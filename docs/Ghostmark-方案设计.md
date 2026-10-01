@@ -4,7 +4,7 @@
 |---|---|
 | 插件名 | **Ghostmark**（manifest id: `ghostmark`） |
 | 文档 | 方案设计（需求与验收标准见《Ghostmark-需求分析》） |
-| 版本 | v1.1 修订稿（v1 冻结稿 + 评审修订，见文末修订记录） |
+| 版本 | v1.2 修订稿（见文末修订记录） |
 
 ---
 
@@ -25,7 +25,7 @@
 src/
 ├── core/                  # 纯函数，零 Obsidian 依赖，vitest 全覆盖
 │   ├── categories.ts      # 字符分类定义、默认策略表、码点元数据
-│   ├── blocks.ts          # 块级解析：frontmatter / 围栏代码 / 行内代码 / 数学块 / 正文
+│   ├── blocks.ts          # 块级解析：frontmatter / 围栏代码 / 行内代码 / 数学块 / 正文；块区间查询 blockRangeAt（FR-13）
 │   ├── scanner.ts         # 扫描文本 → Hit[]（码点 + 类别 + 上下文 + 动作）
 │   ├── cleaner.ts         # Hit[] → 新文本 + ChangeReport（分类计数）
 │   ├── i18n.ts            # en/zh 文案表与取词 t()（locale 注入，纯函数可测）
@@ -36,7 +36,7 @@ src/
 │   ├── hover.ts           # hoverTooltip 详情
 │   └── gutter.ts          # 行号槽徽标
 ├── statusBar.ts           # 状态栏计数与点击开关（Obsidian 外壳 API；仅桌面注册）
-├── commands.ts            # 四个命令（FR-7~10）
+├── commands.ts            # 五个命令（FR-7~10、FR-13）
 ├── settings.ts            # 设置面板、持久化与 schema 迁移（§7）
 └── main.ts                # 插件入口
 ```
@@ -133,17 +133,18 @@ interface ChangeReport {
 
 - `scanner.ts`：线性单趟扫描 + 空格成串合并，输出 `Hit[]`。纯函数签名 `(text, policy, settings) → Hit[]`。
 - `cleaner.ts`：按 `Hit.action` **从后向前**构造新文本（避免偏移失效），同时产出 `ChangeReport`。纯函数签名 `(text, hits) → { text, report }`。
+- `blocks.ts` 块区间查询 `blockRangeAt(lineIndex)`：返回光标行所属块区间（六形态：空行分界段落 / 列表项 / 连续引用行 / 表格行 / 代码或数学块整块 / frontmatter 整块），供"清除当前块"（§6）取范围后走同一扫描 → 清理管线。
 - 执行（命令层）：`editor.transaction` 一次性替换——Obsidian 原生单步撤销即成立，随后 Notice 报告 `ChangeReport`。
 
 ---
 
 ## 5. 检查模式（editor）
 
-- **开关**：`Compartment` + `StateEffect` 挂卸装饰扩展；入口为命令/快捷键/状态栏点击；状态持久化（记住上次状态，默认关）。
+- **开关**：`Compartment` + `StateEffect` 挂卸装饰扩展；入口为命令/快捷键/状态栏点击；状态持久化（记住上次状态，默认关）。状态为**全局单值**（非单笔记）：开启后同仓库所有笔记生效；切换时遍历全部 markdown leaf 同步 dispatch，并在 `layout-change` 时将新建编辑器同步到当前状态——Compartment 效果仅作用于单个 EditorView，且新编辑器以注册时初始值初始化，不主动同步会出现"此开彼关"。
 - **装饰**：`ViewPlugin` + `Decoration.replace({ widget })`。零宽字符本身不占宽度，纯高亮不可见，**必须用替换字形**；空格类叠加背景色 mark。
 - **widget**（`widgets.ts`）：行内小字形。紧凑档每类一个符号——红底 `⌷` / 蓝底 `␣` / 黄底 `⌦`；详细档直接显示码点缩写（`2062`）。密度读设置。
 - **hover**（`hover.ts`）：CM6 `hoverTooltip` 显示名称 + `U+XXXX` + 类别 + 建议动作（如"建议：清除（无语义不可见字符）"）。
-- **gutter**（`gutter.ts`）：行级命中计数徽标。
+- **gutter**（`gutter.ts`）：行级命中计数徽标；徽标可点击 = 清除该行所在块（§6"清除当前块"同一确认规则），是检查模式内的可视化快捷入口。
 - **状态栏**（`statusBar.ts`）：`Ghost: N`（N 为当前笔记命中数），点击切换检查模式。仅桌面注册（`Platform.isMobile` 守卫）；移动端无状态栏 API，入口为命令面板（§3.2）。
 - **性能**：装饰只构建可见视口范围（CM6 `viewport`）。成本核算：万字符级**全文单趟扫描为亚毫秒级**，v1 采用"全文扫描 + 视口过滤装饰"的最简实现，**不做**按块缓存与增量失效（YAGNI）；仅当超长文档实测超出 NFR-3 预算时，再演进为按块增量。
 
@@ -151,11 +152,14 @@ interface ChangeReport {
 
 ## 6. 命令与交互（commands.ts）
 
+清除命令的安全闸门互补规则（v1.2 成文）：**免确认的清除以检查模式可见性为前提，有 Modal 确认的清除不强制可见**。"清除当前块"默认免确认，故要求检查模式开启（关闭时 `checkCallback` 置灰）；"清除全部 / 清除选区"每次弹 Modal 复核，不依赖装饰可见。
+
 | 命令 | 行为 |
 |---|---|
 | `Ghostmark: 切换检查模式` | 开/关装饰；状态栏与命令面板同步状态 |
 | `Ghostmark: 清除全部标记` | 仅当前笔记：扫描 → Modal 确认（分类计数）→ 单事务替换 → Notice 报告 |
 | `Ghostmark: 清除选区` | 对选区同上；无选区时经 `checkCallback` 动态置灰（命令面板不可用） |
+| `Ghostmark: 清除当前块`（英文 "Clear current block"） | 光标所在块级元素（段落 / 列表项 / 引用块 / 表格行 / 代码或数学块 / frontmatter，区间由 `blocks.ts` 解析）→ 扫描 → 默认无确认单事务替换 + Notice 分类计数（设置可开确认）；无命中（或全部 keep/markOnly）时提示且零改动；仅检查模式开启时可用，关闭时 `checkCallback` 置灰 |
 | `Ghostmark: 拾取码点` | 光标处字符 → Modal 显示 `U+XXXX / 名称 / 类别` → 确认后按类别写入建议动作（不可见→`remove`、空格类→`toSpace`、语义→`keep`）加入策略表，并提示可到设置中修改动作 |
 
 ---
@@ -166,7 +170,7 @@ interface ChangeReport {
 
 1. **字符策略表**：默认表（§4.2）逐码点列出，动作三选一；`customPolicies` 追加区。
 2. **上下文规则**：数学块 `markOnly | clean`（默认 markOnly）；ZWNJ `keep | remove`（默认 keep）；代码块内空格类转普通空格（默认开）。
-3. **界面**：检查模式记住上次状态（默认关）；标记密度 `compact | detailed`；清除前确认（默认开）；状态栏显示（默认开）。
+3. **界面**：检查模式记住上次状态（默认关）；标记密度 `compact | detailed`；清除前确认拆两项——全部/选区清除前确认（默认开）、**块清除前确认（默认关）**（互补闸门规则见 §6）；状态栏显示（默认开）。
 4. **语言**：`auto | 英文 | 中文`（默认 auto，跟随 Obsidian 界面语言，手动选择可覆盖）。文案集中于 `core/i18n.ts`，UI 层只经 `t()` 取词，无散落硬编码。
 
 技术栈与版本锁定见 §3 技术选型（官方 sample-plugin 模板、TypeScript + esbuild、零运行时依赖）。
@@ -181,6 +185,7 @@ interface ChangeReport {
 - 扫描器：块级解析边界（frontmatter / 围栏代码 / 行内代码 / 数学块 / 正文）、空格成串合并、BOM 位置识别；
 - 清理器：动作执行正确性、`ChangeReport` 计数、从后向前替换的偏移正确性；
 - 保护规则：emoji ZWJ 序列（含肤色修饰、家庭组合）逐字节保留；数学块默认产出零清除动作；代码块内 U+2002 → 普通空格而非删除；
+- 块区间与块清除：`blockRangeAt` 六形态边界（段落空行分界 / 列表单项 / 引用连续行 / 表格单行 / 代码与数学整块 / frontmatter 整块）与空块；"清除当前块"端到端——仅目标块被清理、块外零改动、ChangeReport 正确、零改动路径产出空报告；
 - i18n：en / zh 两张文案表**键集合完全一致**（缺键即测试失败）；注入各 locale 断言 `t()` 产出正确语言，`auto` 判定逻辑单测覆盖。
 
 ### 8.2 合成 fixture（入库）
@@ -220,7 +225,7 @@ interface ChangeReport {
 | **M0 脚手架** | 模板初始化：esbuild / tsconfig / ESLint（含 obsidianmd 规则）/ vitest 装配；manifest、目录骨架、GitHub Actions | `npm run build / lint / test` 三闸门全绿 |
 | **M1 core 引擎** | categories / blocks / scanner / cleaner + i18n + fixture 全量断言 | 需求 §6.1–6.5 计数与保护断言全部通过 |
 | **M2 检查模式** | inspectMode / widgets / hover / gutter / statusBar | 三色两档密度、hover、徽标手动验收通过；万字符 fixture 无卡顿（NFR-3） |
-| **M3 命令与设置** | 四命令（`checkCallback`）、Modal 确认、设置四组 + 语言切换 + `customPolicies` 持久化 | 清除全部 / 清除选区 / 拾取码点端到端可用；单步撤销成立；语言切换无遗漏 |
+| **M3 命令与设置** | 五命令（`checkCallback`）、Modal 确认、设置四组 + 语言切换 + `customPolicies` 持久化 | 清除全部 / 清除选区 / 清除当前块（含检查模式门槛与徽标点击）/ 拾取码点端到端可用；单步撤销成立；语言切换无遗漏 |
 | **M4 打磨与发布** | README（英 / 中）、错误兜底、manifest 终检、上架规范自查、版本脚本演练 | 构建可复现、零网络请求；`eslint-plugin-obsidianmd` 零错误；GitHub Release 流程走通 |
 
 ### 9.4 Git 与 CI
@@ -251,3 +256,4 @@ interface ChangeReport {
 |---|---|---|
 | v1 | — | 设计冻结稿 |
 | v1.1 | 2026-09-30 | 评审修订：新增 §3 技术选型（构建 / 测试 / Lint / UI 对比与版本锁定）与 §3.2 兼容性策略（minAppVersion / 移动端 / 设置 schema 迁移）；新增 §9 开发流程与里程碑（M0–M4、core 先行 TDD、Git / CI / 发布）；补 LRM/RLM 默认动作论证（§4.2）；§5 性能策略简化为"全文扫描 + 视口过滤"（去按块增量缓存，YAGNI）；`statusBar.ts` 移出 `editor/`；§7 设置增语言切换、FR-9 改按类别建议动作；§8 增 i18n 测试；§10 增移动端 / i18n / 依赖漂移 / schema 迁移风险。全文章节重编号 |
+| v1.2 | 2026-10-01 | 新增 FR-13「清除当前块」：`blocks.ts` 增块区间解析（六形态）与端到端单测；§6 成文"免确认需可见"闸门互补规则并新增命令行；§5 徽标可点击；§7 确认开关拆两项（全部/选区默认开、块清除默认关）；§9.3 M3 更新为五命令；§5 明确检查模式为全局单值并写明跨编辑器同步实现约束（防"此开彼关"） |
