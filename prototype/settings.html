@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P8 · 设置 — 四组完整面板</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .poli-head { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-faint); padding: 10px 0 2px; }
+  .poli-head .lnk { margin-left: auto; color: var(--accent); cursor: pointer; font-size: 12px; }
+  .sub-h { font-size: 13px; color: var(--text-muted); margin: 14px 0 2px; display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body class="theme-dark">
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P8</b><span data-i18n="cap.p8">P8 · 设置 — 四组完整面板</span></div>
+    <div class="demo-bar">
+      <span class="faint" style="font-size:12px" data-i18n="p8.hint">开关 / 下拉均为可交互视觉件（不持久化）；策略表含全部 21 个默认码点 + 拾取追加区。</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed"><div class="ed-inner">
+          <div class="line"><div class="gut"><span class="badge-sp"></span><span class="ln">1</span></div><div class="lc"><p class="faint">…… 编辑器作为背景 ……</p></div></div>
+        </div></div>
+      </div>
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <!-- 设置窗口 -->
+  <div class="overlay" id="ov8" style="padding-top:6vh">
+    <div class="settings-win">
+      <div class="set-nav">
+        <div class="nav-h" data-i18n="nav.options">选项</div>
+        <div class="set-item"><span class="ic">✎</span><span data-i18n="nav.editor">编辑器</span></div>
+        <div class="set-item"><span class="ic">⎘</span><span data-i18n="nav.files">文件与链接</span></div>
+        <div class="set-item"><span class="ic">◐</span><span data-i18n="nav.appearance">外观</span></div>
+        <div class="set-item"><span class="ic">⌘</span><span data-i18n="nav.hotkeys">快捷键</span></div>
+        <div class="nav-h" data-i18n="nav.core">核心插件</div>
+        <div class="set-item"><span class="ic">📅</span><span data-i18n="nav.core1">日记</span></div>
+        <div class="set-item"><span class="ic">▦</span><span data-i18n="nav.core2">白板</span></div>
+        <div class="set-item"><span class="ic">☰</span><span data-i18n="nav.core3">大纲</span></div>
+        <div class="nav-h" data-i18n="nav.community">社区插件</div>
+        <div class="set-item cur"><span class="ic">👻</span><span>Ghostmark</span></div>
+        <div class="set-item"><span class="ic">◈</span><span>Dataview</span></div>
+        <div class="set-item"><span class="ic">✏</span><span>Excalidraw</span></div>
+        <div class="set-item"><span class="ic">◑</span><span>Style Settings</span></div>
+      </div>
+
+      <div class="set-pane">
+        <h2>Ghostmark</h2>
+        <div class="ver">v1.2.0 · <span data-i18n="nav.community">社区插件</span></div>
+
+        <h3><span class="anno"><span data-i18n="s.g1">字符策略表</span><i class="an">1</i></span></h3>
+        <div class="si-desc" style="margin-bottom:6px" data-i18n="s.d1">策略即数据：每个码点的动作可改为 清除 / 转空格 / 保留；变更即时生效并随设置持久化。</div>
+
+        <div class="sub-h"><i class="dot red"></i><span data-i18n="s.red">红 · 无语义不可见（默认清除，含代码块）</span></div>
+        <div class="poli-row"><span class="cp">U+200B</span><span class="nm">ZERO WIDTH SPACE · <span class="zh">零宽空格</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2060</span><span class="nm">WORD JOINER · <span class="zh">词连接符</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2061</span><span class="nm">FUNCTION APPLICATION · <span class="zh">函数应用</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2062</span><span class="nm">INVISIBLE TIMES · <span class="zh">不可见乘号</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2063</span><span class="nm">INVISIBLE SEPARATOR · <span class="zh">不可见分隔符</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2064</span><span class="nm">INVISIBLE PLUS · <span class="zh">不可见加号</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+061C</span><span class="nm">ARABIC LETTER MARK · <span class="zh">阿拉伯字母标记</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+180E</span><span class="nm">MONGOLIAN FREE VOWEL SEPARATOR · <span class="zh">蒙古文元音分隔符</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+200E</span><span class="nm">LEFT-TO-RIGHT MARK · <span class="zh">从左至右标记</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+200F</span><span class="nm">RIGHT-TO-LEFT MARK · <span class="zh">从右至左标记</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+FFFE</span><span class="nm">NOT A CHARACTER · <span class="zh">非字符</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+FFFF</span><span class="nm">NOT A CHARACTER · <span class="zh">非字符</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+FEFF</span><span class="nm">ZERO WIDTH NO-BREAK SPACE · <span class="zh">零宽不换行空格</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="si-desc" style="padding:4px 0 0" data-i18n="s.feff">U+FEFF 仅处理非文件头位置；文件头 BOM 永不处理。</div>
+
+        <div class="sub-h"><i class="dot blue"></i><span data-i18n="s.blue">蓝 · 空格类（正文成串删除、孤立转空格）</span></div>
+        <div class="poli-row"><span class="cp">U+2002</span><span class="nm">EN SPACE · <span class="zh">EN 空格</span></span><span class="tag blue">blue</span>
+          <select class="dd"><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.remove">清除</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2009</span><span class="nm">THIN SPACE · <span class="zh">细空格</span></span><span class="tag blue">blue</span>
+          <select class="dd"><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.remove">清除</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+2007</span><span class="nm">FIGURE SPACE · <span class="zh">数字空格</span></span><span class="tag blue">blue</span>
+          <select class="dd"><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.remove">清除</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+202F</span><span class="nm">NARROW NO-BREAK SPACE · <span class="zh">窄不换行空格</span></span><span class="tag blue">blue</span>
+          <select class="dd"><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.remove">清除</option><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+00A0</span><span class="nm">NO-BREAK SPACE · <span class="zh">不换行空格</span></span><span class="tag blue">blue</span>
+          <select class="dd"><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.remove">清除</option><option data-i18n="opt.keep">保留</option></select></div>
+
+        <div class="sub-h"><i class="dot yellow"></i><span data-i18n="s.yellow">黄 · 受保护语义（仅标记）</span></div>
+        <div class="poli-row"><span class="cp">U+200D</span><span class="nm">ZERO WIDTH JOINER · <span class="zh">零宽连接符</span></span><span class="tag yellow">yellow</span><span class="tag lock" data-i18n="s.lock">写死保护</span>
+          <select class="dd" disabled><option data-i18n="opt.keep">保留</option></select></div>
+        <div class="poli-row"><span class="cp">U+200C</span><span class="nm">ZERO WIDTH NON-JOINER · <span class="zh">零宽非连接符</span></span><span class="tag yellow">yellow</span>
+          <select class="dd"><option data-i18n="opt.keep">保留</option><option data-i18n="opt.remove">清除</option></select></div>
+        <div class="poli-row"><span class="cp">FE00–FE0F</span><span class="nm">VARIATION SELECTORS · <span class="zh">变体选择符</span></span><span class="tag yellow">yellow</span>
+          <select class="dd"><option data-i18n="opt.keep">保留</option><option data-i18n="opt.remove">清除</option></select></div>
+
+        <div class="sub-h" style="margin-top:18px"><span class="anno"><span data-i18n="s.custom">拾取追加区（customPolicies）</span><i class="an">2</i></span><span class="lnk" data-i18n="s.reset">重置为默认表</span></div>
+        <div class="poli-row custom"><span class="cp">U+2064</span><span class="nm">INVISIBLE PLUS · <span class="zh">不可见加号</span> · <span data-i18n="s.picked">拾取于 P6 演示</span></span><span class="tag red">red</span>
+          <select class="dd"><option data-i18n="opt.remove">清除</option><option data-i18n="opt.tospace">转空格</option><option data-i18n="opt.keep">保留</option></select></div>
+
+        <h3 data-i18n="s.g2">上下文规则</h3>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.math">数学块处理</div><div class="si-desc" data-i18n="s.math.d">默认仅标记；MathML 转写来源的 U+2062 可能承载真实乘法语义。</div></div>
+          <select class="dd"><option data-i18n="opt.markonly">仅标记</option><option data-i18n="opt.clean">清理</option></select>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name">ZWNJ</div><div class="si-desc" data-i18n="s.zwnj.d">波斯语等语言承载构词语义，误删会毁掉复合词（#625 教训）。</div></div>
+          <select class="dd"><option data-i18n="opt.keep">保留</option><option data-i18n="opt.remove">清除</option></select>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.codespace">代码块内空格类转普通空格</div><div class="si-desc" data-i18n="s.codespace.d">直接删除会破坏 Python 缩进与语法。</div></div>
+          <span class="switch on"></span>
+        </div>
+
+        <h3 data-i18n="s.g3">界面</h3>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.remember">记住检查模式状态</div><div class="si-desc" data-i18n="s.remember.d">重启后保持上次开关（默认关闭）。</div></div>
+          <span class="switch"></span>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.density">标记密度</div><div class="si-desc" data-i18n="s.density.d">紧凑 = 每类一个符号；详细 = 显示码点缩写。</div></div>
+          <select class="dd"><option data-i18n="opt.compact">紧凑</option><option data-i18n="opt.detailed">详细</option></select>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.confirmall">全部 / 选区清除前确认</div><div class="si-desc" data-i18n="s.confirmall.d">每次弹窗复核分类计数（默认开）。</div></div>
+          <span class="switch on"></span>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name"><span class="anno"><span data-i18n="s.confirmblk">块清除前确认</span><i class="an">3</i></span></div><div class="si-desc" data-i18n="s.confirmblk.d">默认关——免确认以检查模式可见性为闸门（互补规则）。</div></div>
+          <span class="switch"></span>
+        </div>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name" data-i18n="s.statusbar">状态栏显示命中数</div><div class="si-desc" data-i18n="s.statusbar.d">仅桌面；移动端以命令面板为入口。</div></div>
+          <span class="switch on"></span>
+        </div>
+
+        <h3 data-i18n="s.g4">语言</h3>
+        <div class="setting-item">
+          <div class="si-info"><div class="si-name"><span class="anno"><span data-i18n="s.lang">界面语言</span><i class="an">4</i></span></div><div class="si-desc" data-i18n="s.lang.d">默认跟随 Obsidian 界面语言；覆盖全部 UI 文案（hover / Modal / 设置 / Notice）。</div></div>
+          <select class="dd"><option data-i18n="opt.auto">自动</option><option>English</option><option>简体中文</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p8.anno.t">P8 标注</h4>
+    <ol>
+      <li data-i18n-html="p8.1"><b>策略即数据</b>：默认表逐码点三动作（清除 / 转空格 / 保留），红蓝黄分段；ZWJ 写死永久保护，不可改。</li>
+      <li data-i18n-html="p8.2"><b>拾取追加区</b>：FR-9 拾取的码点（如 P6 的 U+2064）追加于此，高亮显示、可改动作、可整体重置。</li>
+      <li data-i18n-html="p8.3"><b>确认开关拆两项</b>：全部/选区默认开（免可见强确认）；块清除默认关（免确认以检查模式为闸门）——互补规则见方案设计 §6。</li>
+      <li data-i18n-html="p8.4"><b>语言</b>：auto 跟随 Obsidian，手动选择覆盖；全部文案集中于 <code>i18n.ts</code>，en/zh 键集合一致性由单测兜底。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghostmark · 原型索引</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .hex-lab { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .sw-chip-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .sw-sq { width: 16px; height: 16px; border-radius: 4px; border: 1px solid; flex: none; }
+  .demo-line { font-size: 15px; line-height: 2; }
+  .demo-badges { display: flex; align-items: center; gap: 14px; padding: 6px 0; }
+  .demo-gut { width: 46px; display: flex; justify-content: flex-end; gap: 5px; padding-right: 10px; border-right: 1px solid var(--border); }
+  .demo-status { display: flex; justify-content: flex-end; padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>Ghostmark</b><span data-i18n="idx.how">每页顶部控制条可切换深浅主题 / 中英语言 / 标记密度 / 标注层；编辑器页内 widget 可悬停查看详情。</span></div>
+  </div>
+
+  <header class="idx-hero">
+    <div class="logo-row">
+      <div class="ghost-glyph">👻</div>
+      <h1>Ghostmark</h1>
+    </div>
+    <p data-i18n="idx.tag">检查并清除剪藏笔记中的不可见水印字符 —— HTML 交互原型（多页 · 双主题 · 中英双语）</p>
+  </header>
+
+  <section class="idx-sec">
+    <h2 data-i18n="idx.sec1">语义三色</h2>
+    <div class="sw-grid">
+      <div class="sw-card">
+        <div class="sw-row"><i class="dot red"></i><span data-i18n="sw.red">红 · 无语义不可见</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--red-bg)"></span><span class="hex-lab">bg · #FCEBED / rgba(255,94,109,.15)</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--red-fg)"></span><span class="hex-lab">fg · #B3261E / #FF8A93</span></div>
+        <div class="chip-samples">
+          <span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>
+          <span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>
+        </div>
+      </div>
+      <div class="sw-card">
+        <div class="sw-row"><i class="dot blue"></i><span data-i18n="sw.blue">蓝 · 空格类</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--blue-bg)"></span><span class="hex-lab">bg · #E9F2FC / rgba(76,146,236,.16)</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--blue-fg)"></span><span class="hex-lab">fg · #1F6FD6 / #7CB8FF</span></div>
+        <div class="chip-samples">
+          <span class="gm-w blue" data-g="␣" data-cp="2002" data-n="20" data-nm="EN SPACE · RUN" data-cat="blue" data-act="remove"></span>
+          <span class="gm-w blue" data-g="␣" data-cp="2009" data-nm="THIN SPACE" data-cat="blue" data-act="remove"></span>
+        </div>
+      </div>
+      <div class="sw-card">
+        <div class="sw-row"><i class="dot yellow"></i><span data-i18n="sw.yellow">黄 · 受保护语义</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--yel-bg)"></span><span class="hex-lab">bg · #FBF3D9 / rgba(233,196,106,.13)</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--yel-fg)"></span><span class="hex-lab">fg · #8A6A00 / #E9C46A</span></div>
+        <div class="chip-samples">
+          <span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep"></span>
+          <span class="gm-w yellow" data-g="⌦" data-cp="FE0F" data-nm="VARIATION SELECTOR-16" data-cat="yellow" data-act="keep"></span>
+        </div>
+      </div>
+      <div class="sw-card">
+        <div class="sw-row"><span class="muted" data-i18n="sw.neu">中性面 · Obsidian 默认主题</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--bg-primary)"></span><span class="hex-lab" data-i18n="sw.bg1">编辑区 background-primary</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--bg-secondary)"></span><span class="hex-lab" data-i18n="sw.bg2">侧栏 background-secondary</span></div>
+        <div class="sw-chip-row"><span style="color:var(--text-normal);font-weight:600">Aa</span><span class="hex-lab" data-i18n="sw.fg">正文 text-normal</span></div>
+        <div class="sw-chip-row"><span class="sw-sq" style="background:var(--accent)"></span><span class="hex-lab" data-i18n="sw.ac">强调色 accent hsl(254,80%,68%)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="idx-sec">
+    <h2 data-i18n="idx.sec2">组件规范</h2>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h5 data-i18n="cp.widget">行内 widget（紧凑 / 详细）</h5>
+        <div class="demo-line">
+          pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>hon
+          段尾<span class="gm-w blue" data-g="␣" data-cp="2002" data-n="20" data-nm="EN SPACE · RUN" data-cat="blue" data-act="remove"></span>
+          👨<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👩‍👩‍👧‍👦
+        </div>
+        <div class="faint" style="font-size:12px;margin-top:6px" data-i18n-html="idx.how">用顶部控制条切换密度查看详细档。</div>
+      </div>
+      <div class="comp-card">
+        <h5 data-i18n="cp.badge">Gutter 徽标（可点击）</h5>
+        <div class="demo-badges">
+          <span class="demo-gut"><span class="badge red">4</span><span class="ln">13</span></span>
+          <span class="demo-gut"><span class="badge blue">24</span><span class="ln">14</span></span>
+          <span class="demo-gut"><span class="badge yellow">5</span><span class="ln">15</span></span>
+        </div>
+      </div>
+      <div class="comp-card">
+        <h5 data-i18n="cp.status">状态栏项</h5>
+        <div class="demo-status">
+          <span class="status-ghost" style="cursor:default"><span class="ghost-dot"></span>Ghost: <b>806</b></span>
+        </div>
+      </div>
+      <div class="comp-card">
+        <h5 data-i18n="cp.hover">Hover 详情浮层（固定展示）</h5>
+        <div class="demo-line" style="padding-top:72px">
+          在设计 <span class="gm-w red pinned" style="margin-left:60px" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span> 接口时……
+        </div>
+      </div>
+      <div class="comp-card">
+        <h5 data-i18n="cp.btn">按钮体系</h5>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" data-i18n="btn.cancel">取消</button>
+          <button class="btn mod-cta">CTA</button>
+          <button class="btn mod-warning">清除 798</button>
+        </div>
+      </div>
+      <div class="comp-card">
+        <h5 data-i18n="cp.notice">Notice 通知</h5>
+        <div class="notice ok" style="position:static;max-width:none">
+          <div>
+            <div data-i18n="n3.ok">已清除 798 处标记（红 321 · 蓝 477）</div>
+            <div class="n-undo"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span data-i18n="n3.undo">单步撤销，原文可完整恢复</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="idx-sec">
+    <h2 data-i18n="idx.sec3">页面导航</h2>
+    <div class="card-grid" style="padding-left:0;padding-right:0">
+      <a class="pcard" href="editor-live-preview.html">
+        <span class="pc-no">P1</span><span class="pc-name" data-i18n="c.p1.name">编辑器 · Live Preview</span>
+        <span class="pc-desc" data-i18n="c.p1.desc">检查模式全貌：三色 widget、行号槽徽标、hover 详情、状态栏计数，点击状态栏可开关检查模式。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-1</span><span class="fr-tag">FR-2</span><span class="fr-tag">FR-3</span><span class="fr-tag">FR-4</span><span class="fr-tag">FR-5</span><span class="fr-tag">FR-6</span></span>
+      </a>
+      <a class="pcard" href="editor-source.html">
+        <span class="pc-no">P2</span><span class="pc-name" data-i18n="c.p2.name">编辑器 · Source 模式</span>
+        <span class="pc-desc" data-i18n="c.p2.desc">原始 Markdown 视图 + 详细档密度（码点缩写），frontmatter 标题污染演示。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-1</span><span class="fr-tag">FR-3</span></span>
+      </a>
+      <a class="pcard" href="clear-all.html">
+        <span class="pc-no">P3</span><span class="pc-name" data-i18n="c.p3.name">清除全部</span>
+        <span class="pc-desc" data-i18n="c.p3.desc">分类计数确认 Modal → 执行 → Notice 报告 → 清除后零标记，before / after 同页演示。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-7</span></span>
+      </a>
+      <a class="pcard" href="clear-selection.html">
+        <span class="pc-no">P4</span><span class="pc-name" data-i18n="c.p4.name">清除选区</span>
+        <span class="pc-desc" data-i18n="c.p4.desc">选区态 + 确认 Modal；base64 可见垃圾需手动删除的设计说明。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-8</span></span>
+      </a>
+      <a class="pcard" href="clear-block.html">
+        <span class="pc-no">P5</span><span class="pc-name" data-i18n="c.p5.name">清除当前块</span>
+        <span class="pc-desc" data-i18n="c.p5.desc">徽标点击入口、块范围高亮、免确认 Notice、确认开关与零改动路径。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-13</span></span>
+      </a>
+      <a class="pcard" href="pick-codepoint.html">
+        <span class="pc-no">P6</span><span class="pc-name" data-i18n="c.p6.name">拾取码点</span>
+        <span class="pc-desc" data-i18n="c.p6.desc">未知字符 → 码点信息 Modal → 按类别写入建议动作 → 持久化。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-9</span></span>
+      </a>
+      <a class="pcard" href="command-palette.html">
+        <span class="pc-no">P7</span><span class="pc-name" data-i18n="c.p7.name">命令面板</span>
+        <span class="pc-desc" data-i18n="c.p7.desc">五个命令与建议快捷键；checkCallback 动态置灰（无选区 / 检查模式关闭）。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-10</span><span class="fr-tag">FR-13</span></span>
+      </a>
+      <a class="pcard" href="settings.html">
+        <span class="pc-no">P8</span><span class="pc-name" data-i18n="c.p8.name">设置</span>
+        <span class="pc-desc" data-i18n="c.p8.desc">字符策略表 / 上下文规则 / 界面 / 语言四组完整面板，拾取追加区与确认双开关。</span>
+        <span class="pc-tags"><span class="fr-tag">FR-11</span><span class="fr-tag">FR-12</span></span>
+      </a>
+      <a class="pcard" href="mobile.html">
+        <span class="pc-no">P9</span><span class="pc-name" data-i18n="c.p9.name">移动端</span>
+        <span class="pc-desc" data-i18n="c.p9.desc">双屏：检查模式装饰可用（无状态栏）、命令面板唯一入口。</span>
+        <span class="pc-tags"><span class="fr-tag">NFR-6</span></span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="idx-sec" style="padding-bottom:30px">
+    <p class="faint" style="font-size:12px" data-i18n="idx.foot">Ghostmark 原型 v1.2 · 与《需求分析》《方案设计》v1.2 对应 · 仅供设计评审</p>
+  </footer>
+</div>
+<script src="common.js"></script>
+</body>
+</html>

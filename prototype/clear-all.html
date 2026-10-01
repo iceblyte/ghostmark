@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P3 · 清除全部 — 确认 → Notice → 清除后</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  .state-after { display: none; }
+  body.clean .state-before { display: none; }
+  body.clean .state-after { display: block; }
+  .re-door { text-align: center; padding: 30px 0 10px; color: var(--text-faint); font-size: 12.5px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P3</b><span data-i18n="cap.p3">P3 · 清除全部 — 确认 Modal → Notice → 清除后</span></div>
+    <div class="demo-bar">
+      <button class="pb-btn demo" data-demo="p3-reset" data-i18n="demo.reset">重置演示</button>
+      <span class="faint" style="font-size:12px"><span data-i18n="p3.hint">初始态即打开确认弹窗；点击「清除 798」执行，Notice 出现、编辑器转为清除后状态。</span></span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+            <!-- before：带装饰 -->
+            <div class="state-before">
+              <div class="line" data-blk="b13">
+                <div class="gut"><span class="badge red" data-blk="b13">4</span><span class="ln">13</span></div>
+                <div class="lc"><p>在设计 pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>hon 接口时，首先要明确 Hel<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>lo 语义边界。</p></div>
+              </div>
+              <div class="line" data-blk="b14">
+                <div class="gut"><span class="badge blue" data-blk="b14">22</span><span class="ln">14</span></div>
+                <div class="lc"><p>参数命名遵循 functi<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>on 命名规范，避免过度缩写。<span class="gm-w blue" data-g="␣" data-cp="2002" data-n="20" data-nm="EN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></p></div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">15</span></div>
+                <div class="lc">&nbsp;</div>
+              </div>
+              <div class="line" data-blk="b31">
+                <div class="gut"><span class="badge red" data-blk="b31">2</span><span class="ln">31</span></div>
+                <div class="lc"><blockquote><p>引用：好的接口设计是<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>一致、可预测的。</p></blockquote></div>
+              </div>
+              <div class="re-door">…… 节选（清除范围 = 全文 806 处中的 798 处可清除项）……</div>
+            </div>
+            <!-- after：零标记 -->
+            <div class="state-after">
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">13</span></div>
+                <div class="lc"><p>在设计 python 接口时，首先要明确 Hello 语义边界。</p></div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">14</span></div>
+                <div class="lc"><p>参数命名遵循 function 命名规范，避免过度缩写。</p></div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">15</span></div>
+                <div class="lc">&nbsp;</div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">31</span></div>
+                <div class="lc"><blockquote><p>引用：好的接口设计是一致、可预测的。</p></blockquote></div>
+              </div>
+              <div class="re-door">✓ 全部装饰已消失 · 搜索 / 双链 / diff 恢复正常（黄类与数学块标记项按策略保留）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <!-- 确认 Modal（默认打开） -->
+  <div class="overlay" id="ov3">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" data-i18n="m3.title">清除全部标记</div>
+        <span class="modal-x" data-close="ov3">✕</span>
+      </div>
+      <div class="modal-desc" data-i18n="m3.desc">将对当前笔记执行策略清理，确认后一次性替换，可单步撤销：</div>
+      <div class="cnt-table">
+        <div class="cnt-row">
+          <div class="c-label"><i class="dot red"></i><span><span data-i18n="r.red">无语义不可见字符</span><div class="c-sub" data-i18n="r.red.sub">U+2062 ×108 · U+061C ×216</div></span></div>
+          <span class="c-num">324</span><span class="c-act remove" data-i18n="pill.remove">清除</span>
+        </div>
+        <div class="cnt-row">
+          <div class="c-label"><i class="dot blue"></i><span><span data-i18n="r.blue">空格类字符</span><div class="c-sub" data-i18n="r.blue.sub">U+2002 ×300 · U+2009 ×177</div></span></div>
+          <span class="c-num">477</span><span class="c-act tospace" data-i18n="pill.tospace">转空格</span>
+        </div>
+        <div class="cnt-row">
+          <div class="c-label"><i class="dot yellow"></i><span><span data-i18n="r.yellow">受保护语义字符</span><div class="c-sub" data-i18n="r.yellow.sub">ZWJ ×4 · 肤色修饰符 ×1</div></span></div>
+          <span class="c-num">5</span><span class="c-act keep" data-i18n="pill.keep">保留</span>
+        </div>
+        <div class="cnt-row">
+          <div class="c-label"><span class="muted" style="padding-left:18px"><span data-i18n="r.math">数学块内 U+2062（仅标记）</span></span></div>
+          <span class="c-num">3</span><span class="c-act markonly" data-i18n="pill.markonly">仅标记</span>
+        </div>
+      </div>
+      <div class="modal-note" data-i18n="m3.math">数学块内 3 处 U+2062 仅标记（默认不动），已从清除计数中扣除。</div>
+      <div class="modal-foot">
+        <button class="btn" data-close="ov3" data-i18n="btn.cancel">取消</button>
+        <button class="btn mod-warning" data-demo="p3-run" data-i18n="btn.clear798">清除 798</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 执行后 Notice -->
+  <div class="notice ok" id="n3" hidden>
+    <div>
+      <div data-i18n="n3.ok">已清除 798 处标记（红 321 · 蓝 477）</div>
+      <div class="n-undo"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span data-i18n="n3.undo">单步撤销，原文可完整恢复</span></div>
+    </div>
+    <span class="n-close">✕</span>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p3.anno.t">P3 标注</h4>
+    <ol>
+      <li data-i18n-html="p3.1"><b>确认 Modal</b>：分类计数汇总逐类列出，数学块仅标记项单列说明；执行按钮为警示样式（mod-warning），显示精确清除数。</li>
+      <li data-i18n-html="p3.2"><b>执行后</b>：右上角 Notice 报告分类计数 + 撤销提示；编辑器回到无装饰状态。点击演示条「重置演示」可还原。</li>
+      <li data-i18n-html="p3.3"><b>单事务替换</b>：清理走一次 <code>editor.transaction</code>，Obsidian 原生撤销栈自动成立。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+<script>
+  // 页面增强：状态栏计数随演示状态切换（806 → 清除后剩余 8）
+  document.addEventListener("click", function (e) {
+    var b = document.querySelector(".status-ghost b");
+    if (!b) return;
+    if (e.target.closest('[data-demo="p3-run"]')) b.textContent = "8";
+    if (e.target.closest('[data-demo="p3-reset"]')) b.textContent = "806";
+  });
+</script>
+</body>
+</html>

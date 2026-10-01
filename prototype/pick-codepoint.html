@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P6 · 拾取码点 — Modal → 写入策略表</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  .gm-w.cursor-on { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .picked-chip {
+    display: none; align-items: center; gap: 6px; margin-left: 10px;
+    font-size: 11.5px; color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 999px; padding: 1px 9px; vertical-align: middle;
+  }
+  body.picked .picked-chip { display: inline-flex; }
+  .m6-char {
+    font-family: var(--font-mono); font-size: 22px; text-align: center;
+    background: var(--bg-secondary); border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 14px; margin-bottom: 12px;
+  }
+  .m6-char .gm-w { font-size: 20px; height: 1.4em; vertical-align: middle; }
+  .m6-grid { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .m6-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; font-size: 13.5px; }
+  .m6-row + .m6-row { border-top: 1px solid var(--border); }
+  .m6-row .k { width: 110px; flex: none; color: var(--text-faint); font-size: 12.5px; }
+  .m6-row .v { color: var(--text-normal); display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P6</b><span data-i18n="cap.p6">P6 · 拾取码点 — Modal → 写入策略表</span></div>
+    <div class="demo-bar">
+      <button class="pb-btn demo" data-demo="p6-reset" data-i18n="demo.repick">重新打开弹窗</button>
+      <span class="faint" style="font-size:12px" data-i18n="p6.hint">新网站出现未知水印字符时的兜底入口：光标停在字符上 → 执行命令。</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">40</span></div>
+              <div class="lc"><p>支付回调需要对 summ<span class="gm-w red cursor-on" data-g="⌷" data-cp="2064" data-nm="INVISIBLE PLUS" data-cat="red" data-act="remove"></span><span class="caret"></span>ary 字段做签名校验，防止篡改。<span class="picked-chip">✓ U+2064 · <span data-i18n="pill.remove">清除</span></span><span class="anno"><i class="an">1</i></span></p></div>
+            </div>
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">41</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">42</span></div>
+              <div class="lc"><p>该字符不在默认策略表中（灰色 badge 无计数），检查模式以未知样式呈现，提示拾取。</p></div>
+            </div>
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">43</span></div>
+              <div class="lc"><p class="faint" style="font-size:12.5px">模拟场景：某协作文档平台新版水印启用了 U+2064 INVISIBLE PLUS。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <!-- 拾取码点 Modal（默认打开） -->
+  <div class="overlay" id="ov6">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" data-i18n="m6.title">拾取码点</div>
+        <span class="modal-x" data-close="ov6">✕</span>
+      </div>
+      <div class="modal-desc" data-i18n="m6.desc">该字符不在默认策略表中，已按类别给出建议动作，可修改后加入：</div>
+      <div class="m6-char">summ<span class="gm-w red" data-g="⌷" data-cp="2064" data-nm="INVISIBLE PLUS" data-cat="red" data-act="remove"></span>ary</div>
+      <div class="m6-grid">
+        <div class="m6-row"><span class="k" data-i18n="m6.cp">码点</span><span class="v mono">U+2064</span></div>
+        <div class="m6-row"><span class="k" data-i18n="m6.name">Unicode 名称</span><span class="v">INVISIBLE PLUS</span></div>
+        <div class="m6-row"><span class="k" data-i18n="m6.cat">类别</span><span class="v"><i class="dot red"></i><span data-i18n="cat.red">无语义不可见</span></span></div>
+        <div class="m6-row"><span class="k" data-i18n="m6.act">建议动作</span><span class="v">
+          <select class="dd">
+            <option data-i18n="act.remove">清除</option>
+            <option data-i18n="act.tospace">转普通空格</option>
+            <option data-i18n="act.keep">保留</option>
+          </select>
+        </span></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="ov6" data-i18n="btn.cancel">取消</button>
+        <button class="btn mod-cta" data-demo="p6-run" data-i18n="btn.pick">加入策略表</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice ok" id="n6" hidden>
+    <div>
+      <div data-i18n="n6.ok">已将 U+2064（动作：清除）加入策略表</div>
+      <div class="n-undo"><span data-i18n="n6.more">可在设置 → 字符策略表中修改动作</span></div>
+    </div>
+    <span class="n-close">✕</span>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p6.anno.t">P6 标注</h4>
+    <ol>
+      <li data-i18n-html="p6.1"><b>兜底未知水印</b>：新网站的未知字符 → 光标停在其上执行命令，按类别写入建议动作（不可见→清除、空格→转空格、语义→保留）。</li>
+      <li data-i18n-html="p6.2"><b>持久化</b>：写入 <code>settings.customPolicies</code>，设置面板可见、可改、可重置（见 P8 拾取追加区）。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+</body>
+</html>

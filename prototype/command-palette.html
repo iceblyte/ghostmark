@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P7 · 命令面板 — 五命令 · 置灰态</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  .cmd .why { display: none; }
+  body.no-sel .cmd[data-flag="sel"] { opacity: .45; }
+  body.no-sel .cmd[data-flag="sel"] .why { display: inline; }
+  body.inspect-off .cmd[data-flag="inspect"] { opacity: .45; }
+  body.inspect-off .cmd[data-flag="inspect"] .why { display: inline; }
+  .cmd:hover { background: var(--bg-secondary); }
+  .cmd.sel:hover { background: var(--accent-alpha); }
+  .hotkeys { display: flex; gap: 3px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P7</b><span data-i18n="cap.p7">P7 · 命令面板 — 五命令 · 置灰态</span></div>
+    <div class="demo-bar">
+      <button class="pb-btn demo" data-demo="p7-nosel" data-i18n="demo.nosel">模拟：无选区</button>
+      <button class="pb-btn demo" data-demo="p7-noinspect" data-i18n="demo.noinspect">模拟：检查模式关闭</button>
+      <button class="pb-btn demo" data-demo="p7-reset" data-i18n="demo.back">恢复全部可用</button>
+      <span class="faint" style="font-size:12px" data-i18n="p7.hint">「清除选区」无选区时、「清除当前块」检查模式关闭时动态置灰；输入框可实际过滤。</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">13</span></div>
+              <div class="lc"><p>在设计 pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>hon 接口时，首先要明确 Hel<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>lo 语义边界。</p></div>
+            </div>
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">14</span></div>
+              <div class="lc"><p class="faint">…… 编辑器作为背景（Ctrl+P 唤出命令面板）……</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <!-- 命令面板 -->
+  <div class="overlay" id="ov7" style="align-items:flex-start">
+    <div class="palette">
+      <div class="p-input">
+        <span class="prompt">&gt;</span>
+        <input id="cmd-filter" type="text" data-i18n-ph="p7.ph" placeholder="输入命令…">
+        <kbd>Esc</kbd>
+      </div>
+      <div class="p-list" id="p-list">
+        <div class="cmd sel"><span data-i18n="cmd.toggle">Ghostmark: 切换检查模式</span><span class="grow"></span><span class="hotkeys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>I</kbd></span></div>
+        <div class="cmd"><span data-i18n="cmd.clearall">Ghostmark: 清除全部标记</span><span class="grow"></span><span class="hotkeys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>K</kbd></span></div>
+        <div class="cmd" data-flag="sel"><span data-i18n="cmd.clearsel">Ghostmark: 清除选区</span><span class="why" data-i18n="p7.why.nosel">（无选区）</span><span class="grow"></span></div>
+        <div class="cmd" data-flag="inspect"><span data-i18n="cmd.clearblock">Ghostmark: 清除当前块</span><span class="why" data-i18n="p7.why.noinspect">（检查模式未开启）</span><span class="grow"></span></div>
+        <div class="cmd"><span data-i18n="cmd.pick">Ghostmark: 拾取码点</span><span class="grow"></span></div>
+        <div class="cmd" style="opacity:.6"><span>Dataview: Rebuild current document view</span><span class="grow"></span></div>
+        <div class="cmd" style="opacity:.6"><span data-i18n="cmd.settings">Obsidian: 打开设置</span><span class="grow"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p7.anno.t">P7 标注</h4>
+    <ol>
+      <li data-i18n-html="p7.1"><b>五个命令</b>：切换检查模式 / 清除全部 / 清除选区 / 清除当前块 / 拾取码点，均进命令面板并配建议快捷键。</li>
+      <li data-i18n-html="p7.2"><b>checkCallback 置灰</b>：「清除选区」无选区时、「清除当前块」检查模式关闭时动态置灰并显示原因。用上方演示按钮切换状态。</li>
+      <li data-i18n-html="p7.3"><b>移动端入口</b>：命令面板是移动端唯一入口（NFR-6），见 P9。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+</body>
+</html>

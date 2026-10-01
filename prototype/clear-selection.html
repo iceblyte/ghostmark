@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P4 · 清除选区 — 选区态 + 确认 Modal</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  .state-after { display: none; }
+  body.clean .state-before { display: none; }
+  body.clean .state-after { display: block; }
+  .re-door { text-align: center; padding: 30px 0 10px; color: var(--text-faint); font-size: 12.5px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P4</b><span data-i18n="cap.p4">P4 · 清除选区 — 选区态 + 确认 Modal</span></div>
+    <div class="demo-bar">
+      <button class="pb-btn demo" data-demo="p4-reset" data-i18n="demo.reset">重置演示</button>
+      <span class="faint" style="font-size:12px" data-i18n="p4.hint">紫色高亮为 Obsidian 原生选区；点击「清除 14」执行。</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+            <div class="state-before">
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">17</span></div>
+                <div class="lc"><p>错误码遵循下表约定，避免自造数字。<span class="gm-w blue" data-g="␣" data-cp="2009" data-n="12" data-nm="THIN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></p></div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">18</span></div>
+                <div class="lc">&nbsp;</div>
+              </div>
+              <div class="line" data-blk="b19">
+                <div class="gut"><span class="badge blue" data-blk="b19">14</span><span class="ln">19</span></div>
+                <div class="lc"><p>调用示例：<span class="sel-hl">使用 pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>hon SDK 初始化 Hel<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>lo 客户端，再调用 functi<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>on 接口完成鉴权。<span class="token64">3KJf2nR8xQmLv7sBd0WpZa1cTe5yHgUoI9wN4jM6EkA=</span><span class="gm-w blue" data-g="␣" data-cp="2002" data-n="8" data-nm="EN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></span></p></div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">20</span></div>
+                <div class="lc">&nbsp;</div>
+              </div>
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">21</span></div>
+                <div class="lc"><p>返回值经 JSON 解析后写入缓存。</p></div>
+              </div>
+              <div class="re-door">…… 节选 ……
+              </div>
+            </div>
+
+            <div class="state-after">
+              <div class="line">
+                <div class="gut"><span class="badge-sp"></span><span class="ln">19</span></div>
+                <div class="lc"><p>调用示例：使用 python SDK 初始化 Hello 客户端，再调用 function 接口完成鉴权。<span class="token64">3KJf2nR8xQmLv7sBd0WpZa1cTe5yHgUoI9wN4jM6EkA=</span></p></div>
+              </div>
+              <div class="re-door">✓ 策略表命中已清除 · 选区外的行零改动 · base64 token 仍在（可见垃圾请手动删除）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <!-- 确认 Modal（默认打开） -->
+  <div class="overlay" id="ov4">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" data-i18n="m4.title">清除选区</div>
+        <span class="modal-x" data-close="ov4">✕</span>
+      </div>
+      <div class="modal-desc" data-i18n="m4.desc">仅对选中文本执行策略清理，不影响其余内容：</div>
+      <div class="cnt-table">
+        <div class="cnt-row">
+          <div class="c-label"><i class="dot red"></i><span><span data-i18n="r.red">无语义不可见字符</span><div class="c-sub" data-i18n="r.red.sub.s">词内隐形簇 ×3</div></span></div>
+          <span class="c-num">6</span><span class="c-act remove" data-i18n="pill.remove">清除</span>
+        </div>
+        <div class="cnt-row">
+          <div class="c-label"><i class="dot blue"></i><span><span data-i18n="r.blue">空格类字符</span><div class="c-sub" data-i18n="r.blue.sub.s">行尾指纹串 ×1（8 个字符）</div></span></div>
+          <span class="c-num">8</span><span class="c-act tospace" data-i18n="pill.tospace">转空格</span>
+        </div>
+      </div>
+      <div class="modal-note warn" data-i18n="m4.warn">选区内的 base64 追踪 token 是可见垃圾，不属于策略表字符——请手动选中后删除（FR-8 设计意图）。</div>
+      <div class="modal-foot">
+        <button class="btn" data-close="ov4" data-i18n="btn.cancel">取消</button>
+        <button class="btn mod-warning" data-demo="p4-run" data-i18n="btn.clear14">清除 14</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice ok" id="n4" hidden>
+    <div>
+      <div data-i18n="n4.ok">已清除选区 14 处标记（红 6 · 蓝 8）</div>
+      <div class="n-undo"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span data-i18n="n3.undo">单步撤销，原文可完整恢复</span></div>
+    </div>
+    <span class="n-close">✕</span>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p4.anno.t">P4 标注</h4>
+    <ol>
+      <li data-i18n-html="p4.1"><b>选区态</b>：紫色高亮为 Obsidian 原生选区色；命令经 <code>checkCallback</code> 动态校验——无选区时命令面板置灰（见 P7）。</li>
+      <li data-i18n-html="p4.2"><b>可见垃圾不归策略管</b>：base64 token 无码点规则，Modal 明示需手动删除，避免「以为没清干净」的误解。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+<script>
+  document.addEventListener("click", function (e) {
+    var b = document.querySelector(".status-ghost b");
+    if (!b) return;
+    if (e.target.closest('[data-demo="p4-run"]')) b.textContent = "792";
+    if (e.target.closest('[data-demo="p4-reset"]')) b.textContent = "806";
+  });
+</script>
+</body>
+</html>

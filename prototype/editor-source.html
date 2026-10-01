@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2 · 编辑器 — Source 模式 · 详细档</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  /* frontmatter：多行渲染为连续整块（压过 .lc .fm 基础规则） */
+  .lc .fm { margin: 0; border: none; padding: 3px 14px; }
+  .lc .fm-top { border-radius: 8px 8px 0 0; padding-top: 8px; margin-top: 4px; }
+  .lc .fm-mid { }
+  .lc .fm-bot { border-radius: 0 0 8px 8px; padding-bottom: 8px; margin-bottom: 10px; }
+  /* Source 模式：Markdown 语法以原样文本呈现 */
+  .raw { font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; }
+  .raw .mk { color: var(--text-faint); }
+  .raw pre { background: none; border: none; padding: 0; margin: 0; }
+</style>
+</head>
+<body class="theme-dark" data-has-density data-default-density="detailed">
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P2</b><span data-i18n="cap.p2">P2 · 编辑器 — Source 模式 · 检查模式 · 详细档</span></div>
+    <div class="demo-bar">
+      <span class="faint" style="font-size:12px"><span data-i18n="p2.hint">与 P1 同一笔记的 Source 呈现 · 详细档（码点缩写）为默认密度 ·</span> <a href="editor-live-preview.html">P1 ↔</a></span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+
+            <div class="line" data-blk="bfm">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">1</span></div>
+              <div class="lc"><div class="fm fm-top">---</div></div>
+            </div>
+
+            <div class="line" data-blk="bfm">
+              <div class="gut"><span class="badge red" data-blk="bfm">2</span><span class="ln">2</span></div>
+              <div class="lc"><div class="fm fm-mid">title: <span class="anno"><i class="an">3</i></span>API <span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span> 设计指南</div></div>
+            </div>
+
+            <div class="line" data-blk="bfm">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">3</span></div>
+              <div class="lc"><div class="fm fm-mid">source: https://example.com/docs/api-guide</div></div>
+            </div>
+
+            <div class="line" data-blk="bfm">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">4</span></div>
+              <div class="lc"><div class="fm fm-bot">---</div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">5</span></div>
+              <div class="lc"><div class="raw"><span class="mk">## </span><span class="anno"><i class="an">1</i></span>接口命名规范</div></div>
+            </div>
+
+            <div class="line" data-blk="b6">
+              <div class="gut"><span class="badge red" data-blk="b6">4</span><span class="ln">6</span></div>
+              <div class="lc"><div class="raw">在设计 pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>hon 接口时，首先要明确 Hel<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>lo 语义边界。<span class="anno"><i class="an">2</i></span></div></div>
+            </div>
+
+            <div class="line" data-blk="b7">
+              <div class="gut"><span class="badge blue" data-blk="b7">22</span><span class="ln">7</span></div>
+              <div class="lc"><div class="raw">参数命名遵循 functi<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>on 命名规范，避免过度缩写。<span class="gm-w blue" data-g="␣" data-cp="2002" data-n="20" data-nm="EN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">8</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">9</span></div>
+              <div class="lc"><div class="raw"><span class="mk">## </span>请求与响应</div></div>
+            </div>
+
+            <div class="line" data-blk="b10">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">10</span></div>
+              <div class="lc"><div class="raw">所有接口返回 JSON，字段使用 camelCase 风格。</div></div>
+            </div>
+
+            <div class="line" data-blk="b11">
+              <div class="gut"><span class="badge blue" data-blk="b11">12</span><span class="ln">11</span></div>
+              <div class="lc"><div class="raw">错误码遵循下表约定，避免自造数字。<span class="gm-w blue" data-g="␣" data-cp="2009" data-n="12" data-nm="THIN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">12</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b13s">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">13</span></div>
+              <div class="lc"><div class="raw">配置示例：</div></div>
+            </div>
+
+            <div class="line" data-blk="bcodes">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">14</span></div>
+              <div class="lc"><div class="raw"><span class="mk">```python</span></div></div>
+            </div>
+
+            <div class="line" data-blk="bcodes">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">15</span></div>
+              <div class="lc"><div class="raw mono">def get_user(user_id):</div></div>
+            </div>
+
+            <div class="line" data-blk="bcodes">
+              <div class="gut"><span class="badge blue" data-blk="bcodes">1</span><span class="ln">16</span></div>
+              <div class="lc"><div class="raw mono">&nbsp;&nbsp;&nbsp;<span class="gm-w blue" data-g="␣" data-cp="2002" data-nm="EN SPACE" data-cat="blue" data-act="tospace" data-note="note.codespace"></span>return db.query("SELECT * FROM users")</div></div>
+            </div>
+
+            <div class="line" data-blk="bcodes">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">17</span></div>
+              <div class="lc"><div class="raw"><span class="mk">```</span></div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">18</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b19s">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">19</span></div>
+              <div class="lc"><div class="raw">数学公式（默认仅标记）：</div></div>
+            </div>
+
+            <div class="line" data-blk="bmaths">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">20</span></div>
+              <div class="lc"><div class="raw"><span class="mk">$$</span></div></div>
+            </div>
+
+            <div class="line" data-blk="bmaths">
+              <div class="gut"><span class="badge red" data-blk="bmaths">1</span><span class="ln">21</span></div>
+              <div class="lc"><div class="raw">E = mc² <span class="gm-w red markonly" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="markonly"></span></div></div>
+            </div>
+
+            <div class="line" data-blk="bmaths">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">22</span></div>
+              <div class="lc"><div class="raw"><span class="mk">$$</span></div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">23</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b24s">
+              <div class="gut"><span class="badge red" data-blk="b24s">2</span><span class="ln">24</span></div>
+              <div class="lc"><div class="raw"><span class="mk">&gt; </span>引用：好的接口设计是<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>一致、可预测的。</div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">25</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b26s">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">26</span></div>
+              <div class="lc"><div class="raw">追踪 token（可见垃圾）：<span class="token64">3KJf2nR8xQmLv7sBd0WpZa1cTe5yHgUoI9wN4jM6EkA=</span></div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">27</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b28s">
+              <div class="gut"><span class="badge yellow" data-blk="b28s">5</span><span class="ln">28</span></div>
+              <div class="lc"><div class="raw">👨<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👩<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👧<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👦 家庭组合与 👩<span class="gm-w yellow" data-g="⌦" data-cp="1F3FB" data-nm="EMOJI MODIFIER FITZPATRICK TYPE-1-2" data-cat="yellow" data-act="keep" data-note="note.skin"></span>🏻<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>💻 职业 emoji 正常渲染，连接符被保留。</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p2.anno.t">P2 标注</h4>
+    <ol>
+      <li data-i18n-html="p2.1"><b>Source 模式</b>：原始 Markdown 全部可见（frontmatter / 围栏 / 数学记号），装饰同样生效——CM6 扩展在双编辑模式可用。</li>
+      <li data-i18n-html="p2.2"><b>详细档密度</b>：widget 直接显示码点缩写（如 <code>2062</code>、<code>2002 ×20</code>），与紧凑档在原型控制条随时切换。</li>
+      <li data-i18n-html="p2.3"><b>frontmatter 标题污染</b>：<code>title</code> 内混入 U+061C 双簇——正是 obsidian-clipper #918 的实锤场景，frontmatter 同正文参与清理。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+</body>
+</html>

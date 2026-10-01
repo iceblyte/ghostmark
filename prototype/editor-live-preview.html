@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 · 编辑器 — Live Preview · 检查模式</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .lc:empty::after { content: "\00a0"; }
+  .lc:empty { min-height: 1.5em; }
+  /* 围栏代码块 / 数学块：多行渲染为连续整块（选择器需压过 .lc pre / .lc .math-block） */
+  .lc pre.cb { margin: 0; border: none; background: var(--bg-code); }
+  .lc pre.cb-top { border-radius: 8px 8px 0 0; padding: 12px 16px 2px; margin-top: 6px; }
+  .lc pre.cb-mid { padding: 2px 16px; }
+  .lc pre.cb-bot { border-radius: 0 0 8px 8px; padding: 2px 16px 12px; }
+  .lc .math-block.mb { margin: 0; }
+  .lc .math-block.mb-top { border-bottom: none; border-radius: 8px 8px 0 0; margin-top: 6px; padding-bottom: 2px; }
+  .lc .math-block.mb-mid { border-top: none; border-bottom: none; padding: 2px 16px; }
+  .lc .math-block.mb-bot { border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 6px; padding-top: 2px; }
+</style>
+</head>
+<body class="theme-dark" data-has-density>
+<div class="desk">
+  <div class="proto-area" data-proto-mount>
+    <div class="page-cap"><b>P1</b><span data-i18n="cap.p1">P1 · 编辑器 — Live Preview · 检查模式 · 紧凑档</span></div>
+    <div class="demo-bar">
+      <button class="pb-btn demo" data-action="toggle-inspect" data-i18n="demo.inspect">检查模式 开 / 关</button>
+      <span class="faint" style="font-size:12px">
+        <span data-i18n="demo.hint1">示例为 fixture 等价节选：本页可见 47 处 / 全文 806 处 ·</span>
+        <span class="anno"><span data-i18n="p1.statusword">状态栏</span><i class="an">4</i></span>
+        <span data-i18n="p1.statushint">可点击切换检查模式</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="win">
+    <div data-chrome-titlebar></div>
+    <div class="win-body">
+      <div data-chrome-ribbon></div>
+      <div data-chrome-left></div>
+
+      <div class="main">
+        <div class="view-header"></div>
+        <div class="ed">
+          <div class="ed-inner">
+
+            <div class="line" data-blk="hd1">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">12</span></div>
+              <div class="lc"><h2>接口命名规范</h2></div>
+            </div>
+
+            <div class="line" data-blk="b13">
+              <div class="gut"><span class="badge red" data-blk="b13">4</span><span class="ln">13</span></div>
+              <div class="lc"><p>在设计 pyt<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red pinned" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove" data-tip="r"></span><span class="anno"><i class="an">2</i></span>hon 接口时，首先要明确 Hel<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>lo 语义边界。<span class="anno"><i class="an">1</i></span></p></div>
+            </div>
+
+            <div class="line" data-blk="b14">
+              <div class="gut"><span class="badge blue" data-blk="b14">22</span><span class="ln">14</span></div>
+              <div class="lc"><p>参数命名遵循 functi<span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="remove"></span>on 命名规范，避免过度缩写。<span class="gm-w blue" data-g="␣" data-cp="2002" data-n="20" data-nm="EN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></p></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">15</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="hd2">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">16</span></div>
+              <div class="lc"><h2>请求与响应</h2></div>
+            </div>
+
+            <div class="line" data-blk="b17">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">17</span></div>
+              <div class="lc"><p>所有接口返回 JSON，字段使用 camelCase 风格。</p></div>
+            </div>
+
+            <div class="line" data-blk="b18">
+              <div class="gut"><span class="badge blue" data-blk="b18">12</span><span class="ln">18</span></div>
+              <div class="lc"><p>错误码遵循下表约定，避免自造数字。<span class="gm-w blue" data-g="␣" data-cp="2009" data-n="12" data-nm="THIN SPACE" data-cat="blue" data-act="remove" data-note="note.run" data-tip="r"></span></p></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">19</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b20">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">20</span></div>
+              <div class="lc"><p>配置示例：</p></div>
+            </div>
+
+            <div class="line" data-blk="bcode">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">21</span></div>
+              <div class="lc"><pre class="cb cb-top"><code>```python</code></pre></div>
+            </div>
+
+            <div class="line" data-blk="bcode">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">22</span></div>
+              <div class="lc"><pre class="cb cb-mid"><code>def get_user(user_id):</code></pre></div>
+            </div>
+
+            <div class="line" data-blk="bcode">
+              <div class="gut"><span class="badge blue" data-blk="bcode">1</span><span class="ln">23</span></div>
+              <div class="lc"><pre class="cb cb-mid"><code>   <span class="gm-w blue" data-g="␣" data-cp="2002" data-nm="EN SPACE" data-cat="blue" data-act="tospace" data-note="note.codespace"></span>return db.query("SELECT * FROM users")</code></pre></div>
+            </div>
+
+            <div class="line" data-blk="bcode">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">24</span></div>
+              <div class="lc"><pre class="cb cb-bot"><code>```</code></pre></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">25</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b26">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">26</span></div>
+              <div class="lc"><p>数学公式（默认仅标记）：</p></div>
+            </div>
+
+            <div class="line" data-blk="bmath">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">27</span></div>
+              <div class="lc"><div class="math-block mb mb-top">$$</div></div>
+            </div>
+
+            <div class="line" data-blk="bmath">
+              <div class="gut"><span class="badge red" data-blk="bmath">1</span><span class="ln">28</span></div>
+              <div class="lc"><div class="math-block mb mb-mid">E = mc² <span class="gm-w red markonly" data-g="⌷" data-cp="2062" data-nm="INVISIBLE TIMES" data-cat="red" data-act="markonly"></span></div></div>
+            </div>
+
+            <div class="line" data-blk="bmath">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">29</span></div>
+              <div class="lc"><div class="math-block mb mb-bot">$$</div></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">30</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b31">
+              <div class="gut"><span class="badge red" data-blk="b31">2</span><span class="ln">31</span></div>
+              <div class="lc"><blockquote><p>引用：好的接口设计是<span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span><span class="gm-w red" data-g="⌷" data-cp="061C" data-nm="ARABIC LETTER MARK" data-cat="red" data-act="remove"></span>一致、可预测的。</p></blockquote></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">32</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b33">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">33</span></div>
+              <div class="lc"><p>追踪 token（可见垃圾）：<span class="token64">3KJf2nR8xQmLv7sBd0WpZa1cTe5yHgUoI9wN4jM6EkA=</span><span class="anno"><i class="an">5</i></span></p></div>
+            </div>
+
+            <div class="line">
+              <div class="gut"><span class="badge-sp"></span><span class="ln">34</span></div>
+              <div class="lc">&nbsp;</div>
+            </div>
+
+            <div class="line" data-blk="b35">
+              <div class="gut"><span class="badge yellow" data-blk="b35">5</span><span class="ln">35</span></div>
+              <div class="lc"><p>👨<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👩<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👧<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>👦 家庭组合与 👩<span class="gm-w yellow" data-g="⌦" data-cp="1F3FB" data-nm="EMOJI MODIFIER FITZPATRICK TYPE-1-2" data-cat="yellow" data-act="keep" data-note="note.skin"></span>🏻<span class="gm-w yellow" data-g="⌦" data-cp="200D" data-nm="ZERO WIDTH JOINER" data-cat="yellow" data-act="keep" data-note="note.zwj"></span>💻 职业 emoji 正常渲染，连接符被保留。</p></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div data-chrome-right></div>
+    </div>
+    <div data-chrome-status data-words="537" data-chars="1,426" data-ghost="806"></div>
+  </div>
+
+  <section class="anno-panel">
+    <h4 data-i18n="p1.anno.t">P1 标注</h4>
+    <ol>
+      <li data-i18n-html="p1.1"><b>三色语义</b>：红 = 无语义不可见（垃圾）、蓝 = 空格类、黄 = 受保护语义。全部装饰来自 CM6 替换字形 widget，零宽字符必须替换才能显形。</li>
+      <li data-i18n-html="p1.2"><b>行内 widget</b>：紧凑档每类一个符号（红 <code>⌷</code> / 蓝 <code>␣</code> / 黄 <code>⌦</code>）；悬停任意 widget 可见详情浮层，红色虚线框为固定展示示例。</li>
+      <li data-i18n-html="p1.3"><b>行号槽徽标</b>：显示该行命中计数，按主导类别着色；点击徽标高亮其所在块（FR-13 双入口之一）。</li>
+      <li data-i18n-html="p1.4"><b>状态栏</b>：<code>Ghost: 806</code> 常驻命中总数，点击切换检查模式（试试点它）。仅桌面注册。</li>
+      <li data-i18n-html="p1.5"><b>可见垃圾</b>：base64 追踪 token 不属于策略表，检查模式不做标记，靠「清除选区」手动删除（见 P4）。</li>
+    </ol>
+  </section>
+</div>
+<script src="common.js"></script>
+</body>
+</html>
