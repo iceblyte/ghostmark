@@ -13,13 +13,16 @@ import {
 } from "./editor/inspectMode";
 import { inspectConfigFacet, type InspectConfig } from "./editor/inspectState";
 import { buildInspectConfig, obsidianLocale } from "./settings";
-import { registerStatusBar } from "./statusBar";
+import { GhostmarkSettingTab } from "./settings";
+import { GhostmarkStatusBar, registerStatusBar } from "./statusBar";
 
 export default class GhostmarkPlugin extends Plugin {
 	settings: GhostmarkSettings = DEFAULT_SETTINGS;
 
 	/** Global single-value inspect-mode state (design doc §5). */
 	inspectEnabled = false;
+
+	private statusBar: GhostmarkStatusBar | null = null;
 
 	config: InspectConfig = buildInspectConfig(
 		DEFAULT_SETTINGS,
@@ -37,7 +40,19 @@ export default class GhostmarkPlugin extends Plugin {
 			inspectCompartment.of(INSPECT_OFF_EXTENSIONS),
 		]);
 
-		registerStatusBar(this);
+		this.statusBar = registerStatusBar(this);
+
+		this.addSettingTab(
+			new GhostmarkSettingTab(this.app, this, {
+				getSettings: () => this.settings,
+				setSettings: (settings) => {
+					this.settings = settings;
+				},
+				getLocale: () => this.config.locale,
+				saveSettings: () => this.saveSettings(),
+				setStatusBarVisible: (on) => this.setStatusBarVisible(on),
+			}),
+		);
 
 		this.app.workspace.onLayoutReady(() => {
 			this.registerEvent(
@@ -47,6 +62,10 @@ export default class GhostmarkPlugin extends Plugin {
 			);
 			this.syncInspectAcrossEditors();
 		});
+	}
+
+	setStatusBarVisible(on: boolean): void {
+		this.statusBar?.setVisible(on);
 	}
 
 	async saveSettings(): Promise<void> {

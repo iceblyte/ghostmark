@@ -198,3 +198,81 @@ body.theme-light {
 	font-weight: 600;
 	color: var(--text-normal);
 }
+
+.ghostmark-status.is-hidden {
+	display: none;
+}
+
+/* ---------- 设置面板（原型 P8） ---------- */
+.gm-sub-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	color: var(--text-muted);
+	margin: 16px 0 2px;
+}
+
+.gm-setting-name {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.gm-setting-name .gm-cp {
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.gm-setting-name .gm-entry-name {
+	color: var(--text-muted);
+	font-size: 12.5px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.gm-tag {
+	font-size: 10.5px;
+	padding: 1.5px 8px;
+	border-radius: 999px;
+	border: 1px solid;
+	flex: none;
+}
+
+.gm-tag.red {
+	color: var(--gm-red-fg);
+	border-color: var(--gm-red-bd);
+	background: var(--gm-red-bg);
+}
+
+.gm-tag.blue {
+	color: var(--gm-blue-fg);
+	border-color: var(--gm-blue-bd);
+	background: var(--gm-blue-bg);
+}
+
+.gm-tag.yellow {
+	color: var(--gm-yellow-fg);
+	border-color: var(--gm-yellow-bd);
+	background: var(--gm-yellow-bg);
+}
+
+.gm-tag.lock,
+.gm-tag.picked {
+	color: var(--text-faint);
+	border-color: var(--background-modifier-border);
+}
+
+.gm-setting-name .gm-tag.picked {
+	color: var(--text-accent);
+	border-color: var(--text-accent);
+}
+
+.setting-item.gm-picked-row {
+	background: hsla(var(--interactive-accent-hsl), 0.1);
+	border-radius: 6px;
+	padding-inline: 10px;
+}

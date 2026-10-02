@@ -20,6 +20,7 @@ import type { InspectConfig } from "./editor/inspectState";
 interface StatusBarHost extends Component {
 	app: { workspace: Workspace };
 	config: InspectConfig;
+	settings: { statusBar: boolean };
 	inspectEnabled: boolean;
 	setInspectEnabled(on: boolean): void;
 	addStatusBarItem(): HTMLElement;
@@ -65,9 +66,15 @@ export class GhostmarkStatusBar {
 		this.countEl.setText(String(count));
 		this.el.toggleClass("is-off", !this.plugin.inspectEnabled);
 	}
+
+	setVisible(on: boolean): void {
+		this.el.toggleClass("is-hidden", !on);
+	}
 }
 
-export function registerStatusBar(plugin: StatusBarHost): void {
-	if (Platform.isMobile) return;
-	new GhostmarkStatusBar(plugin);
+export function registerStatusBar(plugin: StatusBarHost): GhostmarkStatusBar | null {
+	if (Platform.isMobile) return null;
+	const bar = new GhostmarkStatusBar(plugin);
+	bar.setVisible(plugin.settings.statusBar);
+	return bar;
 }
