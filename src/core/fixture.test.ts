@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { buildScanPolicy } from "./categories";
+import { clean } from "./cleaner";
+import { scan } from "./scanner";
 
 const fixturePath = fileURLToPath(
 	new URL("./fixtures/watermark-fixture.md", import.meta.url),
@@ -29,5 +32,48 @@ describe("watermark fixture integrity", () => {
 		const tokens = fixture.match(/[A-Za-z0-9+/]{43}=/g) ?? [];
 		expect(tokens).toHaveLength(48);
 		expect(new Set(tokens).size).toBe(10);
+	});
+});
+
+// Acceptance criteria §6.2–6.5 of the requirements doc, executed on the
+// committed fixture: clear-all with the default policy.
+describe("fixture acceptance: clear all with default policy", () => {
+	const policy = buildScanPolicy();
+	const hits = scan(fixture, policy);
+	const { text: cleaned, report } = clean(fixture, hits);
+
+	it("leaves zero actionable residue after clear-all (§6.2)", () => {
+		const residue = scan(cleaned, policy).filter(
+			(h) => h.action === "remove" || h.action === "toSpace",
+		);
+		expect(residue).toHaveLength(0);
+		expect(report.total).toBe(798);
+	});
+
+	it("preserves emoji ZWJ sequences byte-for-byte (§6.3)", () => {
+		const family =
+			"\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66";
+		const technologist = "\uD83D\uDC69\uD83C\uDFFB\u200D\uD83D\uDCBB";
+		expect(cleaned).toContain(family);
+		expect(cleaned).toContain(technologist);
+		// the four ZWJ and the skin modifier are still there
+		expect(countCodepoint(cleaned, 0x200d)).toBe(4);
+		expect(countCodepoint(cleaned, 0x1f3fb)).toBe(1);
+	});
+
+	it("leaves the math block untouched by default (§6.4)", () => {
+		// 105 of 108 U+2062 lived in prose and are gone; the math block's 3 stay
+		expect(countCodepoint(cleaned, 0x2062)).toBe(3);
+		expect(cleaned).toContain(
+			"\\alpha\u2062\u2062\u2062\\beta = \\gamma + \\delta",
+		);
+	});
+
+	it("converts code-block spaces to plain spaces without loss (§6.5)", () => {
+		expect(countCodepoint(cleaned, 0x2002)).toBe(0);
+		expect(countCodepoint(cleaned, 0x2009)).toBe(0);
+		expect(cleaned).toContain('label = "hello world"');
+		// 797 codepoints deleted, the single code en space converted 1:1
+		expect(cleaned.length).toBe(fixture.length - 797);
 	});
 });

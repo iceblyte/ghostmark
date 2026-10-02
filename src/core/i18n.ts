@@ -1,0 +1,326 @@
+/**
+ * en/zh string tables and the t() lookup (design doc §7.4).
+ * Locale is injected by the caller — pure and testable; en/zh key parity
+ * is enforced by unit tests. Strings mirror the UI prototype (P0–P9).
+ */
+
+export type Locale = "en" | "zh";
+export type LanguageSetting = "auto" | Locale;
+
+const ZH: Record<string, string> = {
+	"cat.red": "无语义不可见",
+	"cat.blue": "空格类",
+	"cat.yellow": "受保护语义",
+
+	"act.remove": "清除",
+	"act.tospace": "转普通空格",
+	"act.keep": "保留",
+	"act.markonly": "仅标记",
+	"act.clean": "清理",
+
+	"tip.suggest": "建议",
+	"note.mathonly": "数学块内：默认仅标记，不清除",
+	"note.codespace": "代码块内：转普通空格（防破坏缩进）",
+	"note.zwj": "ZWJ 承载 emoji 组合语义，永久保护",
+	"note.skin": "肤色修饰符，永久保护",
+	"note.run": "空格成串（≥2）→ 整串删除",
+
+	"ghost.tip": "{n} 处命中 · 点击切换检查模式",
+	"badge.tip": "本行 {n} 处命中 · 点击清除当前块",
+
+	"cmd.toggle": "Ghostmark: 切换检查模式",
+	"cmd.clearall": "Ghostmark: 清除全部标记",
+	"cmd.clearsel": "Ghostmark: 清除选区",
+	"cmd.clearblock": "Ghostmark: 清除当前块",
+	"cmd.pick": "Ghostmark: 拾取码点",
+
+	"m3.title": "清除全部标记",
+	"m3.desc": "将对当前笔记执行策略清理，确认后一次性替换，可单步撤销：",
+	"m4.title": "清除选区",
+	"m4.desc": "仅对选中文本执行策略清理，不影响其余内容：",
+	"m5.title": "清除当前块",
+	"m5.desc": "光标所在块（{block}，{lines} 行）。默认免确认，直接执行：",
+	"m6.title": "拾取码点",
+	"m6.desc": "该字符不在默认策略表中，已按类别给出建议动作，可修改后加入：",
+
+	"r.red": "无语义不可见字符",
+	"r.blue": "空格类字符",
+	"r.yellow": "受保护语义字符",
+	"r.math": "数学块内（仅标记）",
+	"pill.remove": "清除",
+	"pill.tospace": "转空格",
+	"pill.keep": "保留",
+	"pill.markonly": "仅标记",
+	"m3.math": "数学块内 {n} 处仅标记（默认不动），已从清除计数中扣除。",
+	"m4.warn":
+		"选区内的 base64 追踪 token 是可见垃圾，不属于策略表字符——请手动选中后删除（FR-8 设计意图）。",
+
+	"m6.ctx": "光标处字符",
+	"m6.cp": "码点",
+	"m6.name": "Unicode 名称",
+	"m6.cat": "类别",
+	"m6.act": "建议动作",
+	"btn.cancel": "取消",
+	"btn.clear": "清除 {n}",
+	"btn.pick": "加入策略表",
+
+	"n3.ok": "已清除 {n} 处标记（红 {r} · 蓝 {b}）",
+	"n3.undo": "单步撤销，原文可完整恢复",
+	"n4.ok": "已清除选区 {n} 处标记（红 {r} · 蓝 {b}）",
+	"n5.ok": "已清除当前块 {n} 处（红 {r} · 蓝 {b}）· 块外零改动",
+	"n5.zero": "该块无命中（或全部为保留/仅标记），未做修改",
+	"n6.ok": "已将 {cp}（动作：{act}）加入策略表",
+	"n6.more": "可在设置 → 字符策略表中修改动作",
+	"n.zero.all": "当前笔记无可清除标记",
+	"n.zero.sel": "选区内无可清除标记",
+
+	"block.paragraph": "段落",
+	"block.listItem": "列表项",
+	"block.quoteRun": "引用块",
+	"block.tableRow": "表格行",
+	"block.fencedCode": "围栏代码块",
+	"block.mathBlock": "数学块",
+	"block.frontmatter": "frontmatter",
+
+	"s.g1": "字符策略表",
+	"s.d1": "策略即数据：每个码点的动作可改为 清除 / 转空格 / 保留；变更即时生效并随设置持久化。",
+	"s.red": "红 · 无语义不可见（默认清除，含代码块）",
+	"s.blue": "蓝 · 空格类（正文成串删除、孤立转空格）",
+	"s.yellow": "黄 · 受保护语义（仅标记）",
+	"s.lock": "写死保护",
+	"s.feff": "U+FEFF 仅处理非文件头位置；文件头 BOM 永不处理。",
+	"s.custom": "拾取追加区（customPolicies）",
+	"s.reset": "重置为默认表",
+	"s.picked": "拾取添加",
+	"s.g2": "上下文规则",
+	"s.math": "数学块处理",
+	"s.math.d": "默认仅标记；MathML 转写来源的 U+2062 可能承载真实乘法语义。",
+	"s.zwnj": "ZWNJ",
+	"s.zwnj.d": "波斯语等语言承载构词语义，误删会毁掉复合词（#625 教训）。",
+	"s.codespace": "代码块内空格类转普通空格",
+	"s.codespace.d": "直接删除会破坏 Python 缩进与语法。",
+	"s.g3": "界面",
+	"s.remember": "记住检查模式状态",
+	"s.remember.d": "重启后保持上次开关（默认关闭）。",
+	"s.density": "标记密度",
+	"s.density.d": "紧凑 = 每类一个符号；详细 = 显示码点缩写。",
+	"s.confirmall": "全部 / 选区清除前确认",
+	"s.confirmall.d": "每次弹窗复核分类计数（默认开）。",
+	"s.confirmblk": "块清除前确认",
+	"s.confirmblk.d": "默认关——免确认以检查模式可见性为闸门（互补规则）。",
+	"s.statusbar": "状态栏显示命中数",
+	"s.statusbar.d": "仅桌面；移动端以命令面板为入口。",
+	"s.g4": "语言",
+	"s.lang": "界面语言",
+	"s.lang.d": "默认跟随 Obsidian 界面语言；覆盖全部 UI 文案（hover / Modal / 设置 / Notice）。",
+
+	"opt.remove": "清除",
+	"opt.tospace": "转空格",
+	"opt.keep": "保留",
+	"opt.markonly": "仅标记",
+	"opt.clean": "清理",
+	"opt.auto": "自动",
+	"opt.compact": "紧凑",
+	"opt.detailed": "详细",
+
+	"cp.U+200B": "零宽空格",
+	"cp.U+2060": "词连接符",
+	"cp.U+2061": "函数应用",
+	"cp.U+2062": "不可见乘号",
+	"cp.U+2063": "不可见分隔符",
+	"cp.U+2064": "不可见加号",
+	"cp.U+061C": "阿拉伯字母标记",
+	"cp.U+180E": "蒙古文元音分隔符",
+	"cp.U+200E": "从左至右标记",
+	"cp.U+200F": "从右至左标记",
+	"cp.U+FFFE": "非字符",
+	"cp.U+FFFF": "非字符",
+	"cp.U+FEFF": "零宽不换行空格",
+	"cp.U+2002": "EN 空格",
+	"cp.U+2009": "细空格",
+	"cp.U+2007": "数字空格",
+	"cp.U+202F": "窄不换行空格",
+	"cp.U+00A0": "不换行空格",
+	"cp.U+200D": "零宽连接符",
+	"cp.U+200C": "零宽非连接符",
+	"cp.U+FE00-FE0F": "变体选择符",
+	"cp.U+1F3FB": "肤色修饰符",
+	"cp.U+1F3FC": "肤色修饰符",
+	"cp.U+1F3FD": "肤色修饰符",
+	"cp.U+1F3FE": "肤色修饰符",
+	"cp.U+1F3FF": "肤色修饰符",
+};
+
+const EN: Record<string, string> = {
+	"cat.red": "Invisible · no semantics",
+	"cat.blue": "Space-like",
+	"cat.yellow": "Protected · semantic",
+
+	"act.remove": "Remove",
+	"act.tospace": "Convert to space",
+	"act.keep": "Keep",
+	"act.markonly": "Mark only",
+	"act.clean": "Clean",
+
+	"tip.suggest": "Suggested",
+	"note.mathonly": "In math block: mark only by default",
+	"note.codespace": "In code block: convert to space (protects indentation)",
+	"note.zwj": "ZWJ carries emoji semantics — permanently protected",
+	"note.skin": "Skin-tone modifier — permanently protected",
+	"note.run": "Space run (≥2) → whole run removed",
+
+	"ghost.tip": "{n} hits · Click to toggle inspect mode",
+	"badge.tip": "{n} hits in this line · Click to clear current block",
+
+	"cmd.toggle": "Ghostmark: Toggle inspect mode",
+	"cmd.clearall": "Ghostmark: Clear all marks",
+	"cmd.clearsel": "Ghostmark: Clear selection",
+	"cmd.clearblock": "Ghostmark: Clear current block",
+	"cmd.pick": "Ghostmark: Pick codepoint",
+
+	"m3.title": "Clear all marks",
+	"m3.desc": "Policy-based clean of the whole note. One-shot replace after confirm, single-step undo:",
+	"m4.title": "Clear selection",
+	"m4.desc": "Policy-based clean of the selected text only:",
+	"m5.title": "Clear current block",
+	"m5.desc": "Block at cursor ({block}, {lines} lines). No confirm by default:",
+	"m6.title": "Pick codepoint",
+	"m6.desc": "This character is not in the default policy table. A category-based action is suggested — adjust and add:",
+
+	"r.red": "Invisible characters (no semantics)",
+	"r.blue": "Space-like characters",
+	"r.yellow": "Protected semantic characters",
+	"r.math": "In math block (mark-only)",
+	"pill.remove": "Remove",
+	"pill.tospace": "→ Space",
+	"pill.keep": "Keep",
+	"pill.markonly": "Mark only",
+	"m3.math": "{n} mark-only hits inside the math block (untouched by default) are excluded from the count.",
+	"m4.warn":
+		"The base64 tracking token inside the selection is visible garbage, not a policy character — select and delete it manually.",
+
+	"m6.ctx": "Character at cursor",
+	"m6.cp": "Codepoint",
+	"m6.name": "Unicode name",
+	"m6.cat": "Category",
+	"m6.act": "Suggested action",
+	"btn.cancel": "Cancel",
+	"btn.clear": "Clear {n}",
+	"btn.pick": "Add to policy table",
+
+	"n3.ok": "Cleared {n} marks (red {r} · blue {b})",
+	"n3.undo": "Single-step undo — the original text is fully recoverable",
+	"n4.ok": "Cleared {n} marks in selection (red {r} · blue {b})",
+	"n5.ok": "Cleared {n} marks in current block (red {r} · blue {b}) · zero change outside",
+	"n5.zero": "No eligible hits in this block (all keep / mark-only) — text unchanged",
+	"n6.ok": "{cp} (action: {act}) added to the policy table",
+	"n6.more": "Change it anytime in Settings → Character policy table",
+	"n.zero.all": "Nothing to clean in this note",
+	"n.zero.sel": "Nothing to clean in the selection",
+
+	"block.paragraph": "paragraph",
+	"block.listItem": "list item",
+	"block.quoteRun": "quote run",
+	"block.tableRow": "table row",
+	"block.fencedCode": "code block",
+	"block.mathBlock": "math block",
+	"block.frontmatter": "frontmatter",
+
+	"s.g1": "Character policy table",
+	"s.d1": "Policy is data: every codepoint's action can be set to remove / to-space / keep; changes apply instantly and persist.",
+	"s.red": "Red · invisible, no semantics (removed by default, incl. code blocks)",
+	"s.blue": "Blue · space-like (runs removed, isolated → space)",
+	"s.yellow": "Yellow · protected semantics (mark only)",
+	"s.lock": "Locked",
+	"s.feff": "U+FEFF is handled only outside the file head; a leading BOM is never touched.",
+	"s.custom": "Picked additions (customPolicies)",
+	"s.reset": "Reset to defaults",
+	"s.picked": "picked",
+	"s.g2": "Context rules",
+	"s.math": "Math block handling",
+	"s.math.d": "Mark only by default; U+2062 from MathML transcodes may carry real multiplication semantics.",
+	"s.zwnj": "ZWNJ",
+	"s.zwnj.d": "ZWNJ carries word-formation semantics in e.g. Persian; deleting it breaks compound words (#625).",
+	"s.codespace": "Convert space-like chars to plain spaces in code blocks",
+	"s.codespace.d": "Deleting them outright would break Python indentation and syntax.",
+	"s.g3": "Interface",
+	"s.remember": "Remember inspect mode state",
+	"s.remember.d": "Keep the last on/off state across restarts (off by default).",
+	"s.density": "Mark density",
+	"s.density.d": "Compact = one glyph per category; detailed = codepoint abbreviation.",
+	"s.confirmall": "Confirm before clear-all / clear-selection",
+	"s.confirmall.d": "Review category counts every time (on by default).",
+	"s.confirmblk": "Confirm before block clear",
+	"s.confirmblk.d": "Off by default — confirm-free clearing is gated by inspect-mode visibility.",
+	"s.statusbar": "Show hit count in status bar",
+	"s.statusbar.d": "Desktop only; mobile uses the command palette.",
+	"s.g4": "Language",
+	"s.lang": "Interface language",
+	"s.lang.d": "Follow the Obsidian UI language by default; covers all UI strings (hover / modal / settings / notice).",
+
+	"opt.remove": "Remove",
+	"opt.tospace": "To space",
+	"opt.keep": "Keep",
+	"opt.markonly": "Mark only",
+	"opt.clean": "Clean",
+	"opt.auto": "Auto",
+	"opt.compact": "Compact",
+	"opt.detailed": "Detailed",
+
+	"cp.U+200B": "ZERO WIDTH SPACE",
+	"cp.U+2060": "WORD JOINER",
+	"cp.U+2061": "FUNCTION APPLICATION",
+	"cp.U+2062": "INVISIBLE TIMES",
+	"cp.U+2063": "INVISIBLE SEPARATOR",
+	"cp.U+2064": "INVISIBLE PLUS",
+	"cp.U+061C": "ARABIC LETTER MARK",
+	"cp.U+180E": "MONGOLIAN VOWEL SEPARATOR",
+	"cp.U+200E": "LEFT-TO-RIGHT MARK",
+	"cp.U+200F": "RIGHT-TO-LEFT MARK",
+	"cp.U+FFFE": "NOT A CHARACTER",
+	"cp.U+FFFF": "NOT A CHARACTER",
+	"cp.U+FEFF": "ZERO WIDTH NO-BREAK SPACE",
+	"cp.U+2002": "EN SPACE",
+	"cp.U+2009": "THIN SPACE",
+	"cp.U+2007": "FIGURE SPACE",
+	"cp.U+202F": "NARROW NO-BREAK SPACE",
+	"cp.U+00A0": "NO-BREAK SPACE",
+	"cp.U+200D": "ZERO WIDTH JOINER",
+	"cp.U+200C": "ZERO WIDTH NON-JOINER",
+	"cp.U+FE00-FE0F": "VARIATION SELECTORS",
+	"cp.U+1F3FB": "EMOJI MODIFIER FITZPATRICK TYPE-1-2",
+	"cp.U+1F3FC": "EMOJI MODIFIER FITZPATRICK TYPE-3",
+	"cp.U+1F3FD": "EMOJI MODIFIER FITZPATRICK TYPE-4",
+	"cp.U+1F3FE": "EMOJI MODIFIER FITZPATRICK TYPE-5",
+	"cp.U+1F3FF": "EMOJI MODIFIER FITZPATRICK TYPE-6",
+};
+
+const STRINGS: Record<Locale, Record<string, string>> = { zh: ZH, en: EN };
+
+/** Exposed for the key-parity unit test. */
+export function stringKeys(locale: Locale): string[] {
+	return Object.keys(STRINGS[locale]);
+}
+
+/** Resolve the language setting against the Obsidian UI locale. */
+export function resolveLocale(
+	setting: LanguageSetting,
+	obsidianLocale: Locale,
+): Locale {
+	return setting === "auto" ? obsidianLocale : setting;
+}
+
+/** Look up a string with {var} interpolation; unknown keys return the key. */
+export function t(
+	locale: Locale,
+	key: string,
+	vars?: Record<string, string | number>,
+): string {
+	let s = STRINGS[locale][key] ?? STRINGS.zh[key] ?? key;
+	if (vars) {
+		for (const [k, v] of Object.entries(vars)) {
+			s = s.replaceAll(`{${k}}`, String(v));
+		}
+	}
+	return s;
+}
