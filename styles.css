@@ -73,6 +73,44 @@ body.theme-light {
 	white-space: nowrap;
 }
 
+/* ---------- 行号槽徽标（原型 .badge） ---------- */
+.ghostmark-gutter {
+	width: 34px;
+}
+
+.gm-badge {
+	min-width: 17px;
+	height: 15px;
+	padding: 0 4px;
+	border-radius: 8px;
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+
+.gm-badge.red {
+	background: var(--gm-red-bg);
+	color: var(--gm-red-fg);
+	border-color: var(--gm-red-bd);
+}
+
+.gm-badge.blue {
+	background: var(--gm-blue-bg);
+	color: var(--gm-blue-fg);
+	border-color: var(--gm-blue-bd);
+}
+
+.gm-badge.yellow {
+	background: var(--gm-yellow-bg);
+	color: var(--gm-yellow-fg);
+	border-color: var(--gm-yellow-bd);
+}
+
 /* ---------- hover 详情浮层（原型 .gm-w .tip 结构） ---------- */
 .gm-hover {
 	font-family: var(--font-ui);
@@ -129,4 +167,34 @@ body.theme-light {
 
 .gm-dot.yellow {
 	background: var(--gm-yellow-fg);
+}
+
+/* ---------- 状态栏项（原型 .status-ghost） ---------- */
+.ghostmark-status {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	color: var(--text-muted);
+}
+
+.ghostmark-status:hover {
+	color: var(--text-normal);
+}
+
+.ghostmark-status.is-off {
+	opacity: 0.55;
+}
+
+.ghostmark-status .ghost-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.ghostmark-status b {
+	font-family: var(--font-mono);
+	font-weight: 600;
+	color: var(--text-normal);
 }

@@ -6,9 +6,12 @@
 
 import { hoverTooltip } from "@codemirror/view";
 import { isSkinModifier, parseCodepointId, type Hit } from "../core/categories";
-import { scan } from "../core/scanner";
 import { t } from "../core/i18n";
-import { inspectConfigFacet, type InspectConfig } from "./inspectMode";
+import {
+	inspectConfigFacet,
+	inspectHitsField,
+	type InspectConfig,
+} from "./inspectState";
 import { colorClass } from "./widgets";
 
 function hitAt(hits: Hit[], pos: number): Hit | null {
@@ -68,12 +71,7 @@ export function buildHoverDom(hit: Hit, config: InspectConfig): HTMLElement {
 export const hoverExtension = hoverTooltip((view, pos) => {
 	const config = view.state.facet(inspectConfigFacet);
 	if (!config) return null;
-	const text = view.state.doc.toString();
-	const hits = scan(text, config.policy, {
-		mathMode: config.mathMode,
-		codeToSpace: config.codeToSpace,
-	});
-	const hit = hitAt(hits, pos);
+	const hit = hitAt(view.state.field(inspectHitsField, false) ?? [], pos);
 	if (!hit) return null;
 	return {
 		pos: hit.index,

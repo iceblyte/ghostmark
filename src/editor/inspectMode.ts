@@ -1,11 +1,11 @@
 /**
- * Inspect-mode CM6 assembly (design doc §5): a ViewPlugin that scans the
- * document and renders replace-glyph decorations, toggled per editor via a
- * shared Compartment. Global on/off state lives in the plugin shell, which
- * keeps every markdown editor in sync (layout-change).
+ * Inspect-mode CM6 assembly (design doc §5): a ViewPlugin that renders
+ * replace-glyph decorations from the shared scan field, toggled per editor
+ * via a shared Compartment. Global on/off state lives in the plugin shell,
+ * which keeps every markdown editor in sync (layout-change).
  */
 
-import { Compartment, Facet, type Extension } from "@codemirror/state";
+import { Compartment, type Extension } from "@codemirror/state";
 import {
 	Decoration,
 	type DecorationSet,
@@ -13,29 +13,14 @@ import {
 	ViewPlugin,
 	type ViewUpdate,
 } from "@codemirror/view";
-import type { Hit, ScanPolicy } from "../core/categories";
-import type { Locale } from "../core/i18n";
-import { scan } from "../core/scanner";
+import type { Hit } from "../core/categories";
 import { hoverExtension } from "./hover";
-import { GhostWidget, type Density } from "./widgets";
-
-export interface InspectConfig {
-	policy: ScanPolicy;
-	density: Density;
-	locale: Locale;
-	mathMode: "markOnly" | "clean";
-	codeToSpace: boolean;
-	/** Display name for a policy entry id (i18n table or a picked name). */
-	nameFor: (entryId: string) => string;
-}
-
-/** Current policy/density/locale bundle, reconfigurable at runtime. */
-export const inspectConfigFacet = Facet.define<
-	InspectConfig,
-	InspectConfig | null
->({
-	combine: (values) => values.at(-1) ?? null,
-});
+import {
+	inspectConfigFacet,
+	inspectHitsField,
+} from "./inspectState";
+import { gutterExtension } from "./gutter";
+import { GhostWidget } from "./widgets";
 
 function hitsInRange(hits: Hit[], from: number, to: number): Hit[] {
 	let lo = 0;
@@ -63,11 +48,7 @@ function hitsInRange(hits: Hit[], from: number, to: number): Hit[] {
 export function buildDecorations(view: EditorView): DecorationSet {
 	const config = view.state.facet(inspectConfigFacet);
 	if (!config) return Decoration.none;
-	const text = view.state.doc.toString();
-	const hits = scan(text, config.policy, {
-		mathMode: config.mathMode,
-		codeToSpace: config.codeToSpace,
-	});
+	const hits = view.state.field(inspectHitsField, false) ?? [];
 	if (hits.length === 0) return Decoration.none;
 
 	const ranges: Array<{ from: number; to: number; deco: Decoration }> = [];
@@ -124,8 +105,13 @@ const decorationsPlugin = ViewPlugin.fromClass(
 	},
 );
 
-/** Extension set applied while inspect mode is on (gutter joins in C10). */
-export const INSPECT_ON_EXTENSIONS: Extension[] = [decorationsPlugin, hoverExtension];
+/** Extension set applied while inspect mode is on. */
+export const INSPECT_ON_EXTENSIONS: Extension[] = [
+	inspectHitsField,
+	decorationsPlugin,
+	hoverExtension,
+	gutterExtension,
+];
 export const INSPECT_OFF_EXTENSIONS: Extension[] = [];
 
 /** Shared compartment so the shell can toggle every editor at once. */

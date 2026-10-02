@@ -7,9 +7,12 @@ import {
 	INSPECT_OFF_EXTENSIONS,
 	inspectCompartment,
 	inspectConfigCompartment,
+} from "./editor/inspectMode";
+import {
 	inspectConfigFacet,
 	type InspectConfig,
-} from "./editor/inspectMode";
+} from "./editor/inspectState";
+import { registerStatusBar } from "./statusBar";
 
 export default class GhostmarkPlugin extends Plugin {
 	/** Global single-value inspect-mode state (design doc §5). */
@@ -32,6 +35,8 @@ export default class GhostmarkPlugin extends Plugin {
 			inspectConfigCompartment.of(inspectConfigFacet.of(this.config)),
 			inspectCompartment.of(INSPECT_OFF_EXTENSIONS),
 		]);
+
+		registerStatusBar(this);
 
 		this.app.workspace.onLayoutReady(() => {
 			this.registerEvent(
