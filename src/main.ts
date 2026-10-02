@@ -1,7 +1,54 @@
-import { Plugin } from "obsidian";
+import { EditorView } from "@codemirror/view";
+import { MarkdownView, Plugin } from "obsidian";
+import { buildScanPolicy } from "./core/categories";
+import {
+	configureInspect,
+	INSPECT_OFF_EXTENSIONS,
+	inspectCompartment,
+	inspectConfigCompartment,
+	inspectConfigFacet,
+	type InspectConfig,
+} from "./editor/inspectMode";
 
 export default class GhostmarkPlugin extends Plugin {
-	async onload() {}
+	/** Global single-value inspect-mode state (design doc §5). */
+	inspectEnabled = false;
 
-	onunload() {}
+	config: InspectConfig = {
+		policy: buildScanPolicy(),
+		density: "compact",
+		locale: "en",
+		mathMode: "markOnly",
+		codeToSpace: true,
+	};
+
+	async onload() {
+		this.registerEditorExtension([
+			inspectConfigCompartment.of(inspectConfigFacet.of(this.config)),
+			inspectCompartment.of(INSPECT_OFF_EXTENSIONS),
+		]);
+
+		this.app.workspace.onLayoutReady(() => {
+			this.registerEvent(
+				this.app.workspace.on("layout-change", () => {
+					this.syncInspectAcrossEditors();
+				}),
+			);
+			this.syncInspectAcrossEditors();
+		});
+	}
+
+	setInspectEnabled(on: boolean): void {
+		this.inspectEnabled = on;
+		this.syncInspectAcrossEditors();
+	}
+
+	private syncInspectAcrossEditors(): void {
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			const view = leaf.view;
+			if (!(view instanceof MarkdownView)) return;
+			const cmView = EditorView.findFromDOM(view.containerEl);
+			if (cmView) configureInspect(cmView, this.inspectEnabled);
+		});
+	}
 }

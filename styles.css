@@ -1,1 +1,74 @@
-/* Ghostmark — styles are added in the inspect-mode milestone. */
+/* ============================================================
+   Ghostmark — three-color widget palette from UI prototype P0
+   (dark values on body.theme-dark, light overrides on theme-light)
+   ============================================================ */
+
+body.theme-dark {
+	--gm-red-fg: #ff8a93;
+	--gm-red-bg: rgba(255, 94, 109, 0.15);
+	--gm-red-bd: rgba(255, 94, 109, 0.38);
+	--gm-blue-fg: #7cb8ff;
+	--gm-blue-bg: rgba(76, 146, 236, 0.16);
+	--gm-blue-bd: rgba(76, 146, 236, 0.4);
+	--gm-yellow-fg: #e9c46a;
+	--gm-yellow-bg: rgba(233, 196, 106, 0.13);
+	--gm-yellow-bd: rgba(233, 196, 106, 0.34);
+}
+
+body.theme-light {
+	--gm-red-fg: #b3261e;
+	--gm-red-bg: #fcebed;
+	--gm-red-bd: #f2b8bd;
+	--gm-blue-fg: #1f6fd6;
+	--gm-blue-bg: #e9f2fc;
+	--gm-blue-bd: #b9d7f5;
+	--gm-yellow-fg: #8a6a00;
+	--gm-yellow-bg: #fbf3d9;
+	--gm-yellow-bd: #ead59a;
+}
+
+/* ---------- 行内三色 widget（检查模式核心，原型 .gm-w） ---------- */
+.gm-w {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-mono);
+	font-size: 0.78em;
+	line-height: 1;
+	height: 1.35em;
+	padding: 0 4px;
+	margin: 0 1px;
+	border-radius: 4px;
+	border: 1px solid;
+	position: relative;
+	cursor: default;
+	vertical-align: baseline;
+	transform: translateY(-1px);
+	user-select: none;
+}
+
+.gm-w.red {
+	background: var(--gm-red-bg);
+	color: var(--gm-red-fg);
+	border-color: var(--gm-red-bd);
+}
+
+.gm-w.blue {
+	background: var(--gm-blue-bg);
+	color: var(--gm-blue-fg);
+	border-color: var(--gm-blue-bd);
+}
+
+.gm-w.yellow {
+	background: var(--gm-yellow-bg);
+	color: var(--gm-yellow-fg);
+	border-color: var(--gm-yellow-bd);
+}
+
+.gm-w.markonly {
+	border-style: dashed;
+}
+
+.gm-w .gt {
+	white-space: nowrap;
+}
