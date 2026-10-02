@@ -94,10 +94,12 @@ describe("blockRangeAt six shapes", () => {
 		expect(blockRangeAt(fixture, 0)).toEqual({
 			startLine: 0,
 			endLine: fmClose,
+			shape: "frontmatter",
 		});
 		expect(blockRangeAt(fixture, 2)).toEqual({
 			startLine: 0,
 			endLine: fmClose,
+			shape: "frontmatter",
 		});
 	});
 
@@ -109,6 +111,7 @@ describe("blockRangeAt six shapes", () => {
 		expect(blockRangeAt(fixture, open + 2)).toEqual({
 			startLine: open,
 			endLine: close,
+			shape: "fencedCode",
 		});
 	});
 
@@ -118,34 +121,84 @@ describe("blockRangeAt six shapes", () => {
 		expect(blockRangeAt(fixture, open + 1)).toEqual({
 			startLine: open,
 			endLine: close,
+			shape: "mathBlock",
 		});
 	});
 
 	it("resolves the whole quote run of consecutive > lines", () => {
 		const text = "> q1\n> q2\n> q3\n\npara\n";
-		expect(blockRangeAt(text, 1)).toEqual({ startLine: 0, endLine: 2 });
-		expect(blockRangeAt(text, 4)).toEqual({ startLine: 4, endLine: 4 });
+		expect(blockRangeAt(text, 1)).toEqual({
+			startLine: 0,
+			endLine: 2,
+			shape: "quoteRun",
+		});
+		expect(blockRangeAt(text, 4)).toEqual({
+			startLine: 4,
+			endLine: 4,
+			shape: "paragraph",
+		});
 	});
 
 	it("resolves each list item as its own block", () => {
 		const text = "1. item one\n2. item two\n\n- bullet\n";
-		expect(blockRangeAt(text, 0)).toEqual({ startLine: 0, endLine: 0 });
-		expect(blockRangeAt(text, 1)).toEqual({ startLine: 1, endLine: 1 });
-		expect(blockRangeAt(text, 3)).toEqual({ startLine: 3, endLine: 3 });
+		expect(blockRangeAt(text, 0)).toEqual({
+			startLine: 0,
+			endLine: 0,
+			shape: "listItem",
+		});
+		expect(blockRangeAt(text, 1)).toEqual({
+			startLine: 1,
+			endLine: 1,
+			shape: "listItem",
+		});
+		expect(blockRangeAt(text, 3)).toEqual({
+			startLine: 3,
+			endLine: 3,
+			shape: "listItem",
+		});
 	});
 
 	it("resolves each table row as its own block", () => {
 		const text = "| a | b |\n| --- | --- |\n| 1 | 2 |\n";
-		expect(blockRangeAt(text, 0)).toEqual({ startLine: 0, endLine: 0 });
-		expect(blockRangeAt(text, 1)).toEqual({ startLine: 1, endLine: 1 });
-		expect(blockRangeAt(text, 2)).toEqual({ startLine: 2, endLine: 2 });
+		expect(blockRangeAt(text, 0)).toEqual({
+			startLine: 0,
+			endLine: 0,
+			shape: "tableRow",
+		});
+		expect(blockRangeAt(text, 1)).toEqual({
+			startLine: 1,
+			endLine: 1,
+			shape: "tableRow",
+		});
+		expect(blockRangeAt(text, 2)).toEqual({
+			startLine: 2,
+			endLine: 2,
+			shape: "tableRow",
+		});
 	});
 
 	it("expands paragraphs across non-blank plain lines only", () => {
 		const text = "p1\np2\n\np3\n```python\nx\n```\np4\n- item\n> quote\n";
-		expect(blockRangeAt(text, 0)).toEqual({ startLine: 0, endLine: 1 });
-		expect(blockRangeAt(text, 3)).toEqual({ startLine: 3, endLine: 3 });
-		expect(blockRangeAt(text, 7)).toEqual({ startLine: 7, endLine: 7 });
+		expect(blockRangeAt(text, 0)).toEqual({
+			startLine: 0,
+			endLine: 1,
+			shape: "paragraph",
+		});
+		expect(blockRangeAt(text, 3)).toEqual({
+			startLine: 3,
+			endLine: 3,
+			shape: "paragraph",
+		});
+		expect(blockRangeAt(text, 7)).toEqual({
+			startLine: 7,
+			endLine: 7,
+			shape: "paragraph",
+		});
+	});
+
+	it("reports the paragraph shape for plain prose", () => {
+		const text = "one\ntwo\n";
+		expect(blockRangeAt(text, 1)?.shape).toBe("paragraph");
 	});
 
 	it("returns null for blank lines and out-of-range lines", () => {

@@ -31,9 +31,20 @@ export interface BlockMap {
 	lineCount: number;
 }
 
+/** The six FR-13 block shapes. */
+export type BlockShape =
+	| "paragraph"
+	| "listItem"
+	| "quoteRun"
+	| "tableRow"
+	| "fencedCode"
+	| "mathBlock"
+	| "frontmatter";
+
 export interface BlockLineRange {
 	startLine: number;
 	endLine: number;
+	shape: BlockShape;
 }
 
 const FENCE_OPEN_RE = /^[ \t]{0,3}(`{3,}|~{3,})/;
@@ -258,6 +269,21 @@ export function lineText(text: string, map: BlockMap, line: number): string {
 	return s;
 }
 
+/**
+ * Code-unit offsets of a block's content: the start of its first line up
+ * to the end of its last line (excluding the trailing newline), ready for
+ * slice-scan-clean and an editor transaction.
+ */
+export function blockRangeToTextRange(
+	text: string,
+	range: BlockLineRange,
+): { start: number; end: number } {
+	const map = parseBlocks(text);
+	const start = map.lineStarts[range.startLine] ?? 0;
+	const end = map.lineEnds[range.endLine] ?? text.length;
+	return { start, end };
+}
+
 function inRegion(map: BlockMap, line: number): boolean {
 	return map.regions.some(
 		(r) => line >= r.startLine && line <= r.endLine,
@@ -278,14 +304,23 @@ export function blockRangeAt(
 
 	for (const region of map.regions) {
 		if (lineIndex >= region.startLine && lineIndex <= region.endLine) {
-			return { startLine: region.startLine, endLine: region.endLine };
+			return {
+				startLine: region.startLine,
+				endLine: region.endLine,
+				shape:
+					region.type === "math"
+						? "mathBlock"
+						: region.type,
+			};
 		}
 	}
 
 	const line = lineText(text, map, lineIndex);
 	if (line.trim() === "") return null;
 
-	if (LIST_RE.test(line)) return { startLine: lineIndex, endLine: lineIndex };
+	if (LIST_RE.test(line)) {
+		return { startLine: lineIndex, endLine: lineIndex, shape: "listItem" };
+	}
 
 	if (QUOTE_RE.test(line)) {
 		let start = lineIndex;
@@ -297,10 +332,12 @@ export function blockRangeAt(
 		) {
 			end++;
 		}
-		return { startLine: start, endLine: end };
+		return { startLine: start, endLine: end, shape: "quoteRun" };
 	}
 
-	if (TABLE_RE.test(line)) return { startLine: lineIndex, endLine: lineIndex };
+	if (TABLE_RE.test(line)) {
+		return { startLine: lineIndex, endLine: lineIndex, shape: "tableRow" };
+	}
 
 	const isPlainProse = (idx: number): boolean => {
 		const l = lineText(text, map, idx);
@@ -313,5 +350,5 @@ export function blockRangeAt(
 	let end = lineIndex;
 	while (start > 0 && isPlainProse(start - 1)) start--;
 	while (end + 1 < map.lineCount && isPlainProse(end + 1)) end++;
-	return { startLine: start, endLine: end };
+	return { startLine: start, endLine: end, shape: "paragraph" };
 }

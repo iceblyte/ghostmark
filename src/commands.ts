@@ -17,6 +17,7 @@ import {
 	Notice,
 } from "obsidian";
 import type { Category, Hit } from "./core/categories";
+import { blockRangeAt, blockRangeToTextRange } from "./core/blocks";
 import { clean, summarizeHits, type HitSummary } from "./core/cleaner";
 import type { GhostmarkSettings } from "./core/policy";
 import { t, type Locale } from "./core/i18n";
@@ -202,6 +203,83 @@ function undoNotice(main: string, locale: Locale): void {
 	);
 }
 
+function editorOffset(editor: Editor, offset: number): EditorPosition {
+	return editor.offsetToPos(offset);
+}
+
+/**
+ * Clear the block containing the cursor (or an explicit line, for the
+ * gutter badge entry). Default confirm-free — gated by inspect-mode
+ * visibility per the design doc §6 complementary rule.
+ */
+export function clearCurrentBlock(
+	host: CommandsHost,
+	editor: Editor,
+	lineIndex?: number,
+): void {
+	const localeNow = host.config.locale;
+	const text = editor.getValue();
+	const cursorLine = lineIndex ?? editor.getCursor("from").line;
+	const range = blockRangeAt(text, cursorLine);
+	if (!range) {
+		new Notice(t(localeNow, "n5.zero"));
+		return;
+	}
+
+	const { start: startOffset, end: endOffset } = blockRangeToTextRange(
+		text,
+		range,
+	);
+
+	const slice = text.slice(startOffset, endOffset);
+	const hits = scan(slice, host.config.policy, {
+		mathMode: host.config.mathMode,
+		codeToSpace: host.config.codeToSpace,
+	});
+	const summary = summarizeHits(slice, hits);
+	if (summary.actionable === 0) {
+		new Notice(t(localeNow, "n5.zero"));
+		return;
+	}
+
+	const run = (): void => {
+		const { text: cleaned, report } = clean(slice, hits);
+		editor.transaction({
+			changes: [
+				{
+					from: editorOffset(editor, startOffset),
+					to: editorOffset(editor, endOffset),
+					text: cleaned,
+				},
+			],
+		});
+		undoNotice(
+			t(localeNow, "n5.ok", {
+				n: report.total,
+				r: report.byCategory.invisible,
+				b: report.byCategory.spaceLike,
+			}),
+			localeNow,
+		);
+	};
+
+	if (!host.settings.confirmBeforeBlock) {
+		run();
+		return;
+	}
+	new ConfirmClearModal(host.app, {
+		locale: localeNow,
+		title: t(localeNow, "m5.title"),
+		desc: t(localeNow, "m5.desc", {
+			block: t(localeNow, `block.${range.shape}`),
+			lines: range.endLine - range.startLine + 1,
+		}),
+		summary,
+		confirmLabel: t(localeNow, "btn.clear", { n: summary.actionable }),
+		onConfirm: run,
+	}).open();
+}
+
 export function registerCommands(host: CommandsHost): void {
 	host.addCommand({
 		id: "toggle-inspect",
@@ -259,6 +337,22 @@ export function registerCommands(host: CommandsHost): void {
 			if (editor.getSelection().length === 0) return false;
 			if (!checking) {
 				runClearSelection(host, editor);
+			}
+			return true;
+		},
+	});
+
+	host.addCommand({
+		id: "clear-block",
+		name: t(host.config.locale, "cmd.clearblock"),
+		// Confirm-free clearing requires visibility (design doc §6):
+		// the command is grayed out while inspect mode is off.
+		checkCallback: (checking) => {
+			const editor = activeEditor(host);
+			if (!editor) return false;
+			if (!host.inspectEnabled) return false;
+			if (!checking) {
+				clearCurrentBlock(host, editor);
 			}
 			return true;
 		},

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { blockRangeAt, blockRangeToTextRange } from "./blocks";
 import { buildScanPolicy } from "./categories";
 import { clean } from "./cleaner";
 import { scan } from "./scanner";
@@ -75,5 +76,40 @@ describe("fixture acceptance: clear all with default policy", () => {
 		expect(cleaned).toContain('label = "hello world"');
 		// 797 codepoints deleted, the single code en space converted 1:1
 		expect(cleaned.length).toBe(fixture.length - 797);
+	});
+});
+
+// Acceptance criterion §8 of the requirements doc: clear-current-block
+// must touch only the block at the target line.
+describe("fixture acceptance: clear current block (FR-13)", () => {
+	const policy = buildScanPolicy();
+
+	it("cleans a list item block and leaves the rest untouched", () => {
+		const lines = fixture.split("\n");
+		const line = lines.findIndex((l) => l.includes("\u061c"));
+		const range = blockRangeAt(fixture, line);
+		if (!range) throw new Error("no block at line");
+		const { start, end } = blockRangeToTextRange(fixture, range);
+		const slice = fixture.slice(start, end);
+		const { text: cleanedSlice, report } = clean(slice, scan(slice, policy));
+		expect(report.total).toBeGreaterThan(0);
+
+		const result = fixture.slice(0, start) + cleanedSlice + fixture.slice(end);
+		expect(result.length).toBe(fixture.length - report.total);
+		// the bytes before and after the block are identical
+		expect(result.slice(0, start)).toBe(fixture.slice(0, start));
+	});
+
+	it("reports zero change for a block without policy hits", () => {
+		const lines = fixture.split("\n");
+		const headingLine = lines.findIndex((l) => l === "## 六、收尾");
+		const range = blockRangeAt(fixture, headingLine);
+		if (!range) throw new Error("no block");
+		const { start, end } = blockRangeToTextRange(fixture, range);
+		const slice = fixture.slice(start, end);
+		const actionable = scan(slice, policy).filter(
+			(h) => h.action === "remove" || h.action === "toSpace",
+		);
+		expect(actionable).toHaveLength(0);
 	});
 });

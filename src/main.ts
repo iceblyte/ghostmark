@@ -1,5 +1,5 @@
 import { EditorView } from "@codemirror/view";
-import { MarkdownView, Plugin } from "obsidian";
+import { MarkdownView, Plugin, editorInfoField } from "obsidian";
 import {
 	DEFAULT_SETTINGS,
 	migrateSettings,
@@ -11,10 +11,14 @@ import {
 	inspectCompartment,
 	inspectConfigCompartment,
 } from "./editor/inspectMode";
-import { inspectConfigFacet, type InspectConfig } from "./editor/inspectState";
+import {
+	clearBlockRequestFacet,
+	inspectConfigFacet,
+	type InspectConfig,
+} from "./editor/inspectState";
 import { buildInspectConfig, obsidianLocale } from "./settings";
 import { GhostmarkSettingTab } from "./settings";
-import { registerCommands } from "./commands";
+import { clearCurrentBlock, registerCommands } from "./commands";
 import { GhostmarkStatusBar, registerStatusBar } from "./statusBar";
 
 export default class GhostmarkPlugin extends Plugin {
@@ -39,6 +43,11 @@ export default class GhostmarkPlugin extends Plugin {
 		this.registerEditorExtension([
 			inspectConfigCompartment.of(inspectConfigFacet.of(this.config)),
 			inspectCompartment.of(INSPECT_OFF_EXTENSIONS),
+			// Gutter badge → clear the block containing that line (FR-13)
+			clearBlockRequestFacet.of((view, lineIndex) => {
+				const editor = view.state.field(editorInfoField).editor;
+				if (editor) clearCurrentBlock(this, editor, lineIndex);
+			}),
 		]);
 
 		this.statusBar = registerStatusBar(this);
