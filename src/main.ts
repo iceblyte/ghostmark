@@ -14,6 +14,7 @@ import {
 import { inspectConfigFacet, type InspectConfig } from "./editor/inspectState";
 import { buildInspectConfig, obsidianLocale } from "./settings";
 import { GhostmarkSettingTab } from "./settings";
+import { registerCommands } from "./commands";
 import { GhostmarkStatusBar, registerStatusBar } from "./statusBar";
 
 export default class GhostmarkPlugin extends Plugin {
@@ -41,6 +42,8 @@ export default class GhostmarkPlugin extends Plugin {
 		]);
 
 		this.statusBar = registerStatusBar(this);
+
+		registerCommands(this);
 
 		this.addSettingTab(
 			new GhostmarkSettingTab(this.app, this, {

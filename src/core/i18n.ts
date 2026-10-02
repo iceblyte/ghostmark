@@ -149,6 +149,9 @@ const ZH: Record<string, string> = {
 	"cp.U+1F3FD": "肤色修饰符",
 	"cp.U+1F3FE": "肤色修饰符",
 	"cp.U+1F3FF": "肤色修饰符",
+
+	"short.zwj": "ZWJ",
+	"short.skin": "肤色修饰符",
 };
 
 const EN: Record<string, string> = {
@@ -293,6 +296,9 @@ const EN: Record<string, string> = {
 	"cp.U+1F3FD": "EMOJI MODIFIER FITZPATRICK TYPE-4",
 	"cp.U+1F3FE": "EMOJI MODIFIER FITZPATRICK TYPE-5",
 	"cp.U+1F3FF": "EMOJI MODIFIER FITZPATRICK TYPE-6",
+
+	"short.zwj": "ZWJ",
+	"short.skin": "skin modifier",
 };
 
 const STRINGS: Record<Locale, Record<string, string>> = { zh: ZH, en: EN };
