@@ -181,7 +181,10 @@ export function buildScanPolicy(
 ): ScanPolicy {
 	const policy: ScanPolicy = new Map();
 	for (const entry of entries) {
-		const action = overrides[entry.id] ?? entry.action;
+		// Locked rows (ZWJ) ignore overrides — protection is hard-wired.
+		const override = overrides[entry.id];
+		const action =
+			override && entry.options.length > 1 ? override : entry.action;
 		const resolved: ResolvedChar = {
 			category: entry.category,
 			action,
@@ -224,4 +227,17 @@ const EMOJI_MEMBER_RE =
 /** Whether ch can take part in an emoji ZWJ sequence (design doc §4.3). */
 export function isEmojiSequenceMember(ch: string): boolean {
 	return EMOJI_MEMBER_RE.test(ch);
+}
+
+/** Official names for skin-tone modifiers, which have no policy row. */
+export const SKIN_MODIFIER_NAMES: Record<number, string> = {
+	0x1f3fb: "EMOJI MODIFIER FITZPATRICK TYPE-1-2",
+	0x1f3fc: "EMOJI MODIFIER FITZPATRICK TYPE-3",
+	0x1f3fd: "EMOJI MODIFIER FITZPATRICK TYPE-4",
+	0x1f3fe: "EMOJI MODIFIER FITZPATRICK TYPE-5",
+	0x1f3ff: "EMOJI MODIFIER FITZPATRICK TYPE-6",
+};
+
+export function isSkinModifier(cp: number): boolean {
+	return cp >= 0x1f3fb && cp <= 0x1f3ff;
 }
