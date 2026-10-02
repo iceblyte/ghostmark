@@ -365,6 +365,51 @@ body.theme-light {
 	color: var(--gm-yellow-fg);
 }
 
+/* ---------- 拾取码点 Modal（原型 P6 .m6-char / .m6-grid） ---------- */
+.gm-pick-char {
+	font-family: var(--font-mono);
+	font-size: 22px;
+	text-align: center;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 14px;
+	margin-bottom: 12px;
+}
+
+.gm-pick-grid {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	overflow: hidden;
+	margin-bottom: 12px;
+}
+
+.gm-pick-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 14px;
+	font-size: 13.5px;
+}
+
+.gm-pick-row + .gm-pick-row {
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.gm-pick-k {
+	width: 110px;
+	flex: none;
+	color: var(--text-faint);
+	font-size: 12.5px;
+}
+
+.gm-pick-v {
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
 /* ---------- Notice 撤销提示（原型 .n-undo） ---------- */
 .gm-notice-undo {
 	margin-top: 4px;

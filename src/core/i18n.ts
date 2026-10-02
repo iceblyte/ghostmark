@@ -71,6 +71,8 @@ const ZH: Record<string, string> = {
 	"n5.zero": "该块无命中（或全部为保留/仅标记），未做修改",
 	"n6.ok": "已将 {cp}（动作：{act}）加入策略表",
 	"n6.more": "可在设置 → 字符策略表中修改动作",
+	"n.pick.known": "该字符已在策略表中",
+	"pick.name.unknown": "—",
 	"n.zero.all": "当前笔记无可清除标记",
 	"n.zero.sel": "选区内无可清除标记",
 
@@ -218,6 +220,8 @@ const EN: Record<string, string> = {
 	"n5.zero": "No eligible hits in this block (all keep / mark-only) — text unchanged",
 	"n6.ok": "{cp} (action: {act}) added to the policy table",
 	"n6.more": "Change it anytime in Settings → Character policy table",
+	"n.pick.known": "This codepoint is already in the policy table",
+	"pick.name.unknown": "—",
 	"n.zero.all": "Nothing to clean in this note",
 	"n.zero.sel": "Nothing to clean in the selection",
 

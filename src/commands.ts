@@ -16,7 +16,13 @@ import {
 	Modal,
 	Notice,
 } from "obsidian";
-import type { Category, Hit } from "./core/categories";
+import {
+	classifyUnknownCodepoint,
+	formatCodepoint,
+	type Action,
+	type Category,
+	type Hit,
+} from "./core/categories";
 import { blockRangeAt, blockRangeToTextRange } from "./core/blocks";
 import { clean, summarizeHits, type HitSummary } from "./core/cleaner";
 import type { GhostmarkSettings } from "./core/policy";
@@ -30,6 +36,7 @@ export interface CommandsHost extends Component {
 	settings: GhostmarkSettings;
 	inspectEnabled: boolean;
 	setInspectEnabled(on: boolean): void;
+	saveSettings(): Promise<void>;
 	addCommand(command: Command): Command;
 }
 
@@ -203,6 +210,145 @@ function undoNotice(main: string, locale: Locale): void {
 	);
 }
 
+/** Prototype P6 pick modal: char preview, codepoint facts, action select. */
+class PickCodepointModal extends Modal {
+	constructor(
+		app: App,
+		private opts: {
+			locale: Locale;
+			id: string;
+			name: string;
+			category: Category;
+			suggested: Action;
+			onPick: (action: Action) => void;
+		},
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		const { locale } = this.opts;
+		this.setTitle(t(locale, "m6.title"));
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.createEl("p", {
+			cls: "gm-modal-desc",
+			text: t(locale, "m6.desc"),
+		});
+		contentEl.createDiv({
+			cls: "gm-pick-char",
+			text: String.fromCodePoint(Number.parseInt(this.opts.id.slice(2), 16)),
+		});
+
+		const grid = contentEl.createDiv({ cls: "gm-pick-grid" });
+		const rows: Array<[string, string]> = [
+			[t(locale, "m6.cp"), this.opts.id],
+			[t(locale, "m6.name"), this.opts.name],
+		];
+		for (const [key, value] of rows) {
+			const row = grid.createDiv({ cls: "gm-pick-row" });
+			row.createSpan({ cls: "gm-pick-k", text: key });
+			row.createSpan({ cls: "gm-pick-v", text: value });
+		}
+		const catRow = grid.createDiv({ cls: "gm-pick-row" });
+		catRow.createSpan({ cls: "gm-pick-k", text: t(locale, "m6.cat") });
+		const cat = catRow.createSpan({ cls: "gm-pick-v" });
+		cat.createSpan({
+			cls: `gm-dot ${this.opts.category === "invisible" ? "red" : this.opts.category === "spaceLike" ? "blue" : "yellow"}`,
+		});
+		cat.createSpan({
+			text: " " + t(locale, `cat.${this.opts.category}`),
+		});
+		const actRow = grid.createDiv({ cls: "gm-pick-row" });
+		actRow.createSpan({ cls: "gm-pick-k", text: t(locale, "m6.act") });
+		let selected = this.opts.suggested;
+		const sel = actRow.createEl("select", { cls: "dropdown" });
+		for (const action of ["remove", "tospace", "keep"] as const) {
+			sel.createEl("option", {
+				text: t(locale, `opt.${action}`),
+			}).value = action;
+		}
+		sel.value = selected;
+		sel.addEventListener("change", () => {
+			selected = sel.value as Action;
+		});
+
+		const foot = contentEl.createDiv({ cls: "modal-button-container" });
+		foot
+			.createEl("button", { text: t(locale, "btn.cancel") })
+			.addEventListener("click", () => this.close());
+		foot
+			.createEl("button", { text: t(locale, "btn.pick"), cls: "mod-cta" })
+			.addEventListener("click", () => {
+				this.close();
+				this.opts.onPick(selected);
+			});
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
+}
+
+export function registerPickCodepointCommand(host: CommandsHost): void {
+	host.addCommand({
+		id: "pick-codepoint",
+		name: t(host.config.locale, "cmd.pick"),
+		editorCallback: (editor) => {
+			const localeNow = host.config.locale;
+			const text = editor.getValue();
+			if (text.length === 0) return;
+			const cursor = editor.posToOffset(editor.getCursor("from"));
+			let start = Math.min(cursor, text.length - 1);
+			let cp = text.codePointAt(start);
+			// a cursor between surrogate halves reads the low one; step back
+			if (cp !== undefined && cp >= 0xdc00 && cp <= 0xdfff && start > 0) {
+				start -= 1;
+				cp = text.codePointAt(start);
+			}
+			if (cp === undefined) return;
+
+			const id = formatCodepoint(cp);
+			if (host.config.policy.has(cp)) {
+				new Notice(t(localeNow, "n.pick.known"));
+				return;
+			}
+			const suggestion = classifyUnknownCodepoint(cp);
+			const rawName = host.config.nameFor(id);
+			new PickCodepointModal(host.app, {
+				locale: localeNow,
+				id,
+				name: rawName === id ? t(localeNow, "pick.name.unknown") : rawName,
+				category: suggestion.category,
+				suggested: suggestion.action,
+				onPick: (action) => {
+					host.settings.customPolicies[id] = {
+						codepoint: id,
+						category: suggestion.category,
+						action,
+						name: "",
+					};
+					void host.saveSettings();
+					new Notice(
+						createFragment((frag) => {
+							frag.createDiv({
+								text: t(localeNow, "n6.ok", {
+									cp: id,
+									act: t(localeNow, `act.${action}`),
+								}),
+							});
+							frag.createDiv({
+								cls: "gm-notice-undo",
+								text: t(localeNow, "n6.more"),
+							});
+						}),
+					);
+				},
+			}).open();
+		},
+	});
+}
+
 function editorOffset(editor: Editor, offset: number): EditorPosition {
 	return editor.offsetToPos(offset);
 }
@@ -357,6 +503,8 @@ export function registerCommands(host: CommandsHost): void {
 			return true;
 		},
 	});
+
+	registerPickCodepointCommand(host);
 }
 
 function runClearSelection(host: CommandsHost, editor: Editor): void {
