@@ -18,7 +18,7 @@ const COMPACT_GLYPH: Record<Category, string> = {
 	semantic: "⌦",
 };
 
-function colorClass(category: Category): string {
+export function colorClass(category: Category): string {
 	if (category === "invisible") return "red";
 	if (category === "spaceLike") return "blue";
 	return "yellow";

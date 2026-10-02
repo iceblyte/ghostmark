@@ -16,6 +16,7 @@ import {
 import type { Hit, ScanPolicy } from "../core/categories";
 import type { Locale } from "../core/i18n";
 import { scan } from "../core/scanner";
+import { hoverExtension } from "./hover";
 import { GhostWidget, type Density } from "./widgets";
 
 export interface InspectConfig {
@@ -24,6 +25,8 @@ export interface InspectConfig {
 	locale: Locale;
 	mathMode: "markOnly" | "clean";
 	codeToSpace: boolean;
+	/** Display name for a policy entry id (i18n table or a picked name). */
+	nameFor: (entryId: string) => string;
 }
 
 /** Current policy/density/locale bundle, reconfigurable at runtime. */
@@ -121,8 +124,8 @@ const decorationsPlugin = ViewPlugin.fromClass(
 	},
 );
 
-/** Extension set applied while inspect mode is on (hover/gutter join later). */
-export const INSPECT_ON_EXTENSIONS: Extension[] = [decorationsPlugin];
+/** Extension set applied while inspect mode is on (gutter joins in C10). */
+export const INSPECT_ON_EXTENSIONS: Extension[] = [decorationsPlugin, hoverExtension];
 export const INSPECT_OFF_EXTENSIONS: Extension[] = [];
 
 /** Shared compartment so the shell can toggle every editor at once. */

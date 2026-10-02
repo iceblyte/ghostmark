@@ -72,3 +72,61 @@ body.theme-light {
 .gm-w .gt {
 	white-space: nowrap;
 }
+
+/* ---------- hover 详情浮层（原型 .gm-w .tip 结构） ---------- */
+.gm-hover {
+	font-family: var(--font-ui);
+	font-size: 12px;
+	line-height: 1.5;
+	text-align: left;
+	color: var(--text-muted);
+	background: var(--background-secondary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 7px;
+	box-shadow: var(--shadow-s);
+	padding: 8px 12px;
+}
+
+.gm-hover b {
+	display: block;
+	color: var(--text-normal);
+	font-size: 12.5px;
+	margin-bottom: 2px;
+}
+
+.gm-hover .gm-hover-row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.gm-hover .gm-hover-note {
+	display: block;
+	margin-top: 3px;
+	color: var(--gm-yellow-fg);
+}
+
+.gm-hover .gm-hover-suggest {
+	display: block;
+	margin-top: 2px;
+}
+
+.gm-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+	flex: none;
+}
+
+.gm-dot.red {
+	background: var(--gm-red-fg);
+}
+
+.gm-dot.blue {
+	background: var(--gm-blue-fg);
+}
+
+.gm-dot.yellow {
+	background: var(--gm-yellow-fg);
+}

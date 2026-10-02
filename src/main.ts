@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view";
 import { MarkdownView, Plugin } from "obsidian";
 import { buildScanPolicy } from "./core/categories";
+import { t } from "./core/i18n";
 import {
 	configureInspect,
 	INSPECT_OFF_EXTENSIONS,
@@ -20,6 +21,10 @@ export default class GhostmarkPlugin extends Plugin {
 		locale: "en",
 		mathMode: "markOnly",
 		codeToSpace: true,
+		nameFor: (entryId) => {
+			const localized = t("en", `cp.${entryId}`);
+			return localized === `cp.${entryId}` ? entryId : localized;
+		},
 	};
 
 	async onload() {
