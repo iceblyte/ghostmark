@@ -1,7 +1,7 @@
 {
 	"id": "ghostmark",
 	"name": "Ghostmark",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.0.0",
 	"description": "Inspect and clean invisible watermark characters in clipped notes.",
 	"author": "iceblyte",
