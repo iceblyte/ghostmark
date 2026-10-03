@@ -5,5 +5,6 @@
 	"minAppVersion": "1.0.0",
 	"description": "Inspect and clean invisible watermark characters in clipped notes.",
 	"author": "iceblyte",
+	"authorUrl": "https://github.com/iceblyte",
 	"isDesktopOnly": false
 }
