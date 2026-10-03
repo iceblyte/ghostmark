@@ -34,6 +34,7 @@ checks = [
     ("Fix-3：死胡同提示 n.pick.sel.none 已移除", "n.pick.sel.none" not in js),
     ("Fix-3c：勾选列表 gm-pick-list", "gm-pick-list" in js),
     ("Fix-3d：勾选文案 m6.list.desc / btn.add.n", "m6.list.desc" in js and "btn.add.n" in js),
+    ("Fix-3e：整行点选 is-off 反馈", "is-off" in js),
     ("Fix-3b：空状态提示 s.custom.empty", "s.custom.empty" in js),
     ("Fix-4：添加行整行布局 gm-add-row", "gm-add-row" in js),
     ("Fix-5：inspectRemember 默认开启", "inspectRemember:!0" in js),

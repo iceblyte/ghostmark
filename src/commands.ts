@@ -267,10 +267,18 @@ class PickListModal extends Modal {
 			const row = list.createDiv({ cls: "gm-pick-item" });
 			const box = row.createEl("input", { type: "checkbox" });
 			box.checked = true;
-			box.addEventListener("change", () => {
+			const sync = (): void => {
 				if (box.checked) checked.add(candidate.cp);
 				else checked.delete(candidate.cp);
+				row.toggleClass("is-off", !box.checked);
 				updateLabel();
+			};
+			// the whole row toggles; the checkbox handles its own click
+			box.addEventListener("change", () => sync());
+			row.addEventListener("click", (event) => {
+				if (event.target === box) return;
+				box.checked = !box.checked;
+				sync();
 			});
 			row.createSpan({
 				cls: "gm-pick-char",
@@ -283,6 +291,7 @@ class PickListModal extends Modal {
 				cls: "gm-pick-suggest",
 				text: t(locale, "tip.suggest") + ": " + t(locale, `act.${candidate.action.toLowerCase()}`),
 			});
+			row.toggleClass("is-off", !box.checked);
 		}
 
 		const foot = contentEl.createDiv({ cls: "modal-button-container" });

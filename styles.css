@@ -475,6 +475,16 @@ body.theme-light {
 	gap: 8px;
 	padding: 8px 14px;
 	font-size: 13.5px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.gm-pick-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.gm-pick-item.is-off {
+	opacity: 0.5;
 }
 
 .gm-pick-item + .gm-pick-item {
