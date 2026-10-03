@@ -5,9 +5,18 @@
  * re-pushes the InspectConfig to every editor).
  */
 
-import { PluginSettingTab, Setting, type App, type Plugin } from "obsidian";
 import {
+	Notice,
+	PluginSettingTab,
+	Setting,
+	type App,
+	type Plugin,
+} from "obsidian";
+import {
+	classifyUnknownCodepoint,
+	formatCodepoint,
 	DEFAULT_POLICY_ENTRIES,
+	type Action,
 	type Category,
 	type PolicyEntry,
 } from "./core/categories";
@@ -100,6 +109,8 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
+		// full re-renders (dropdown changes, resets) keep the scroll position
+		const scrollTop = containerEl.scrollTop;
 		containerEl.empty();
 		const L = this.L;
 
@@ -123,17 +134,11 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			);
+		containerEl.scrollTop = scrollTop;
 	}
 
 	private heading(text: string): void {
 		new Setting(this.containerEl).setName(text).setHeading();
-	}
-
-	private note(text: string): void {
-		this.containerEl.createDiv({
-			cls: "setting-item-description",
-			text,
-		});
 	}
 
 	private subHead(cls: string | null, text: string): void {
@@ -150,47 +155,66 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		this.note(t(L, "s.d1"));
 
 		for (const category of ["invisible", "spaceLike", "semantic"] as const) {
-			this.displayCategoryHead(category);
-			if (this.settings.collapsedGroups[category]) continue;
-			for (const entry of DEFAULT_POLICY_ENTRIES) {
-				if (entry.category !== category) continue;
-				this.displayPolicyRow(entry);
-				if (entry.id === "U+FEFF") {
-					this.note(t(L, "s.feff"));
-				}
-			}
+			this.displayCategoryGroup(category);
 		}
 
 		this.displayCustomPolicies();
 	}
 
-	private displayCategoryHead(category: Category): void {
+	/**
+	 * One collapsible category group. Expand/collapse toggles the body
+	 * in place — no re-render, so the browsing position never jumps.
+	 */
+	private displayCategoryGroup(category: Category): void {
 		const L = this.L;
 		const labels = {
 			invisible: "s.red",
 			spaceLike: "s.blue",
 			semantic: "s.yellow",
 		} as const;
+
 		const collapsed = this.settings.collapsedGroups[category];
 		const head = createDiv({ cls: "gm-sub-head gm-collapsible" });
-		head.createSpan({
+		const caret = head.createSpan({
 			cls: "gm-caret",
 			text: collapsed ? "▸" : "▾",
 		});
 		head.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
 		head.createSpan({ text: t(L, labels[category]) });
-		head.addEventListener("click", () => {
-			this.settings.collapsedGroups[category] = !collapsed;
-			void this.deps.saveSettings();
-			this.display();
-		});
 		this.containerEl.appendChild(head);
+
+		const body = createDiv({ cls: "gm-group-body" });
+		if (collapsed) body.addClass("is-collapsed");
+		this.containerEl.appendChild(body);
+
+		for (const entry of DEFAULT_POLICY_ENTRIES) {
+			if (entry.category !== category) continue;
+			this.displayPolicyRow(entry, body);
+			if (entry.id === "U+FEFF") {
+				this.note(t(L, "s.feff"), body);
+			}
+		}
+
+		head.addEventListener("click", () => {
+			const nowCollapsed = !body.hasClass("is-collapsed");
+			body.toggleClass("is-collapsed", nowCollapsed);
+			caret.textContent = nowCollapsed ? "▸" : "▾";
+			this.settings.collapsedGroups[category] = nowCollapsed;
+			void this.deps.saveSettings();
+		});
 	}
 
-	private displayPolicyRow(entry: PolicyEntry): void {
+	private note(text: string, container: HTMLElement = this.containerEl): void {
+		container.createDiv({
+			cls: "setting-item-description",
+			text,
+		});
+	}
+
+	private displayPolicyRow(entry: PolicyEntry, container: HTMLElement): void {
 		const L = this.L;
 		const locked = entry.options.length <= 1;
-		const setting = new Setting(this.containerEl);
+		const setting = new Setting(container);
 		setting.setName(
 			createFragment((frag) => {
 				const wrap = createSpan({ cls: "gm-setting-name" });
@@ -243,10 +267,102 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		}
 	}
 
+	/**
+	 * Manual addition row (FR-9 without the editor): accepts a codepoint
+	 * ("U+2065", "2065") or a pasted character; "auto" resolves the
+	 * category-based suggested action at add time.
+	 */
+	private displayCustomAddRow(): void {
+		const L = this.L;
+		let input = "";
+		let choice: Action | "auto" = "auto";
+
+		const submit = async (): Promise<void> => {
+			const trimmed = input.trim();
+			if (!trimmed) return;
+			const cp = this.parseCodepointInput(trimmed);
+			if (cp === null || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) {
+				new Notice(t(L, "n.add.invalid"));
+				return;
+			}
+			if (effectivePolicy(this.settings).has(cp)) {
+				new Notice(t(L, "n.pick.known"));
+				return;
+			}
+			const suggestion = classifyUnknownCodepoint(cp);
+			const id = formatCodepoint(cp);
+			this.settings.customPolicies[id] = {
+				codepoint: id,
+				category: suggestion.category,
+				action: choice === "auto" ? suggestion.action : choice,
+				name: "",
+			};
+			const action =
+				this.settings.customPolicies[id]?.action ?? suggestion.action;
+			await this.deps.saveSettings();
+			new Notice(
+				createFragment((frag) => {
+					frag.createDiv({
+						text: t(L, "n6.ok", {
+							cp: id,
+							act: actionLabel(L, "act", action),
+						}),
+					});
+					frag.createDiv({
+						cls: "gm-notice-undo",
+						text: t(L, "n6.more"),
+					});
+				}),
+			);
+			this.display();
+		};
+
+		const setting = new Setting(this.containerEl).setClass("gm-add-row");
+		setting.addText((text) => {
+			text
+				.setPlaceholder(t(L, "s.add.placeholder"))
+				.onChange((value) => {
+					input = value;
+				});
+			text.inputEl.addEventListener("keydown", (event) => {
+				if (event.key === "Enter") void submit();
+			});
+		});
+		setting.addDropdown((dd) =>
+			dd
+				.addOptions({
+					auto: t(L, "opt.auto"),
+					remove: actionLabel(L, "opt", "remove"),
+					toSpace: actionLabel(L, "opt", "toSpace"),
+					keep: actionLabel(L, "opt", "keep"),
+				})
+				.setValue("auto")
+				.onChange((value) => {
+					choice = value as Action | "auto";
+				}),
+		);
+		setting.addExtraButton((btn) => {
+			btn.setIcon("plus");
+			// setTooltip needs Obsidian 1.1.0; aria-label shows the
+			// native tooltip on every supported version.
+			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.add"));
+			btn.onClick(() => void submit());
+		});
+	}
+
+	/** "U+2065" / "u+2065" / "2065" / a pasted character → codepoint. */
+	private parseCodepointInput(input: string): number | null {
+		const hex = /^(?:u\+)?([0-9a-f]{1,6})$/i.exec(input);
+		if (hex?.[1]) return Number.parseInt(hex[1], 16);
+		const cp = input.codePointAt(0);
+		return cp === undefined ? null : cp;
+	}
+
 	private displayCustomPolicies(): void {
 		const L = this.L;
 
 		this.subHead(null, t(L, "s.custom"));
+		this.displayCustomAddRow();
 
 		for (const [key, custom] of Object.entries(this.settings.customPolicies)) {
 			const setting = new Setting(this.containerEl).setClass("gm-picked-row");

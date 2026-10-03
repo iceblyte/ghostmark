@@ -233,6 +233,10 @@ body.theme-light {
 	color: var(--text-faint);
 }
 
+.gm-group-body.is-collapsed {
+	display: none;
+}
+
 .gm-setting-name {
 	display: flex;
 	align-items: center;

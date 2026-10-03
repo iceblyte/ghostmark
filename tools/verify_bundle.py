@@ -24,6 +24,10 @@ checks = [
     ("设置：collapsedGroups 折叠持久化", "collapsedGroups" in js),
     ("设置：gm-collapsible 样式类", "gm-collapsible" in js),
     ("动作值：toSpace 统一（无小写键残留）", '"tospace"' not in js and "'tospace'" not in js),
+    ("Fix-1：滚动保持 getScrollInfo/scrollTo", "getScrollInfo" in js and "scrollTo" in js),
+    ("Fix-2：分组就地折叠 gm-group-body/is-collapsed", "gm-group-body" in js and "is-collapsed" in js),
+    ("Fix-3：手动添加行 s.add.placeholder", "s.add.placeholder" in js and "n.add.invalid" in js),
+    ("Fix-4：死胡同提示 n.pick.sel.none 已移除", "n.pick.sel.none" not in js),
 ]
 
 ok = True

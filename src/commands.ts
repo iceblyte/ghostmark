@@ -10,6 +10,7 @@ import {
 	type App,
 	type Command,
 	type Component,
+	type EditorChange,
 	Editor,
 	type EditorPosition,
 	MarkdownView,
@@ -51,15 +52,53 @@ function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
 	});
 }
 
+/**
+ * Apply changes as one transaction while keeping the viewport where it
+ * was: the cursor is mapped through the changes explicitly (changes are
+ * given in original-document coordinates, sorted, non-overlapping) and
+ * the scroll position is restored if the editor moved it (Fix for the
+ * jump-to-top after gutter-badge clears).
+ */
+function applyCleanedChanges(editor: Editor, changes: EditorChange[]): void {
+	const scroll = editor.getScrollInfo();
+	const cursor = editor.posToOffset(editor.getCursor("from"));
+	let newCursor = cursor;
+	for (const change of changes) {
+		const fromPos = change.from ?? { line: 0, ch: 0 };
+		const from = editor.posToOffset(fromPos);
+		const toPos = change.to ?? editor.offsetToPos(editor.getValue().length);
+		const to = editor.posToOffset(toPos);
+		if (cursor < from) break;
+		if (cursor >= to) {
+			newCursor += change.text.length - (to - from);
+		} else {
+			newCursor = from + Math.min(cursor - from, change.text.length);
+			break;
+		}
+	}
+	const cursorPos = editor.offsetToPos(newCursor);
+	editor.transaction({
+		changes,
+		selection: { from: cursorPos },
+	});
+	const after = editor.getScrollInfo();
+	if (
+		Math.abs(after.top - scroll.top) > 1 ||
+		Math.abs(after.left - scroll.left) > 1
+	) {
+		editor.scrollTo(scroll.left, scroll.top);
+	}
+}
+
 function replaceWholeDocument(editor: Editor, text: string): void {
 	const lastLine = editor.lineCount() - 1;
 	const end: EditorPosition = {
 		line: lastLine,
 		ch: editor.getLine(lastLine)?.length ?? 0,
 	};
-	editor.transaction({
-		changes: [{ from: { line: 0, ch: 0 }, to: end, text }],
-	});
+	applyCleanedChanges(editor, [
+		{ from: { line: 0, ch: 0 }, to: end, text },
+	]);
 }
 
 /** Prototype P3/P4 confirm modal: category counts, math split, warning. */
@@ -306,9 +345,10 @@ class PickCodepointModal extends Modal {
 
 /**
  * Pick the codepoint under the cursor, or — when the editor has a
- * selection — every unknown watermark/space-like codepoint in it
- * (single find gets the modal, several are batch-added with the
- * category-based suggested actions).
+ * selection — the unknown watermark/space-like codepoints in it: exactly
+ * one opens the confirm modal, several are batch-added with the
+ * category-based suggested actions, and none falls back to the character
+ * at the selection head so the flow never dead-ends.
  */
 export function runPickCodepoint(host: CommandsHost, editor: Editor): void {
 	const localeNow = host.config.locale;
@@ -317,48 +357,39 @@ export function runPickCodepoint(host: CommandsHost, editor: Editor): void {
 
 	const selection = editor.getSelection();
 	if (selection.length > 0) {
-		runBatchPick(host, localeNow, selection);
+		const found = collectPickables(host, selection);
+		if (found.length > 1) {
+			addBatchPicks(host, localeNow, found);
+			return;
+		}
+		if (found.length === 1 && found[0]) {
+			openPickModal(host, localeNow, found[0].cp);
+			return;
+		}
+		// no new pickables in the selection: offer the character the
+		// selection ends on instead of a dead-end notice
+		const anchor = editor.posToOffset(editor.getCursor("anchor"));
+		const head = editor.posToOffset(editor.getCursor("head"));
+		const cp = codepointAt(text, head > anchor ? head - 1 : head);
+		if (cp !== null) openPickModal(host, localeNow, cp);
 		return;
 	}
 
 	const cursor = editor.posToOffset(editor.getCursor("from"));
-	let start = Math.min(cursor, text.length - 1);
+	const cp = codepointAt(text, cursor);
+	if (cp !== null) openPickModal(host, localeNow, cp);
+}
+
+function codepointAt(text: string, offset: number): number | null {
+	let start = Math.min(Math.max(offset, 0), text.length - 1);
+	if (start < 0) return null;
 	let cp = text.codePointAt(start);
-	// a cursor between surrogate halves reads the low one; step back
+	// a boundary between surrogate halves reads the low one; step back
 	if (cp !== undefined && cp >= 0xdc00 && cp <= 0xdfff && start > 0) {
 		start -= 1;
 		cp = text.codePointAt(start);
 	}
-	if (cp === undefined) return;
-
-	const id = formatCodepoint(cp);
-	if (host.config.policy.has(cp)) {
-		new Notice(t(localeNow, "n.pick.known"));
-		return;
-	}
-	const suggestion = classifyUnknownCodepoint(cp);
-	const rawName = host.config.nameFor(id);
-	new PickCodepointModal(host.app, {
-		locale: localeNow,
-		id,
-		name: rawName === id ? t(localeNow, "pick.name.unknown") : rawName,
-		category: suggestion.category,
-		suggested: suggestion.action,
-		onPick: (action) => {
-			host.settings.customPolicies[id] = {
-				codepoint: id,
-				category: suggestion.category,
-				action,
-				name: "",
-			};
-			void host.saveSettings();
-			new Notice(
-				pickNotice(localeNow, [
-					{ id, action },
-				]),
-			);
-		},
-	}).open();
+	return cp === undefined ? null : cp;
 }
 
 interface PickedCodepoint {
@@ -387,41 +418,46 @@ function pickNotice(locale: Locale, picks: PickedCodepoint[]): DocumentFragment 
 	});
 }
 
+interface PickCandidate {
+	cp: number;
+	id: string;
+	category: Category;
+	action: Action;
+}
+
 /**
- * Selection batch: only codepoints that classify as invisible or
- * space-like are offered — normal letters/emoji are never policy
- * material. Each pick stores the category-based suggested action.
+ * Unknown codepoints in the selection that classify as invisible or
+ * space-like — ordinary letters/emoji are not policy material.
  */
-function runBatchPick(
+function collectPickables(
 	host: CommandsHost,
-	localeNow: Locale,
 	selection: string,
-): void {
+): PickCandidate[] {
 	const seen = new Set<number>();
-	const picks: Array<{
-		id: string;
-		category: Category;
-		action: Action;
-	}> = [];
+	const picks: PickCandidate[] = [];
 	for (let i = 0; i < selection.length; ) {
 		const cp = selection.codePointAt(i) ?? 0;
 		i += cp > 0xffff ? 2 : 1;
 		if (host.config.policy.has(cp) || seen.has(cp)) continue;
 		const suggestion = classifyUnknownCodepoint(cp);
-		// semantic covers ordinary characters — not pickable material
 		if (suggestion.category === "semantic") continue;
 		seen.add(cp);
 		picks.push({
+			cp,
 			id: formatCodepoint(cp),
 			category: suggestion.category,
 			action: suggestion.action,
 		});
 	}
-	if (picks.length === 0) {
-		new Notice(t(localeNow, "n.pick.sel.none"));
-		return;
-	}
-	for (const pick of picks) {
+	return picks;
+}
+
+function addBatchPicks(
+	host: CommandsHost,
+	localeNow: Locale,
+	candidates: PickCandidate[],
+): void {
+	for (const pick of candidates) {
 		host.settings.customPolicies[pick.id] = {
 			codepoint: pick.id,
 			category: pick.category,
@@ -430,7 +466,42 @@ function runBatchPick(
 		};
 	}
 	void host.saveSettings();
-	new Notice(pickNotice(localeNow, picks));
+	new Notice(pickNotice(localeNow, candidates));
+}
+
+function openPickModal(
+	host: CommandsHost,
+	localeNow: Locale,
+	cp: number,
+): void {
+	const id = formatCodepoint(cp);
+	if (host.config.policy.has(cp)) {
+		new Notice(t(localeNow, "n.pick.known"));
+		return;
+	}
+	const suggestion = classifyUnknownCodepoint(cp);
+	const rawName = host.config.nameFor(id);
+	new PickCodepointModal(host.app, {
+		locale: localeNow,
+		id,
+		name: rawName === id ? t(localeNow, "pick.name.unknown") : rawName,
+		category: suggestion.category,
+		suggested: suggestion.action,
+		onPick: (action) => {
+			host.settings.customPolicies[id] = {
+				codepoint: id,
+				category: suggestion.category,
+				action,
+				name: "",
+			};
+			void host.saveSettings();
+			new Notice(
+				pickNotice(localeNow, [
+					{ id, action },
+				]),
+			);
+		},
+	}).open();
 }
 
 function editorOffset(editor: Editor, offset: number): EditorPosition {
@@ -474,15 +545,13 @@ export function clearCurrentBlock(
 
 	const run = (): void => {
 		const { text: cleaned, report } = clean(slice, hits);
-		editor.transaction({
-			changes: [
-				{
-					from: editorOffset(editor, startOffset),
-					to: editorOffset(editor, endOffset),
-					text: cleaned,
-				},
-			],
-		});
+		applyCleanedChanges(editor, [
+			{
+				from: editorOffset(editor, startOffset),
+				to: editorOffset(editor, endOffset),
+				text: cleaned,
+			},
+		]);
 		undoNotice(
 			t(localeNow, "n5.ok", {
 				n: report.total,
@@ -641,7 +710,7 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 				text: cleaned,
 			};
 		});
-		editor.transaction({ changes });
+		applyCleanedChanges(editor, changes);
 		undoNotice(
 			t(localeNow, "n4.ok", { n: total, r: red, b: blue }),
 			localeNow,
