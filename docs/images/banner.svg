@@ -1,0 +1,28 @@
+<svg width="1280" height="300" viewBox="0 0 1280 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghostmark">
+  <rect x="1.5" y="1.5" width="1277" height="297" rx="20" fill="#1b1b1f" stroke="#3a3a42" stroke-width="1.5"/>
+  <text x="64" y="182" font-size="112">👻</text>
+  <text x="228" y="128" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="66" font-weight="700" fill="#eaeaea">Ghostmark</text>
+  <text x="230" y="176" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="26" fill="#9a9aa2">检查并清除剪藏笔记中的不可见水印字符</text>
+  <g font-family="Consolas,'JetBrains Mono',monospace" font-size="15" font-weight="700">
+    <rect x="230" y="232" width="46" height="26" rx="13" fill="rgba(255,94,109,.18)" stroke="rgba(255,94,109,.5)"/>
+    <text x="253" y="250" text-anchor="middle" fill="#ff8a93">4</text>
+    <rect x="282" y="232" width="58" height="26" rx="13" fill="rgba(76,146,236,.2)" stroke="rgba(76,146,236,.55)"/>
+    <text x="311" y="250" text-anchor="middle" fill="#7cb8ff">22</text>
+    <rect x="346" y="232" width="46" height="26" rx="13" fill="rgba(233,196,106,.16)" stroke="rgba(233,196,106,.45)"/>
+    <text x="369" y="250" text-anchor="middle" fill="#e9c46a">5</text>
+    <text x="410" y="250" font-size="16" fill="#6d6d76" font-weight="400">←  行号槽分段徽标 · 红 / 蓝 / 黄</text>
+  </g>
+  <g font-family="Consolas,'JetBrains Mono',monospace" font-size="20">
+    <rect x="742" y="96" width="40" height="30" rx="6" fill="rgba(255,94,109,.18)" stroke="rgba(255,94,109,.5)"/>
+    <text x="762" y="118" text-anchor="middle" fill="#ff8a93">⌷</text>
+    <rect x="792" y="96" width="40" height="30" rx="6" fill="rgba(76,146,236,.2)" stroke="rgba(76,146,236,.55)"/>
+    <text x="812" y="118" text-anchor="middle" fill="#7cb8ff">␣</text>
+    <rect x="842" y="96" width="40" height="30" rx="6" fill="rgba(233,196,106,.16)" stroke="rgba(233,196,106,.45)"/>
+    <text x="862" y="118" text-anchor="middle" fill="#e9c46a">⌦</text>
+    <text x="900" y="118" fill="#9a9aa2">→ 全部显形</text>
+    <text x="742" y="176" fill="#ff8a93">pyt⌷⌷hon</text>
+    <text x="892" y="176" fill="#6d6d76">→</text>
+    <text x="920" y="176" fill="#eaeaea">python</text>
+    <text x="742" y="216" font-family="'Segoe UI','PingFang SC',sans-serif" font-size="17" fill="#6d6d76">搜索 · 双链 · diff · 终端，全部恢复正常。</text>
+  </g>
+</svg>
