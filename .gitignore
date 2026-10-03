@@ -10,5 +10,7 @@ Thumbs.db
 # 本地工具配置
 .zcodeignore
 
-# 视频制作产物（大文件，不入库；管线在 tools/video/）
-video/
+# 视频制作相关（与插件本体无关，本地留存：成片/配音/幻灯片/管线）
+/video/
+/tools/video/
+.playwright-mcp/
