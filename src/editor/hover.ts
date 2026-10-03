@@ -17,7 +17,7 @@ import {
 	inspectRuntimeField,
 	type InspectConfig,
 } from "./inspectState";
-import { colorClass } from "./widgets";
+import { colorClass } from "./badgeModel";
 
 function hitAt(hits: Hit[], pos: number): Hit | null {
 	let lo = 0;

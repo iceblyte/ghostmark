@@ -73,42 +73,49 @@ body.theme-light {
 	white-space: nowrap;
 }
 
-/* ---------- 行号槽徽标（原型 .badge） ---------- */
+/* ---------- 行号槽徽标（分段式：每个类别一段，各带数量） ---------- */
 .ghostmark-gutter {
 	width: 34px;
 }
 
 .gm-badge {
-	min-width: 17px;
+	display: inline-flex;
+	align-items: stretch;
 	height: 15px;
-	padding: 0 4px;
 	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid var(--background-modifier-border);
 	font-family: var(--font-mono);
 	font-size: 9.5px;
 	font-weight: 600;
+	cursor: pointer;
+}
+
+.gm-badge-seg {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	cursor: pointer;
-	border: 1px solid transparent;
+	min-width: 11px;
+	padding: 0 4px;
 }
 
-.gm-badge.red {
+.gm-badge-seg + .gm-badge-seg {
+	border-left: 1px solid var(--background-modifier-border);
+}
+
+.gm-badge-seg.red {
 	background: var(--gm-red-bg);
 	color: var(--gm-red-fg);
-	border-color: var(--gm-red-bd);
 }
 
-.gm-badge.blue {
+.gm-badge-seg.blue {
 	background: var(--gm-blue-bg);
 	color: var(--gm-blue-fg);
-	border-color: var(--gm-blue-bd);
 }
 
-.gm-badge.yellow {
+.gm-badge-seg.yellow {
 	background: var(--gm-yellow-bg);
 	color: var(--gm-yellow-fg);
-	border-color: var(--gm-yellow-bd);
 }
 
 .gm-badge.passive {

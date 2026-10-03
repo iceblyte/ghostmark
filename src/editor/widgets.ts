@@ -9,6 +9,7 @@ import { WidgetType } from "@codemirror/view";
 import type { Category } from "../core/categories";
 import type { Locale } from "../core/i18n";
 import { t } from "../core/i18n";
+import { colorClass } from "./badgeModel";
 
 export type Density = "compact" | "detailed";
 
@@ -17,12 +18,6 @@ const COMPACT_GLYPH: Record<Category, string> = {
 	spaceLike: "␣",
 	semantic: "⌦",
 };
-
-export function colorClass(category: Category): string {
-	if (category === "invisible") return "red";
-	if (category === "spaceLike") return "blue";
-	return "yellow";
-}
 
 export class GhostWidget extends WidgetType {
 	constructor(
