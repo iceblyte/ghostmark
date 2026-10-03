@@ -1,8 +1,10 @@
 /**
- * Settings tab (FR-11, prototype P8): four groups — character policy
- * table (21 default rows + picked additions), context rules, interface
- * and language. Changes apply instantly and persist (saveSettings also
- * re-pushes the InspectConfig to every editor).
+ * Settings tab (FR-11, prototype P8): the character policy table shows
+ * three group entries that open a dedicated sub-page per category (FR-12
+ * feedback: editing happens on its own page), plus the picked-additions
+ * section with a manual add row, context rules, interface and language.
+ * Changes apply instantly and persist (saveSettings also re-pushes the
+ * InspectConfig to every editor).
  */
 
 import {
@@ -29,13 +31,33 @@ import { resolveLocale, t, type Locale } from "./core/i18n";
 import type { InspectConfig } from "./editor/inspectState";
 
 /** i18n keys are lowercase; core Action values are camelCase. */
-function actionLabel(locale: Locale, prefix: "act" | "opt", action: string): string {
+function actionLabel(
+	locale: Locale,
+	prefix: "act" | "opt",
+	action: string,
+): string {
 	return t(locale, `${prefix}.${action.toLowerCase()}`);
 }
 
 function charOf(id: string): string {
 	const cp = Number.parseInt(id.replace(/^U\+/, ""), 16);
 	return Number.isNaN(cp) ? "" : String.fromCodePoint(cp);
+}
+
+function entryLabel(entry: PolicyEntry, locale: Locale): string {
+	const zh = t("zh", `cp.${entry.id}`);
+	return zh === `cp.${entry.id}` || zh === entry.name
+		? entry.name
+		: `${entry.name} · ${zh}`;
+}
+
+/** Everything the tab needs from the plugin, injected to avoid a cycle. */
+export interface GhostmarkTabDeps {
+	getSettings(): GhostmarkSettings;
+	setSettings(settings: GhostmarkSettings): void;
+	getLocale(): Locale;
+	saveSettings(): Promise<void>;
+	setStatusBarVisible(on: boolean): void;
 }
 
 /**
@@ -68,29 +90,15 @@ export function buildInspectConfig(
 	};
 }
 
-/** Everything the tab needs from the plugin, injected to avoid a cycle. */
-export interface GhostmarkTabDeps {
-	getSettings(): GhostmarkSettings;
-	setSettings(settings: GhostmarkSettings): void;
-	getLocale(): Locale;
-	saveSettings(): Promise<void>;
-	setStatusBarVisible(on: boolean): void;
-}
-
 function tagFor(category: Category): { cls: string; text: string } {
 	if (category === "invisible") return { cls: "red", text: "red" };
 	if (category === "spaceLike") return { cls: "blue", text: "blue" };
 	return { cls: "yellow", text: "yellow" };
 }
 
-function entryLabel(entry: PolicyEntry, locale: Locale): string {
-	const zh = t("zh", `cp.${entry.id}`);
-	return zh === `cp.${entry.id}` || zh === entry.name
-		? entry.name
-		: `${entry.name} · ${zh}`;
-}
-
 export class GhostmarkSettingTab extends PluginSettingTab {
+	private subPage: Category | null = null;
+
 	constructor(
 		app: App,
 		plugin: Plugin,
@@ -107,17 +115,47 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		return this.deps.getLocale();
 	}
 
-	display(): void {
+	display(restoreScroll = true): void {
 		const { containerEl } = this;
-		// full re-renders (dropdown changes, resets) keep the scroll position
-		const scrollTop = containerEl.scrollTop;
+		// re-renders of the same page keep the scroll position; page
+		// switches start at the top
+		const scrollTop = restoreScroll ? containerEl.scrollTop : 0;
 		containerEl.empty();
+		const L = this.L;
+
+		if (this.subPage) {
+			this.displayCategorySubPage(this.subPage);
+		} else {
+			this.displayMainPage();
+		}
+		containerEl.scrollTop = scrollTop;
+	}
+
+	private heading(text: string): void {
+		new Setting(this.containerEl).setName(text).setHeading();
+	}
+
+	private note(text: string, container: HTMLElement = this.containerEl): void {
+		container.createDiv({
+			cls: "setting-item-description",
+			text,
+		});
+	}
+
+	private subHead(cls: string | null, text: string): void {
+		const head = createDiv({ cls: "gm-sub-head" });
+		if (cls) head.createSpan({ cls: `gm-dot ${cls}` });
+		head.createSpan({ text });
+		this.containerEl.appendChild(head);
+	}
+
+	private displayMainPage(): void {
 		const L = this.L;
 
 		this.displayPolicyTable();
 		this.displayContextRules();
 		this.displayInterface();
-		new Setting(containerEl)
+		new Setting(this.containerEl)
 			.setName(t(L, "s.lang"))
 			.setDesc(t(L, "s.lang.d"))
 			.addDropdown((dd) =>
@@ -134,18 +172,6 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			);
-		containerEl.scrollTop = scrollTop;
-	}
-
-	private heading(text: string): void {
-		new Setting(this.containerEl).setName(text).setHeading();
-	}
-
-	private subHead(cls: string | null, text: string): void {
-		const head = createDiv({ cls: "gm-sub-head" });
-		if (cls) head.createSpan({ cls: `gm-dot ${cls}` });
-		head.createSpan({ text });
-		this.containerEl.appendChild(head);
 	}
 
 	private displayPolicyTable(): void {
@@ -155,17 +181,50 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		this.note(t(L, "s.d1"));
 
 		for (const category of ["invisible", "spaceLike", "semantic"] as const) {
-			this.displayCategoryGroup(category);
+			this.displayGroupNav(category);
 		}
 
 		this.displayCustomPolicies();
 	}
 
-	/**
-	 * One collapsible category group. Expand/collapse toggles the body
-	 * in place — no re-render, so the browsing position never jumps.
-	 */
-	private displayCategoryGroup(category: Category): void {
+	/** Group entry on the main page; clicking opens the category page. */
+	private displayGroupNav(category: Category): void {
+		const L = this.L;
+		const labels = {
+			invisible: "s.red",
+			spaceLike: "s.blue",
+			semantic: "s.yellow",
+		} as const;
+		const count = DEFAULT_POLICY_ENTRIES.filter(
+			(entry) => entry.category === category,
+		).length;
+
+		const setting = new Setting(this.containerEl).setClass("gm-group-nav");
+		setting.setName(
+			createFragment((frag) => {
+				const wrap = createSpan({ cls: "gm-setting-name" });
+				wrap.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
+				wrap.createSpan({ text: t(L, labels[category]) });
+				frag.appendChild(wrap);
+			}),
+		);
+		setting.setDesc(t(L, "s.codepoints", { n: count }));
+		setting.addExtraButton((btn) => {
+			btn.setIcon("chevron-right");
+			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.g1"));
+			btn.onClick(() => {
+				this.subPage = category;
+				this.display(false);
+			});
+		});
+		setting.settingEl.addEventListener("click", () => {
+			this.subPage = category;
+			this.display(false);
+		});
+	}
+
+	/** Dedicated page for one category: back entry plus its policy rows. */
+	private displayCategorySubPage(category: Category): void {
 		const L = this.L;
 		const labels = {
 			invisible: "s.red",
@@ -173,42 +232,31 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 			semantic: "s.yellow",
 		} as const;
 
-		const collapsed = this.settings.collapsedGroups[category];
-		const head = createDiv({ cls: "gm-sub-head gm-collapsible" });
-		const caret = head.createSpan({
-			cls: "gm-caret",
-			text: collapsed ? "▸" : "▾",
+		const head = new Setting(this.containerEl).setClass("gm-subpage-head");
+		head.setName(
+			createFragment((frag) => {
+				const wrap = createSpan({ cls: "gm-setting-name" });
+				wrap.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
+				wrap.createSpan({ text: t(L, labels[category]) });
+				frag.appendChild(wrap);
+			}),
+		);
+		head.addExtraButton((btn) => {
+			btn.setIcon("arrow-left");
+			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.back"));
+			btn.onClick(() => {
+				this.subPage = null;
+				this.display(false);
+			});
 		});
-		head.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
-		head.createSpan({ text: t(L, labels[category]) });
-		this.containerEl.appendChild(head);
-
-		const body = createDiv({ cls: "gm-group-body" });
-		if (collapsed) body.addClass("is-collapsed");
-		this.containerEl.appendChild(body);
 
 		for (const entry of DEFAULT_POLICY_ENTRIES) {
 			if (entry.category !== category) continue;
-			this.displayPolicyRow(entry, body);
+			this.displayPolicyRow(entry, this.containerEl);
 			if (entry.id === "U+FEFF") {
-				this.note(t(L, "s.feff"), body);
+				this.note(t(L, "s.feff"));
 			}
 		}
-
-		head.addEventListener("click", () => {
-			const nowCollapsed = !body.hasClass("is-collapsed");
-			body.toggleClass("is-collapsed", nowCollapsed);
-			caret.textContent = nowCollapsed ? "▸" : "▾";
-			this.settings.collapsedGroups[category] = nowCollapsed;
-			void this.deps.saveSettings();
-		});
-	}
-
-	private note(text: string, container: HTMLElement = this.containerEl): void {
-		container.createDiv({
-			cls: "setting-item-description",
-			text,
-		});
 	}
 
 	private displayPolicyRow(entry: PolicyEntry, container: HTMLElement): void {
@@ -265,6 +313,71 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		} else {
 			this.settings.policyOverrides[entry.id] = action;
 		}
+	}
+
+	private displayCustomPolicies(): void {
+		const L = this.L;
+
+		this.subHead(null, t(L, "s.custom"));
+		this.displayCustomAddRow();
+
+		const entries = Object.entries(this.settings.customPolicies);
+		if (entries.length === 0) {
+			this.note(t(L, "s.custom.empty"));
+		}
+		for (const [key, custom] of entries) {
+			const setting = new Setting(this.containerEl).setClass("gm-picked-row");
+			setting.setName(
+				createFragment((frag) => {
+					const wrap = createSpan({ cls: "gm-setting-name" });
+					wrap.createSpan({ cls: "gm-cp", text: charOf(key) });
+					wrap.createSpan({ cls: "gm-cp", text: key });
+					wrap.createSpan({
+						cls: "gm-entry-name",
+						text: custom.name || t(L, "pick.name.unknown"),
+					});
+					const tag = tagFor(custom.category);
+					wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
+					wrap.createSpan({
+						cls: "gm-tag picked",
+						text: t(L, "s.picked"),
+					});
+					frag.appendChild(wrap);
+				}),
+			);
+			setting.addDropdown((dd) =>
+				dd
+					.addOptions({
+						remove: actionLabel(L, "opt", "remove"),
+						toSpace: actionLabel(L, "opt", "toSpace"),
+						keep: actionLabel(L, "opt", "keep"),
+					})
+					.setValue(custom.action)
+					.onChange(async (value) => {
+						custom.action = value as GhostmarkSettings["zwnjAction"];
+						await this.deps.saveSettings();
+					}),
+			);
+			setting.addExtraButton((btn) => {
+				btn.setIcon("trash");
+				// setTooltip needs Obsidian 1.1.0; aria-label shows the
+				// native tooltip on every supported version.
+				btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.delete"));
+				btn.onClick(async () => {
+					delete this.settings.customPolicies[key];
+					await this.deps.saveSettings();
+					this.display();
+				});
+			});
+		}
+
+		new Setting(this.containerEl).addButton((btn) =>
+			btn.setButtonText(t(L, "s.reset")).onClick(async () => {
+				this.deps.setSettings(resetPolicies(this.settings));
+				await this.deps.saveSettings();
+				this.display();
+			}),
+		);
 	}
 
 	/**
@@ -324,6 +437,7 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					input = value;
 				});
+			text.inputEl.setAttribute("aria-label", t(L, "s.add"));
 			text.inputEl.addEventListener("keydown", (event) => {
 				if (event.key === "Enter") void submit();
 			});
@@ -356,67 +470,6 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		if (hex?.[1]) return Number.parseInt(hex[1], 16);
 		const cp = input.codePointAt(0);
 		return cp === undefined ? null : cp;
-	}
-
-	private displayCustomPolicies(): void {
-		const L = this.L;
-
-		this.subHead(null, t(L, "s.custom"));
-		this.displayCustomAddRow();
-
-		for (const [key, custom] of Object.entries(this.settings.customPolicies)) {
-			const setting = new Setting(this.containerEl).setClass("gm-picked-row");
-			setting.setName(
-				createFragment((frag) => {
-					const wrap = createSpan({ cls: "gm-setting-name" });
-					wrap.createSpan({ cls: "gm-cp", text: charOf(key) });
-					wrap.createSpan({ cls: "gm-cp", text: key });
-					wrap.createSpan({
-						cls: "gm-entry-name",
-						text: custom.name || t(L, "pick.name.unknown"),
-					});
-					const tag = tagFor(custom.category);
-					wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
-					wrap.createSpan({
-						cls: "gm-tag picked",
-						text: t(L, "s.picked"),
-					});
-					frag.appendChild(wrap);
-				}),
-			);
-			setting.addDropdown((dd) =>
-				dd
-					.addOptions({
-						remove: actionLabel(L, "opt", "remove"),
-						toSpace: actionLabel(L, "opt", "toSpace"),
-						keep: actionLabel(L, "opt", "keep"),
-					})
-					.setValue(custom.action)
-					.onChange(async (value) => {
-						custom.action = value as GhostmarkSettings["zwnjAction"];
-						await this.deps.saveSettings();
-					}),
-			);
-			setting.addExtraButton((btn) => {
-				btn.setIcon("trash");
-				// setTooltip needs Obsidian 1.1.0; aria-label shows the
-				// native tooltip on every supported version.
-				btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.delete"));
-				btn.onClick(async () => {
-					delete this.settings.customPolicies[key];
-					await this.deps.saveSettings();
-					this.display();
-				});
-			});
-		}
-
-		new Setting(this.containerEl).addButton((btn) =>
-			btn.setButtonText(t(L, "s.reset")).onClick(async () => {
-				this.deps.setSettings(resetPolicies(this.settings));
-				await this.deps.saveSettings();
-				this.display();
-			}),
-		);
 	}
 
 	private displayContextRules(): void {

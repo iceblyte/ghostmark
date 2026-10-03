@@ -91,7 +91,10 @@ const ZH: Record<string, string> = {
 	"block.frontmatter": "frontmatter",
 
 	"s.g1": "字符策略表",
-	"s.d1": "策略即数据：每个码点的动作可改为 清除 / 转空格 / 保留；变更即时生效并随设置持久化。",
+	"s.d1": "策略即数据：点击分组进入对应页面，逐码点修改动作（清除 / 转空格 / 保留）；变更即时生效并随设置持久化。",
+	"s.back": "返回",
+	"s.codepoints": "{n} 个码点",
+	"s.custom.empty": "尚无拾取项——用拾取码点命令或上方输入框添加",
 	"s.red": "红 · 无语义不可见（默认清除，含代码块）",
 	"s.blue": "蓝 · 空格类（正文成串删除、孤立转空格）",
 	"s.yellow": "黄 · 受保护语义（仅标记）",
@@ -251,7 +254,10 @@ const EN: Record<string, string> = {
 	"block.frontmatter": "frontmatter",
 
 	"s.g1": "Character policy table",
-	"s.d1": "Policy is data: every codepoint's action can be set to remove / to-space / keep; changes apply instantly and persist.",
+	"s.d1": "Policy is data: click a group to open its page and set every codepoint's action (remove / to-space / keep); changes apply instantly and persist.",
+	"s.back": "Back",
+	"s.codepoints": "{n} codepoints",
+	"s.custom.empty": "Nothing picked yet — use the pick command or the input above",
 	"s.red": "Red · invisible, no semantics (removed by default, incl. code blocks)",
 	"s.blue": "Blue · space-like (runs removed, isolated → space)",
 	"s.yellow": "Yellow · protected semantics (mark only)",

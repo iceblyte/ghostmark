@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS: GhostmarkSettings = {
 	mathMode: "markOnly",
 	zwnjAction: "keep",
 	codeToSpace: true,
-	inspectRemember: false,
+	inspectRemember: true,
 	inspectEnabled: false,
 	density: "compact",
 	confirmBeforeAll: true,

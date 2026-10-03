@@ -11,7 +11,7 @@ describe("DEFAULT_SETTINGS", () => {
 			mathMode: "markOnly",
 			zwnjAction: "keep",
 			codeToSpace: true,
-			inspectRemember: false,
+			inspectRemember: true,
 			inspectEnabled: false,
 			density: "compact",
 			confirmBeforeAll: true,

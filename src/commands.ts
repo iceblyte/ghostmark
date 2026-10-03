@@ -426,8 +426,9 @@ interface PickCandidate {
 }
 
 /**
- * Unknown codepoints in the selection that classify as invisible or
- * space-like — ordinary letters/emoji are not policy material.
+ * Unknown codepoints in the selection — every distinct codepoint not yet
+ * covered by the policy table, exactly as the user selected them (no
+ * classification filter: an explicit selection IS the intent).
  */
 function collectPickables(
 	host: CommandsHost,
@@ -440,7 +441,6 @@ function collectPickables(
 		i += cp > 0xffff ? 2 : 1;
 		if (host.config.policy.has(cp) || seen.has(cp)) continue;
 		const suggestion = classifyUnknownCodepoint(cp);
-		if (suggestion.category === "semantic") continue;
 		seen.add(cp);
 		picks.push({
 			cp,

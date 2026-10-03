@@ -35,6 +35,8 @@ export default class GhostmarkPlugin extends Plugin {
 
 	private statusBar: GhostmarkStatusBar | null = null;
 
+	private settingsTab: GhostmarkSettingTab | null = null;
+
 	config = buildInspectConfig(DEFAULT_SETTINGS, "en");
 
 	async onload() {
@@ -72,17 +74,16 @@ export default class GhostmarkPlugin extends Plugin {
 			}),
 		);
 
-		this.addSettingTab(
-			new GhostmarkSettingTab(this.app, this, {
-				getSettings: () => this.settings,
-				setSettings: (settings) => {
-					this.settings = settings;
-				},
-				getLocale: () => this.config.locale,
-				saveSettings: () => this.saveSettings(),
-				setStatusBarVisible: (on) => this.setStatusBarVisible(on),
-			}),
-		);
+		this.settingsTab = new GhostmarkSettingTab(this.app, this, {
+			getSettings: () => this.settings,
+			setSettings: (settings) => {
+				this.settings = settings;
+			},
+			getLocale: () => this.config.locale,
+			saveSettings: () => this.saveSettings(),
+			setStatusBarVisible: (on) => this.setStatusBarVisible(on),
+		});
+		this.addSettingTab(this.settingsTab);
 	}
 
 	async saveSettings(): Promise<void> {
@@ -92,6 +93,10 @@ export default class GhostmarkPlugin extends Plugin {
 		this.forEachEditorView((view) => {
 			view.dispatch({ effects: inspectRuntimeEffect.of(inspectRuntime.version) });
 		});
+		// picks and policy changes show up in an open settings tab at once
+		if (this.settingsTab?.containerEl.isShown()) {
+			this.settingsTab.display();
+		}
 	}
 
 	setInspectEnabled(on: boolean): void {

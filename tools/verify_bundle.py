@@ -21,13 +21,18 @@ checks = [
     ("Notice：n.zero.sel 中文（转义形态）", probe in js),
     ("拾取：批量/单行删除 s.delete", "s.delete" in js),
     ("拾取：右键 crosshair 图标", "crosshair" in js),
-    ("设置：collapsedGroups 折叠持久化", "collapsedGroups" in js),
-    ("设置：gm-collapsible 样式类", "gm-collapsible" in js),
+    ("设置：collapsedGroups 迁移字段保留", "collapsedGroups" in js),
+    ("设置：旧折叠样式 gm-collapsible 已移除", "gm-collapsible" not in js),
     ("动作值：toSpace 统一（无小写键残留）", '"tospace"' not in js and "'tospace'" not in js),
     ("Fix-1：滚动保持 getScrollInfo/scrollTo", "getScrollInfo" in js and "scrollTo" in js),
-    ("Fix-2：分组就地折叠 gm-group-body/is-collapsed", "gm-group-body" in js and "is-collapsed" in js),
-    ("Fix-3：手动添加行 s.add.placeholder", "s.add.placeholder" in js and "n.add.invalid" in js),
-    ("Fix-4：死胡同提示 n.pick.sel.none 已移除", "n.pick.sel.none" not in js),
+    ("Fix-1b：分组导航 gm-group-nav（点击进子页面）", "gm-group-nav" in js),
+    ("Fix-1c：子页面头部 gm-subpage-head", "gm-subpage-head" in js),
+    ("Fix-1d：返回键 s.back / 计数 s.codepoints", "s.back" in js and "s.codepoints" in js),
+    ("Fix-2：设置页实时刷新 isShown", "isShown" in js),
+    ("Fix-3：死胡同提示 n.pick.sel.none 已移除", "n.pick.sel.none" not in js),
+    ("Fix-3b：空状态提示 s.custom.empty", "s.custom.empty" in js),
+    ("Fix-4：添加行整行布局 gm-add-row", "gm-add-row" in js),
+    ("Fix-5：inspectRemember 默认开启", "inspectRemember:!0" in js),
 ]
 
 ok = True

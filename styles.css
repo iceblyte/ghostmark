@@ -217,24 +217,28 @@ body.theme-light {
 	margin: 16px 0 2px;
 }
 
-.gm-sub-head.gm-collapsible {
+/* ---------- 策略表分组导航 / 子页面（点击进入修改） ---------- */
+.setting-item.gm-group-nav {
 	cursor: pointer;
-	user-select: none;
 }
 
-.gm-sub-head.gm-collapsible:hover {
-	color: var(--text-normal);
+.setting-item.gm-group-nav:hover {
+	background: var(--background-modifier-hover);
 }
 
-.gm-caret {
-	font-size: 10px;
-	width: 12px;
-	flex: none;
-	color: var(--text-faint);
+.setting-item.gm-subpage-head {
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
 }
 
-.gm-group-body.is-collapsed {
-	display: none;
+.setting-item.gm-group-nav .setting-item-name,
+.setting-item.gm-subpage-head .setting-item-name {
+	font-weight: 600;
+}
+
+.gm-group-nav .setting-item-name .gm-setting-name,
+.gm-subpage-head .setting-item-name .gm-setting-name {
+	gap: 8px;
 }
 
 .gm-setting-name {
@@ -305,6 +309,22 @@ body.theme-light {
 	background: hsla(var(--interactive-accent-hsl), 0.1);
 	border-radius: 6px;
 	padding-inline: 10px;
+}
+
+/* ---------- 手动添加行：输入框位于整行最左 ---------- */
+.setting-item.gm-add-row .setting-item-info {
+	display: none;
+}
+
+.setting-item.gm-add-row .setting-item-control {
+	flex: 1;
+	gap: 6px;
+	justify-content: flex-start;
+}
+
+.setting-item.gm-add-row input[type="text"] {
+	flex: 1;
+	min-width: 0;
 }
 
 /* ---------- 确认 Modal（原型 P3/P4 .cnt-table / .modal-note） ---------- */
