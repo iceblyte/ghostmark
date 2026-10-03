@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Hit } from "../core/categories";
-import { badgeSegments, badgeVariant } from "./badgeModel";
+import {
+	badgeSegments,
+	badgeVariant,
+	badgeWidthPx,
+	MIN_BADGE_GUTTER,
+} from "./badgeModel";
 
 function hit(
 	category: Hit["category"],
@@ -51,6 +56,39 @@ describe("badgeSegments", () => {
 			hit("invisible", 2),
 		]);
 		expect(segments).toEqual([{ color: "red", count: 3 }]);
+	});
+});
+
+describe("badgeWidthPx", () => {
+	it("never goes below the gutter floor", () => {
+		expect(badgeWidthPx([])).toBe(MIN_BADGE_GUTTER);
+		expect(badgeWidthPx([{ color: "red", count: 1 }])).toBe(
+			MIN_BADGE_GUTTER,
+		);
+	});
+
+	it("grows for multi-digit and multi-segment badges", () => {
+		const twoSegments = badgeWidthPx([
+			{ color: "red", count: 10 },
+			{ color: "blue", count: 32 },
+		]);
+		const threeSegments = badgeWidthPx([
+			{ color: "red", count: 10 },
+			{ color: "blue", count: 32 },
+			{ color: "yellow", count: 4 },
+		]);
+		expect(twoSegments).toBeGreaterThan(MIN_BADGE_GUTTER);
+		expect(threeSegments).toBeGreaterThan(twoSegments);
+	});
+
+	it("keeps per-line segment widths bounded by the doc maximum", () => {
+		const widest = [
+			{ color: "red", count: 100 },
+			{ color: "blue", count: 32 },
+		];
+		expect(badgeWidthPx(widest)).toBeGreaterThan(
+			badgeWidthPx([{ color: "red", count: 1 }]),
+		);
 	});
 });
 

@@ -15,6 +15,11 @@ import {
 	type ViewUpdate,
 } from "@codemirror/view";
 import type { Hit } from "../core/categories";
+import {
+	badgeSegments,
+	badgeWidthPx,
+	MIN_BADGE_GUTTER,
+} from "./badgeModel";
 import { hoverExtension } from "./hover";
 import {
 	inspectHitsField,
@@ -23,6 +28,28 @@ import {
 } from "./inspectState";
 import { gutterExtension } from "./gutter";
 import { GhostWidget } from "./widgets";
+
+/**
+ * Size the badge gutter for the widest badge in the whole document (not
+ * just the viewport) so widths never change while scrolling; applied as
+ * a CSS variable on the editor root.
+ */
+function updateGutterWidth(view: EditorView): void {
+	const hits = view.state.field(inspectHitsField, false) ?? [];
+	const doc = view.state.doc;
+	const perLine = new Map<number, Hit[]>();
+	for (const hit of hits) {
+		const from = doc.lineAt(hit.index).from;
+		const list = perLine.get(from);
+		if (list) list.push(hit);
+		else perLine.set(from, [hit]);
+	}
+	let max = MIN_BADGE_GUTTER;
+	for (const list of perLine.values()) {
+		max = Math.max(max, badgeWidthPx(badgeSegments(list)));
+	}
+	view.dom.setCssProps({ "--gm-gutter-width": `${max}px` });
+}
 
 function hitsInRange(hits: Hit[], from: number, to: number): Hit[] {
 	let lo = 0;
@@ -91,10 +118,17 @@ const decorationsPlugin = ViewPlugin.fromClass(
 		decorations: DecorationSet;
 
 		constructor(view: EditorView) {
+			updateGutterWidth(view);
 			this.decorations = buildDecorations(view);
 		}
 
 		update(update: ViewUpdate) {
+			if (
+				update.docChanged ||
+				runtimeChanged(update)
+			) {
+				updateGutterWidth(update.view);
+			}
 			if (
 				update.docChanged ||
 				update.viewportChanged ||

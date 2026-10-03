@@ -80,10 +80,38 @@ export function badgeVariant(hits: Hit[]): BadgeVariantInfo {
 		else if (hit.action === "toSpace") spaceCount += hit.count;
 	}
 	if (removeCount > 0) {
-		return { variant: "clear", actionedCount: removeCount + spaceCount, totalCount };
+		return {
+			variant: "clear",
+			actionedCount: removeCount + spaceCount,
+			totalCount,
+		};
 	}
 	if (spaceCount > 0) {
 		return { variant: "space", actionedCount: spaceCount, totalCount };
 	}
 	return { variant: "passive", actionedCount: 0, totalCount };
+}
+
+/** Gutter floor (single small badge) - matches the previous fixed width. */
+export const MIN_BADGE_GUTTER = 34;
+
+// px estimates for the 9.5px monospace badge metrics in styles.css
+const SEG_CHAR_WIDTH = 6;
+const SEG_PAD_X = 8;
+const SEG_DIVIDER = 1;
+const BADGE_BORDER = 2;
+
+/**
+ * Width the gutter needs so the widest badge for these segments is never
+ * clipped; the shell applies the per-document maximum as a CSS variable.
+ */
+export function badgeWidthPx(segments: BadgeSegment[]): number {
+	if (segments.length === 0) return MIN_BADGE_GUTTER;
+	let width = BADGE_BORDER;
+	for (let i = 0; i < segments.length; i++) {
+		if (i > 0) width += SEG_DIVIDER;
+		const digits = String(segments[i]?.count ?? 0).length;
+		width += SEG_PAD_X + digits * SEG_CHAR_WIDTH;
+	}
+	return Math.max(MIN_BADGE_GUTTER, width);
 }

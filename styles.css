@@ -75,7 +75,7 @@ body.theme-light {
 
 /* ---------- 行号槽徽标（分段式：每个类别一段，各带数量） ---------- */
 .ghostmark-gutter {
-	width: 34px;
+	width: max(34px, var(--gm-gutter-width, 34px));
 }
 
 .gm-badge {

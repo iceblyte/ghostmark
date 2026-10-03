@@ -36,6 +36,7 @@ checks = [
     ("Fix-3d：勾选文案 m6.list.desc / btn.add.n", "m6.list.desc" in js and "btn.add.n" in js),
     ("Fix-3e：整行点选 is-off 反馈", "is-off" in js),
     ("Feature：分段徽标 gm-badge-seg", "gm-badge-seg" in js),
+    ("Feature：gutter 自适应宽度变量", "--gm-gutter-width" in js),
     ("Feature：颜色注册表 BADGE_COLORS（三种顺序）", js.count('category:"') >= 3 or 'color:"' in js),
     ("Fix-3b：空状态提示 s.custom.empty", "s.custom.empty" in js),
     ("Fix-4：添加行整行布局 gm-add-row", "gm-add-row" in js),
