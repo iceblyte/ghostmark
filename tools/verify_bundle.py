@@ -7,6 +7,8 @@ js = open("main.js", encoding="utf-8").read()
 
 probe = "".join("\\u%04X" % ord(c) for c in "选区内无可清除标记")
 
+probeRememberOn = "".join("\\u%04X" % ord(c) for c in "默认开启）")
+probeRememberOff = "".join("\\u%04X" % ord(c) for c in "默认关闭）")
 checks = [
     ("检查模式：右键菜单 editor-menu", "editor-menu" in js),
     ("检查模式：gutter lineMarkerChange 配置", "lineMarkerChange" in js),
@@ -35,6 +37,9 @@ checks = [
     ("Fix-3b：空状态提示 s.custom.empty", "s.custom.empty" in js),
     ("Fix-4：添加行整行布局 gm-add-row", "gm-add-row" in js),
     ("Fix-5：inspectRemember 默认开启", "inspectRemember:!0" in js),
+    ("Fix-5b：设置页描述改为默认开启（中文转义）", probeRememberOn in js),
+    ("Fix-5c：旧描述文字（默认关闭）已移除", probeRememberOff not in js),
+    ("Fix-5d：英文描述 on by default", "on by default" in js and "off by default" not in js),
 ]
 
 ok = True
