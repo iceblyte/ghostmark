@@ -7,6 +7,7 @@ describe("DEFAULT_SETTINGS", () => {
 			schemaVersion: SCHEMA_VERSION,
 			policyOverrides: {},
 			customPolicies: {},
+			collapsedGroups: { invisible: false, spaceLike: false, semantic: false },
 			mathMode: "markOnly",
 			zwnjAction: "keep",
 			codeToSpace: true,
@@ -56,6 +57,17 @@ describe("migrateSettings", () => {
 		expect(migrated.mathMode).toBe("markOnly");
 		expect(migrated.language).toBe("auto");
 		expect(migrated.density).toBe("compact");
+	});
+
+	it("normalizes lowercase action values written by older builds", () => {
+		const migrated = migrateSettings({
+			policyOverrides: { "U+200B": "tospace" },
+			customPolicies: {
+				"U+2065": { codepoint: "U+2065", category: "invisible", action: "tospace", name: "x" },
+			},
+		});
+		expect(migrated.policyOverrides["U+200B"]).toBe("toSpace");
+		expect(migrated.customPolicies["U+2065"]?.action).toBe("toSpace");
 	});
 });
 

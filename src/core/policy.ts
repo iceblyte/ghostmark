@@ -22,6 +22,12 @@ export interface GhostmarkSettings {
 	policyOverrides: Record<string, Action>;
 	/** Picked codepoints (FR-9), keyed by "U+XXXX". */
 	customPolicies: Record<string, CharPolicy>;
+	/** Collapsed state of the policy-table category groups (settings UI). */
+	collapsedGroups: {
+		invisible: boolean;
+		spaceLike: boolean;
+		semantic: boolean;
+	};
 	/** Context rules. */
 	mathMode: MathMode;
 	/** Convenience control for the U+200C row (context rules group). */
@@ -44,6 +50,7 @@ export const DEFAULT_SETTINGS: GhostmarkSettings = {
 	schemaVersion: SCHEMA_VERSION,
 	policyOverrides: {},
 	customPolicies: {},
+	collapsedGroups: { invisible: false, spaceLike: false, semantic: false },
 	mathMode: "markOnly",
 	zwnjAction: "keep",
 	codeToSpace: true,
@@ -62,7 +69,10 @@ const DENSITIES: readonly Density[] = ["compact", "detailed"];
 const LANGUAGES: readonly LanguageSetting[] = ["auto", "en", "zh"];
 
 function asAction(value: unknown): Action | null {
-	return ACTIONS.includes(value as Action) ? (value as Action) : null;
+	if (typeof value !== "string") return null;
+	// case-insensitive: repairs lowercase "tospace" written by older builds
+	const action = ACTIONS.find((a) => a.toLowerCase() === value.toLowerCase());
+	return action ?? null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -118,6 +128,24 @@ export function migrateSettings(raw: unknown): GhostmarkSettings {
 		}
 	}
 	settings.customPolicies = customs;
+
+	const collapsed = asRecord(data.collapsedGroups);
+	if (collapsed) {
+		settings.collapsedGroups = {
+			invisible:
+				typeof collapsed.invisible === "boolean"
+					? collapsed.invisible
+					: false,
+			spaceLike:
+				typeof collapsed.spaceLike === "boolean"
+					? collapsed.spaceLike
+					: false,
+			semantic:
+				typeof collapsed.semantic === "boolean"
+					? collapsed.semantic
+					: false,
+		};
+	}
 
 	if (data.mathMode !== undefined) {
 		settings.mathMode = oneOf(data.mathMode, MATH_MODES) ?? settings.mathMode;

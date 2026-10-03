@@ -5,11 +5,16 @@
  */
 
 import { hoverTooltip } from "@codemirror/view";
-import { isSkinModifier, parseCodepointId, type Hit } from "../core/categories";
+import {
+	isSkinModifier,
+	parseCodepointId,
+	type Hit,
+} from "../core/categories";
 import { t } from "../core/i18n";
 import {
-	inspectConfigFacet,
 	inspectHitsField,
+	inspectRuntime,
+	inspectRuntimeField,
 	type InspectConfig,
 } from "./inspectState";
 import { colorClass } from "./widgets";
@@ -63,14 +68,16 @@ export function buildHoverDom(hit: Hit, config: InspectConfig): HTMLElement {
 
 	root.createDiv({
 		cls: "gm-hover-suggest",
-		text: `${t(config.locale, "tip.suggest")}: ${t(config.locale, `act.${hit.action}`)}`,
+		text: `${t(config.locale, "tip.suggest")}: ${t(config.locale, `act.${hit.action.toLowerCase()}`)}`,
 	});
 	return root;
 }
 
 export const hoverExtension = hoverTooltip((view, pos) => {
-	const config = view.state.facet(inspectConfigFacet);
+	if (!inspectRuntime.enabled) return null;
+	const config = inspectRuntime.config;
 	if (!config) return null;
+	if (view.state.field(inspectRuntimeField, false) === undefined) return null;
 	const hit = hitAt(view.state.field(inspectHitsField, false) ?? [], pos);
 	if (!hit) return null;
 	return {

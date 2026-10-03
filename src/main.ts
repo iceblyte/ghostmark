@@ -1,24 +1,30 @@
 import { EditorView } from "@codemirror/view";
-import { MarkdownView, Plugin, editorInfoField } from "obsidian";
+import {
+	type Editor,
+	MarkdownView,
+	Plugin,
+	editorInfoField,
+} from "obsidian";
+import { t } from "./core/i18n";
 import {
 	DEFAULT_SETTINGS,
 	migrateSettings,
 	type GhostmarkSettings,
 } from "./core/policy";
 import {
-	configureInspect,
-	INSPECT_OFF_EXTENSIONS,
-	inspectCompartment,
-	inspectConfigCompartment,
-} from "./editor/inspectMode";
+	clearCurrentBlock,
+	registerCommands,
+	runPickCodepoint,
+} from "./commands";
+import { INSPECT_EXTENSIONS } from "./editor/inspectMode";
 import {
 	clearBlockRequestFacet,
-	inspectConfigFacet,
-	type InspectConfig,
+	inspectRuntime,
+	inspectRuntimeEffect,
+	setInspectRuntime,
 } from "./editor/inspectState";
 import { buildInspectConfig, obsidianLocale } from "./settings";
 import { GhostmarkSettingTab } from "./settings";
-import { clearCurrentBlock, registerCommands } from "./commands";
 import { GhostmarkStatusBar, registerStatusBar } from "./statusBar";
 
 export default class GhostmarkPlugin extends Plugin {
@@ -29,20 +35,21 @@ export default class GhostmarkPlugin extends Plugin {
 
 	private statusBar: GhostmarkStatusBar | null = null;
 
-	config: InspectConfig = buildInspectConfig(
-		DEFAULT_SETTINGS,
-		"en",
-	);
+	config = buildInspectConfig(DEFAULT_SETTINGS, "en");
 
 	async onload() {
 		this.settings = migrateSettings(await this.loadData());
-		this.config = buildInspectConfig(this.settings, obsidianLocale());
 		this.inspectEnabled =
 			this.settings.inspectRemember && this.settings.inspectEnabled;
+		this.config = buildInspectConfig(this.settings, obsidianLocale());
+		// Snapshot the runtime BEFORE the extensions register: every editor
+		// state created from now on reads it at creation time, so new
+		// editors, plugin re-enables and file switches all start in the
+		// right state without any sync pass.
+		setInspectRuntime(this.inspectEnabled, this.config);
 
 		this.registerEditorExtension([
-			inspectConfigCompartment.of(inspectConfigFacet.of(this.config)),
-			inspectCompartment.of(INSPECT_OFF_EXTENSIONS),
+			...INSPECT_EXTENSIONS,
 			// Gutter badge → clear the block containing that line (FR-13)
 			clearBlockRequestFacet.of((view, lineIndex) => {
 				const editor = view.state.field(editorInfoField).editor;
@@ -50,9 +57,20 @@ export default class GhostmarkPlugin extends Plugin {
 			}),
 		]);
 
-		this.statusBar = registerStatusBar(this);
-
+		registerStatusBar(this);
 		registerCommands(this);
+
+		// Editor context menu entry for pick-codepoint (FR-9)
+		this.registerEvent(
+			this.app.workspace.on("editor-menu", (menu, editor: Editor) => {
+				menu.addItem((item) =>
+					item
+						.setTitle(t(this.config.locale, "cmd.pick"))
+						.setIcon("crosshair")
+						.onClick(() => runPickCodepoint(this, editor)),
+				);
+			}),
+		);
 
 		this.addSettingTab(
 			new GhostmarkSettingTab(this.app, this, {
@@ -65,40 +83,34 @@ export default class GhostmarkPlugin extends Plugin {
 				setStatusBarVisible: (on) => this.setStatusBarVisible(on),
 			}),
 		);
-
-		this.app.workspace.onLayoutReady(() => {
-			this.registerEvent(
-				this.app.workspace.on("layout-change", () => {
-					this.syncInspectAcrossEditors();
-				}),
-			);
-			this.syncInspectAcrossEditors();
-		});
-	}
-
-	setStatusBarVisible(on: boolean): void {
-		this.statusBar?.setVisible(on);
 	}
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		this.config = buildInspectConfig(this.settings, obsidianLocale());
+		setInspectRuntime(this.inspectEnabled, this.config);
 		this.forEachEditorView((view) => {
-			view.dispatch({
-				effects: inspectConfigCompartment.reconfigure(
-					inspectConfigFacet.of(this.config),
-				),
-			});
+			view.dispatch({ effects: inspectRuntimeEffect.of(inspectRuntime.version) });
 		});
 	}
 
 	setInspectEnabled(on: boolean): void {
-		this.inspectEnabled = on;
-		if (this.settings.inspectRemember && this.settings.inspectEnabled !== on) {
-			this.settings.inspectEnabled = on;
-			void this.saveData(this.settings);
+		if (this.inspectEnabled !== on) {
+			this.inspectEnabled = on;
+			setInspectRuntime(on, this.config);
+			this.forEachEditorView((view) => {
+				view.dispatch({ effects: inspectRuntimeEffect.of(inspectRuntime.version) });
+			});
+			if (this.settings.inspectRemember) {
+				this.settings.inspectEnabled = on;
+				void this.saveData(this.settings);
+			}
 		}
-		this.syncInspectAcrossEditors();
+		this.statusBar?.update();
+	}
+
+	setStatusBarVisible(on: boolean): void {
+		this.statusBar?.setVisible(on);
 	}
 
 	forEachEditorView(callback: (view: EditorView) => void): void {
@@ -108,11 +120,5 @@ export default class GhostmarkPlugin extends Plugin {
 			const cmView = EditorView.findFromDOM(view.containerEl);
 			if (cmView) callback(cmView);
 		});
-	}
-
-	private syncInspectAcrossEditors(): void {
-		this.forEachEditorView((view) =>
-			configureInspect(view, this.inspectEnabled),
-		);
 	}
 }

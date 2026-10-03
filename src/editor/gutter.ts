@@ -11,13 +11,30 @@ import type { Locale } from "../core/i18n";
 import { t } from "../core/i18n";
 import {
 	clearBlockRequestFacet,
-	inspectConfigFacet,
 	inspectHitsField,
+	inspectRuntime,
+	inspectRuntimeField,
 } from "./inspectState";
 import { colorClass } from "./widgets";
 
 /** Severity order used to break count ties: red, blue, yellow. */
 const CATEGORY_PRIORITY: Category[] = ["invisible", "spaceLike", "semantic"];
+
+type BadgeVariant = "clear" | "space" | "passive";
+
+function badgeVariant(hits: Hit[]): { variant: BadgeVariant; count: number } {
+	let removeCount = 0;
+	let spaceCount = 0;
+	let totalCount = 0;
+	for (const hit of hits) {
+		totalCount += hit.count;
+		if (hit.action === "remove") removeCount += hit.count;
+		else if (hit.action === "toSpace") spaceCount += hit.count;
+	}
+	if (removeCount > 0) return { variant: "clear", count: totalCount };
+	if (spaceCount > 0) return { variant: "space", count: spaceCount };
+	return { variant: "passive", count: totalCount };
+}
 
 function lineHits(hits: Hit[], line: BlockInfo): Hit[] {
 	let lo = 0;
@@ -67,6 +84,7 @@ class HitBadge extends GutterMarker {
 		readonly color: string,
 		readonly count: number,
 		readonly locale: Locale,
+		readonly variant: BadgeVariant,
 	) {
 		super();
 	}
@@ -75,23 +93,37 @@ class HitBadge extends GutterMarker {
 		return (
 			other.color === this.color &&
 			other.count === this.count &&
-			other.locale === this.locale
+			other.locale === this.locale &&
+			other.variant === this.variant
 		);
 	}
 
 	override toDOM(): HTMLElement {
-		const span = createSpan({ cls: `gm-badge ${this.color}` });
+		const span = createSpan({
+			cls: `gm-badge ${this.color}${this.variant === "passive" ? " passive" : ""}`,
+		});
 		span.setText(String(this.count));
-		span.title = t(this.locale, "badge.tip", { n: this.count });
+		const tipKey =
+			this.variant === "clear"
+				? "badge.tip"
+				: this.variant === "space"
+					? "badge.tip.space"
+					: "badge.tip.keep";
+		span.title = t(this.locale, tipKey, { n: this.count });
 		return span;
 	}
 }
 
-function badgeFor(color: string, count: number, locale: Locale): HitBadge {
-	const key = `${color}|${count}|${locale}`;
+function badgeFor(
+	color: string,
+	count: number,
+	locale: Locale,
+	variant: BadgeVariant,
+): HitBadge {
+	const key = `${color}|${count}|${locale}|${variant}`;
 	let badge = badgeCache.get(key);
 	if (!badge) {
-		badge = new HitBadge(color, count, locale);
+		badge = new HitBadge(color, count, locale, variant);
 		badgeCache.set(key, badge);
 	}
 	return badge;
@@ -101,18 +133,19 @@ export const gutterExtension = gutter({
 	class: "ghostmark-gutter",
 	lineMarkerChange: (update) =>
 		update.docChanged ||
-		update.startState.facet(inspectConfigFacet) !==
-			update.state.facet(inspectConfigFacet),
+		update.state.field(inspectRuntimeField, false) !==
+			update.startState.field(inspectRuntimeField, false),
 	lineMarker(view, line) {
-		const config = view.state.facet(inspectConfigFacet);
+		if (!inspectRuntime.enabled) return null;
+		const config = inspectRuntime.config;
 		if (!config) return null;
 		const hits = view.state.field(inspectHitsField, false) ?? [];
 		const inLine = lineHits(hits, line);
 		if (inLine.length === 0) return null;
 		const color = dominantColor(inLine);
 		if (!color) return null;
-		const count = inLine.reduce((sum, h) => sum + h.count, 0);
-		return badgeFor(color, count, config.locale);
+		const { variant, count } = badgeVariant(inLine);
+		return badgeFor(color, count, config.locale, variant);
 	},
 	domEventHandlers: {
 		mousedown(view, line, event) {

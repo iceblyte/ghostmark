@@ -27,6 +27,8 @@ const ZH: Record<string, string> = {
 
 	"ghost.tip": "{n} 处命中 · 点击切换检查模式",
 	"badge.tip": "本行 {n} 处命中 · 点击清除当前块",
+	"badge.tip.space": "本行 {n} 处空格类 · 点击转为普通空格",
+	"badge.tip.keep": "本行 {n} 处标记（保留/仅标记）· 无可清除项",
 
 	"cmd.toggle": "Ghostmark: 切换检查模式",
 	"cmd.clearall": "Ghostmark: 清除全部标记",
@@ -66,15 +68,19 @@ const ZH: Record<string, string> = {
 
 	"n3.ok": "已清除 {n} 处标记（红 {r} · 蓝 {b}）",
 	"n3.undo": "单步撤销，原文可完整恢复",
+	"n3.keep": "数学块内 {a} 处仅标记 · 受保护 {b} 处按策略保留",
 	"n4.ok": "已清除选区 {n} 处标记（红 {r} · 蓝 {b}）",
 	"n5.ok": "已清除当前块 {n} 处（红 {r} · 蓝 {b}）· 块外零改动",
 	"n5.zero": "该块无命中（或全部为保留/仅标记），未做修改",
 	"n6.ok": "已将 {cp}（动作：{act}）加入策略表",
 	"n6.more": "可在设置 → 字符策略表中修改动作",
 	"n.pick.known": "该字符已在策略表中",
+	"n.pick.batch": "已将 {n} 个新码点加入策略表：{list}",
+	"n.pick.sel.none": "选区内没有发现可拾取的新码点",
 	"pick.name.unknown": "—",
 	"n.zero.all": "当前笔记无可清除标记",
-	"n.zero.sel": "选区内无可清除标记",
+	"n.zero.sel":
+		"选区内无可清除标记（base64 追踪 token 等可见垃圾请手动选中删除）",
 
 	"block.paragraph": "段落",
 	"block.listItem": "列表项",
@@ -94,6 +100,7 @@ const ZH: Record<string, string> = {
 	"s.custom": "拾取追加区（customPolicies）",
 	"s.reset": "重置为默认表",
 	"s.picked": "拾取添加",
+	"s.delete": "移除此码点",
 	"s.g2": "上下文规则",
 	"s.math": "数学块处理",
 	"s.math.d": "默认仅标记；MathML 转写来源的 U+2062 可能承载真实乘法语义。",
@@ -176,6 +183,10 @@ const EN: Record<string, string> = {
 
 	"ghost.tip": "{n} hits · Click to toggle inspect mode",
 	"badge.tip": "{n} hits in this line · Click to clear current block",
+	"badge.tip.space":
+		"{n} space-like chars in this line · Click to convert to plain spaces",
+	"badge.tip.keep":
+		"{n} marks in this line (keep / mark-only) · Nothing to clear",
 
 	"cmd.toggle": "Ghostmark: Toggle inspect mode",
 	"cmd.clearall": "Ghostmark: Clear all marks",
@@ -215,15 +226,19 @@ const EN: Record<string, string> = {
 
 	"n3.ok": "Cleared {n} marks (red {r} · blue {b})",
 	"n3.undo": "Single-step undo — the original text is fully recoverable",
+	"n3.keep": "{a} mark-only in math · {b} protected — kept by policy",
 	"n4.ok": "Cleared {n} marks in selection (red {r} · blue {b})",
 	"n5.ok": "Cleared {n} marks in current block (red {r} · blue {b}) · zero change outside",
 	"n5.zero": "No eligible hits in this block (all keep / mark-only) — text unchanged",
 	"n6.ok": "{cp} (action: {act}) added to the policy table",
 	"n6.more": "Change it anytime in Settings → Character policy table",
 	"n.pick.known": "This codepoint is already in the policy table",
+	"n.pick.batch": "Added {n} new codepoints to the policy table: {list}",
+	"n.pick.sel.none": "No new pickable codepoints in the selection",
 	"pick.name.unknown": "—",
 	"n.zero.all": "Nothing to clean in this note",
-	"n.zero.sel": "Nothing to clean in the selection",
+	"n.zero.sel":
+		"Nothing to clean in the selection (visible garbage like base64 tokens must be deleted manually)",
 
 	"block.paragraph": "paragraph",
 	"block.listItem": "list item",
@@ -243,6 +258,7 @@ const EN: Record<string, string> = {
 	"s.custom": "Picked additions (customPolicies)",
 	"s.reset": "Reset to defaults",
 	"s.picked": "picked",
+	"s.delete": "Remove this codepoint",
 	"s.g2": "Context rules",
 	"s.math": "Math block handling",
 	"s.math.d": "Mark only by default; U+2062 from MathML transcodes may carry real multiplication semantics.",

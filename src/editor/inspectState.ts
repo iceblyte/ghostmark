@@ -1,10 +1,12 @@
 /**
- * Shared inspect-mode state: the config facet, the full-document scan
- * field and the gutter→command request facet. Kept free of decorations
- * code so hover/gutter can import it without cycles.
+ * Shared inspect-mode runtime state. The plugin owns a single mutable
+ * runtime (enabled + config, bumped version); a version-counter StateField
+ * snapshots the version when an editor state is created, so NEW editors
+ * come up in the correct state automatically, and runtime changes are
+ * propagated to existing editors with a plain effect.
  */
 
-import { Facet, StateField } from "@codemirror/state";
+import { Facet, StateEffect, StateField } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import type { Hit, ScanPolicy } from "../core/categories";
 import type { Locale } from "../core/i18n";
@@ -21,41 +23,66 @@ export interface InspectConfig {
 	nameFor: (entryId: string) => string;
 }
 
-/** Current policy/density/locale bundle, reconfigurable at runtime. */
-export const inspectConfigFacet = Facet.define<
-	InspectConfig,
-	InspectConfig | null
->({
-	combine: (values) => values.at(-1) ?? null,
+/**
+ * Global runtime, owned by the plugin shell. Mutation goes through
+ * setInspectRuntime(), which also bumps the version the field snapshots.
+ */
+export const inspectRuntime: {
+	enabled: boolean;
+	config: InspectConfig | null;
+	version: number;
+} = { enabled: false, config: null, version: 0 };
+
+export function setInspectRuntime(enabled: boolean, config: InspectConfig) {
+	inspectRuntime.enabled = enabled;
+	inspectRuntime.config = config;
+	inspectRuntime.version += 1;
+}
+
+/** Dispatched to existing editors after setInspectRuntime(); carries the version. */
+export const inspectRuntimeEffect = StateEffect.define<number>();
+
+/** Version of the runtime this state was created with / last synced to. */
+export const inspectRuntimeField = StateField.define<number>({
+	create: () => inspectRuntime.version,
+	update(value, tr) {
+		for (const e of tr.effects) {
+			if (e.is(inspectRuntimeEffect)) return e.value;
+		}
+		return value;
+	},
 });
 
+function scanState(state: {
+	doc: { toString(): string };
+}): Hit[] {
+	const config = inspectRuntime.config;
+	if (!config || !inspectRuntime.enabled) return [];
+	return scan(state.doc.toString(), config.policy, {
+		mathMode: config.mathMode,
+		codeToSpace: config.codeToSpace,
+	});
+}
+
 /**
- * Full-document scan result, recomputed on doc or config changes. One scan
- * per transaction feeds decorations, hover and gutter (design doc §5:
- * full scan + viewport-filtered decoration).
+ * Full-document scan result, recomputed on doc or runtime changes. One
+ * scan per transaction feeds decorations, hover and gutter (design doc
+ * §5: full scan + viewport-filtered decoration).
  */
 export const inspectHitsField = StateField.define<Hit[]>({
-	create: () => [],
+	create: scanState,
 	update(hits, tr) {
-		if (
-			!tr.docChanged &&
-			tr.startState.facet(inspectConfigFacet) ===
-				tr.state.facet(inspectConfigFacet)
-		) {
-			return hits;
-		}
-		const config = tr.state.facet(inspectConfigFacet);
-		if (!config) return [];
-		return scan(tr.state.doc.toString(), config.policy, {
-			mathMode: config.mathMode,
-			codeToSpace: config.codeToSpace,
-		});
+		const versionChanged =
+			tr.state.field(inspectRuntimeField, false) !==
+			tr.startState.field(inspectRuntimeField, false);
+		if (!tr.docChanged && !versionChanged) return hits;
+		return scanState(tr.state);
 	},
 });
 
 /**
- * Provided by the shell once the clear-current-block command exists
- * (FR-13): gutter badge clicks request a block clear for a 0-based line.
+ * Provided by the shell (FR-13): gutter badge clicks request a block
+ * clear for a 0-based line.
  */
 export const clearBlockRequestFacet = Facet.define<
 	(view: EditorView, lineIndex: number) => void

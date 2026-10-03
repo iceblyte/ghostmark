@@ -197,10 +197,23 @@ export class ConfirmClearModal extends Modal {
 	}
 }
 
-function undoNotice(main: string, locale: Locale): void {
+function undoNotice(
+	main: string,
+	locale: Locale,
+	kept?: { markOnly: number; protectedCount: number },
+): void {
 	new Notice(
 		createFragment((frag) => {
 			frag.createDiv({ text: main });
+			if (kept && kept.markOnly + kept.protectedCount > 0) {
+				frag.createDiv({
+					cls: "gm-notice-undo",
+					text: t(locale, "n3.keep", {
+						a: kept.markOnly,
+						b: kept.protectedCount,
+					}),
+				});
+			}
 			const row = frag.createDiv({ cls: "gm-notice-undo" });
 			row.createEl("kbd", { text: "Ctrl" });
 			row.createSpan({ text: "+" });
@@ -263,10 +276,11 @@ class PickCodepointModal extends Modal {
 		actRow.createSpan({ cls: "gm-pick-k", text: t(locale, "m6.act") });
 		let selected = this.opts.suggested;
 		const sel = actRow.createEl("select", { cls: "dropdown" });
-		for (const action of ["remove", "tospace", "keep"] as const) {
-			sel.createEl("option", {
-				text: t(locale, `opt.${action}`),
-			}).value = action;
+		for (const action of ["remove", "toSpace", "keep"] as const) {
+			const option = sel.createEl("option", {
+				text: t(locale, `opt.${action.toLowerCase()}`),
+			});
+			option.value = action;
 		}
 		sel.value = selected;
 		sel.addEventListener("change", () => {
@@ -290,63 +304,133 @@ class PickCodepointModal extends Modal {
 	}
 }
 
-export function registerPickCodepointCommand(host: CommandsHost): void {
-	host.addCommand({
-		id: "pick-codepoint",
-		name: t(host.config.locale, "cmd.pick"),
-		editorCallback: (editor) => {
-			const localeNow = host.config.locale;
-			const text = editor.getValue();
-			if (text.length === 0) return;
-			const cursor = editor.posToOffset(editor.getCursor("from"));
-			let start = Math.min(cursor, text.length - 1);
-			let cp = text.codePointAt(start);
-			// a cursor between surrogate halves reads the low one; step back
-			if (cp !== undefined && cp >= 0xdc00 && cp <= 0xdfff && start > 0) {
-				start -= 1;
-				cp = text.codePointAt(start);
-			}
-			if (cp === undefined) return;
+/**
+ * Pick the codepoint under the cursor, or — when the editor has a
+ * selection — every unknown watermark/space-like codepoint in it
+ * (single find gets the modal, several are batch-added with the
+ * category-based suggested actions).
+ */
+export function runPickCodepoint(host: CommandsHost, editor: Editor): void {
+	const localeNow = host.config.locale;
+	const text = editor.getValue();
+	if (text.length === 0) return;
 
-			const id = formatCodepoint(cp);
-			if (host.config.policy.has(cp)) {
-				new Notice(t(localeNow, "n.pick.known"));
-				return;
-			}
-			const suggestion = classifyUnknownCodepoint(cp);
-			const rawName = host.config.nameFor(id);
-			new PickCodepointModal(host.app, {
-				locale: localeNow,
-				id,
-				name: rawName === id ? t(localeNow, "pick.name.unknown") : rawName,
+	const selection = editor.getSelection();
+	if (selection.length > 0) {
+		runBatchPick(host, localeNow, selection);
+		return;
+	}
+
+	const cursor = editor.posToOffset(editor.getCursor("from"));
+	let start = Math.min(cursor, text.length - 1);
+	let cp = text.codePointAt(start);
+	// a cursor between surrogate halves reads the low one; step back
+	if (cp !== undefined && cp >= 0xdc00 && cp <= 0xdfff && start > 0) {
+		start -= 1;
+		cp = text.codePointAt(start);
+	}
+	if (cp === undefined) return;
+
+	const id = formatCodepoint(cp);
+	if (host.config.policy.has(cp)) {
+		new Notice(t(localeNow, "n.pick.known"));
+		return;
+	}
+	const suggestion = classifyUnknownCodepoint(cp);
+	const rawName = host.config.nameFor(id);
+	new PickCodepointModal(host.app, {
+		locale: localeNow,
+		id,
+		name: rawName === id ? t(localeNow, "pick.name.unknown") : rawName,
+		category: suggestion.category,
+		suggested: suggestion.action,
+		onPick: (action) => {
+			host.settings.customPolicies[id] = {
+				codepoint: id,
 				category: suggestion.category,
-				suggested: suggestion.action,
-				onPick: (action) => {
-					host.settings.customPolicies[id] = {
-						codepoint: id,
-						category: suggestion.category,
-						action,
-						name: "",
-					};
-					void host.saveSettings();
-					new Notice(
-						createFragment((frag) => {
-							frag.createDiv({
-								text: t(localeNow, "n6.ok", {
-									cp: id,
-									act: t(localeNow, `act.${action}`),
-								}),
-							});
-							frag.createDiv({
-								cls: "gm-notice-undo",
-								text: t(localeNow, "n6.more"),
-							});
-						}),
-					);
-				},
-			}).open();
+				action,
+				name: "",
+			};
+			void host.saveSettings();
+			new Notice(
+				pickNotice(localeNow, [
+					{ id, action },
+				]),
+			);
 		},
+	}).open();
+}
+
+interface PickedCodepoint {
+	id: string;
+	action: Action;
+}
+
+function pickNotice(locale: Locale, picks: PickedCodepoint[]): DocumentFragment {
+	return createFragment((frag) => {
+		frag.createDiv({
+			text:
+				picks.length === 1
+					? t(locale, "n6.ok", {
+							cp: picks[0]?.id ?? "",
+							act: t(locale, `act.${(picks[0]?.action ?? "remove").toLowerCase()}`),
+						})
+					: t(locale, "n.pick.batch", {
+							n: picks.length,
+							list: picks.map((p) => p.id).join("、"),
+						}),
+		});
+		frag.createDiv({
+			cls: "gm-notice-undo",
+			text: t(locale, "n6.more"),
+		});
 	});
+}
+
+/**
+ * Selection batch: only codepoints that classify as invisible or
+ * space-like are offered — normal letters/emoji are never policy
+ * material. Each pick stores the category-based suggested action.
+ */
+function runBatchPick(
+	host: CommandsHost,
+	localeNow: Locale,
+	selection: string,
+): void {
+	const seen = new Set<number>();
+	const picks: Array<{
+		id: string;
+		category: Category;
+		action: Action;
+	}> = [];
+	for (let i = 0; i < selection.length; ) {
+		const cp = selection.codePointAt(i) ?? 0;
+		i += cp > 0xffff ? 2 : 1;
+		if (host.config.policy.has(cp) || seen.has(cp)) continue;
+		const suggestion = classifyUnknownCodepoint(cp);
+		// semantic covers ordinary characters — not pickable material
+		if (suggestion.category === "semantic") continue;
+		seen.add(cp);
+		picks.push({
+			id: formatCodepoint(cp),
+			category: suggestion.category,
+			action: suggestion.action,
+		});
+	}
+	if (picks.length === 0) {
+		new Notice(t(localeNow, "n.pick.sel.none"));
+		return;
+	}
+	for (const pick of picks) {
+		host.settings.customPolicies[pick.id] = {
+			codepoint: pick.id,
+			category: pick.category,
+			action: pick.action,
+			name: "",
+		};
+	}
+	void host.saveSettings();
+	new Notice(pickNotice(localeNow, picks));
 }
 
 function editorOffset(editor: Editor, offset: number): EditorPosition {
@@ -457,6 +541,10 @@ export function registerCommands(host: CommandsHost): void {
 						b: report.byCategory.spaceLike,
 					}),
 					localeNow,
+					{
+						markOnly: summary.markOnly,
+						protectedCount: summary.byCategory.semantic,
+					},
 				);
 			};
 			if (!host.settings.confirmBeforeAll) {
@@ -504,7 +592,11 @@ export function registerCommands(host: CommandsHost): void {
 		},
 	});
 
-	registerPickCodepointCommand(host);
+	host.addCommand({
+		id: "pick-codepoint",
+		name: t(host.config.locale, "cmd.pick"),
+		editorCallback: (editor) => runPickCodepoint(host, editor),
+	});
 }
 
 function runClearSelection(host: CommandsHost, editor: Editor): void {
@@ -553,6 +645,10 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 		undoNotice(
 			t(localeNow, "n4.ok", { n: total, r: red, b: blue }),
 			localeNow,
+			{
+				markOnly: summary.markOnly,
+				protectedCount: summary.byCategory.semantic,
+			},
 		);
 	};
 

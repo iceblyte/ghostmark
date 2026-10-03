@@ -1,11 +1,12 @@
 /**
  * Inspect-mode CM6 assembly (design doc §5): a ViewPlugin that renders
- * replace-glyph decorations from the shared scan field, toggled per editor
- * via a shared Compartment. Global on/off state lives in the plugin shell,
- * which keeps every markdown editor in sync (layout-change).
+ * replace-glyph decorations from the shared scan field whenever the
+ * global runtime is enabled. On/off is read from the runtime version
+ * field, so every editor state (new or existing) reflects the global
+ * switch without per-editor compartments.
  */
 
-import { Compartment, type Extension } from "@codemirror/state";
+import type { Extension } from "@codemirror/state";
 import {
 	Decoration,
 	type DecorationSet,
@@ -16,8 +17,9 @@ import {
 import type { Hit } from "../core/categories";
 import { hoverExtension } from "./hover";
 import {
-	inspectConfigFacet,
 	inspectHitsField,
+	inspectRuntime,
+	inspectRuntimeField,
 } from "./inspectState";
 import { gutterExtension } from "./gutter";
 import { GhostWidget } from "./widgets";
@@ -46,10 +48,11 @@ function hitsInRange(hits: Hit[], from: number, to: number): Hit[] {
 }
 
 export function buildDecorations(view: EditorView): DecorationSet {
-	const config = view.state.facet(inspectConfigFacet);
-	if (!config) return Decoration.none;
+	if (!inspectRuntime.enabled) return Decoration.none;
 	const hits = view.state.field(inspectHitsField, false) ?? [];
 	if (hits.length === 0) return Decoration.none;
+	const config = inspectRuntime.config;
+	if (!config) return Decoration.none;
 
 	const ranges: Array<{ from: number; to: number; deco: Decoration }> = [];
 	for (const { from, to } of view.visibleRanges) {
@@ -76,6 +79,13 @@ export function buildDecorations(view: EditorView): DecorationSet {
 	);
 }
 
+function runtimeChanged(update: ViewUpdate): boolean {
+	return (
+		update.state.field(inspectRuntimeField, false) !==
+		update.startState.field(inspectRuntimeField, false)
+	);
+}
+
 const decorationsPlugin = ViewPlugin.fromClass(
 	class {
 		decorations: DecorationSet;
@@ -88,8 +98,7 @@ const decorationsPlugin = ViewPlugin.fromClass(
 			if (
 				update.docChanged ||
 				update.viewportChanged ||
-				update.startState.facet(inspectConfigFacet) !==
-					update.state.facet(inspectConfigFacet)
+				runtimeChanged(update)
 			) {
 				this.decorations = buildDecorations(update.view);
 			}
@@ -105,23 +114,11 @@ const decorationsPlugin = ViewPlugin.fromClass(
 	},
 );
 
-/** Extension set applied while inspect mode is on. */
-export const INSPECT_ON_EXTENSIONS: Extension[] = [
+/** Always-on extension set; gating happens through the runtime field. */
+export const INSPECT_EXTENSIONS: Extension[] = [
+	inspectRuntimeField,
 	inspectHitsField,
 	decorationsPlugin,
 	hoverExtension,
 	gutterExtension,
 ];
-export const INSPECT_OFF_EXTENSIONS: Extension[] = [];
-
-/** Shared compartment so the shell can toggle every editor at once. */
-export const inspectCompartment = new Compartment();
-
-/** Compartment carrying the facet input, so settings updates propagate. */
-export const inspectConfigCompartment = new Compartment();
-
-export function configureInspect(view: EditorView, on: boolean): void {
-	const next = on ? INSPECT_ON_EXTENSIONS : INSPECT_OFF_EXTENSIONS;
-	if (inspectCompartment.get(view.state) === next) return;
-	view.dispatch({ effects: inspectCompartment.reconfigure(next) });
-}

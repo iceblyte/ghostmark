@@ -19,6 +19,16 @@ import {
 import { resolveLocale, t, type Locale } from "./core/i18n";
 import type { InspectConfig } from "./editor/inspectState";
 
+/** i18n keys are lowercase; core Action values are camelCase. */
+function actionLabel(locale: Locale, prefix: "act" | "opt", action: string): string {
+	return t(locale, `${prefix}.${action.toLowerCase()}`);
+}
+
+function charOf(id: string): string {
+	const cp = Number.parseInt(id.replace(/^U\+/, ""), 16);
+	return Number.isNaN(cp) ? "" : String.fromCodePoint(cp);
+}
+
 /**
  * Obsidian's UI locale. Read from localStorage("language") — the official
  * getLanguage() would force minAppVersion 1.8.7, which the design doc
@@ -141,6 +151,7 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 
 		for (const category of ["invisible", "spaceLike", "semantic"] as const) {
 			this.displayCategoryHead(category);
+			if (this.settings.collapsedGroups[category]) continue;
 			for (const entry of DEFAULT_POLICY_ENTRIES) {
 				if (entry.category !== category) continue;
 				this.displayPolicyRow(entry);
@@ -160,7 +171,20 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 			spaceLike: "s.blue",
 			semantic: "s.yellow",
 		} as const;
-		this.subHead(tagFor(category).cls, t(L, labels[category]));
+		const collapsed = this.settings.collapsedGroups[category];
+		const head = createDiv({ cls: "gm-sub-head gm-collapsible" });
+		head.createSpan({
+			cls: "gm-caret",
+			text: collapsed ? "▸" : "▾",
+		});
+		head.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
+		head.createSpan({ text: t(L, labels[category]) });
+		head.addEventListener("click", () => {
+			this.settings.collapsedGroups[category] = !collapsed;
+			void this.deps.saveSettings();
+			this.display();
+		});
+		this.containerEl.appendChild(head);
 	}
 
 	private displayPolicyRow(entry: PolicyEntry): void {
@@ -187,7 +211,7 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		setting.addDropdown((dd) => {
 			const options: Record<string, string> = {};
 			for (const action of entry.options) {
-				options[action] = t(L, `opt.${action}`);
+				options[action] = actionLabel(L, "opt", action);
 			}
 			dd.addOptions(options);
 			if (locked) dd.selectEl.disabled = true;
@@ -229,10 +253,11 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 			setting.setName(
 				createFragment((frag) => {
 					const wrap = createSpan({ cls: "gm-setting-name" });
+					wrap.createSpan({ cls: "gm-cp", text: charOf(key) });
 					wrap.createSpan({ cls: "gm-cp", text: key });
 					wrap.createSpan({
 						cls: "gm-entry-name",
-						text: custom.name || key,
+						text: custom.name || t(L, "pick.name.unknown"),
 					});
 					const tag = tagFor(custom.category);
 					wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
@@ -246,9 +271,9 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 			setting.addDropdown((dd) =>
 				dd
 					.addOptions({
-						remove: t(L, "opt.remove"),
-						tospace: t(L, "opt.tospace"),
-						keep: t(L, "opt.keep"),
+						remove: actionLabel(L, "opt", "remove"),
+						toSpace: actionLabel(L, "opt", "toSpace"),
+						keep: actionLabel(L, "opt", "keep"),
 					})
 					.setValue(custom.action)
 					.onChange(async (value) => {
@@ -256,6 +281,17 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 						await this.deps.saveSettings();
 					}),
 			);
+			setting.addExtraButton((btn) => {
+				btn.setIcon("trash");
+				// setTooltip needs Obsidian 1.1.0; aria-label shows the
+				// native tooltip on every supported version.
+				btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.delete"));
+				btn.onClick(async () => {
+					delete this.settings.customPolicies[key];
+					await this.deps.saveSettings();
+					this.display();
+				});
+			});
 		}
 
 		new Setting(this.containerEl).addButton((btn) =>
