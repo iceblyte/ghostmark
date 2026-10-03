@@ -35,6 +35,22 @@ describe("migrateSettings", () => {
 		expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
 	});
 
+	it("upgrades v1 inspectRemember=false to the new on default", () => {
+		const migrated = migrateSettings({
+			schemaVersion: 1,
+			inspectRemember: false,
+		});
+		expect(migrated.inspectRemember).toBe(true);
+	});
+
+	it("respects inspectRemember=false saved under the current schema", () => {
+		const migrated = migrateSettings({
+			schemaVersion: 2,
+			inspectRemember: false,
+		});
+		expect(migrated.inspectRemember).toBe(false);
+	});
+
 	it("keeps valid overrides and customs, drops invalid ones", () => {
 		const migrated = migrateSettings({
 			policyOverrides: { "U+200B": "keep", "U+2062": "explode" },

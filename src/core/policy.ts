@@ -44,7 +44,7 @@ export interface GhostmarkSettings {
 	language: LanguageSetting;
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_SETTINGS: GhostmarkSettings = {
 	schemaVersion: SCHEMA_VERSION,
@@ -95,6 +95,10 @@ export function migrateSettings(raw: unknown): GhostmarkSettings {
 
 	const data = asRecord(raw);
 	if (!data) return settings;
+
+	// source schema version, for one-time upgrade decisions below
+	const rawSchema =
+		typeof data.schemaVersion === "number" ? data.schemaVersion : 0;
 
 	const overrides: Record<string, Action> = {};
 	const overrideData = asRecord(data.policyOverrides);
@@ -200,6 +204,13 @@ export function migrateSettings(raw: unknown): GhostmarkSettings {
 	}
 
 	settings.schemaVersion = SCHEMA_VERSION;
+
+	// v1 → v2: "remember inspect mode" flipped its default to on; upgrade
+	// existing installs so the new default is visible, while a value saved
+	// under v2+ (deliberately turned off afterwards) is respected.
+	if (rawSchema < 2) {
+		settings.inspectRemember = true;
+	}
 	return settings;
 }
 

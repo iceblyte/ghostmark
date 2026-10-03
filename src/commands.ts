@@ -236,6 +236,84 @@ export class ConfirmClearModal extends Modal {
 	}
 }
 
+/** Prototype P6 pick list: check the selection's codepoints to add. */
+class PickListModal extends Modal {
+	constructor(
+		app: App,
+		private opts: {
+			locale: Locale;
+			candidates: PickCandidate[];
+			onConfirm: (picked: PickCandidate[]) => void;
+		},
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		const { locale } = this.opts;
+		this.setTitle(t(locale, "m6.title"));
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.createEl("p", {
+			cls: "gm-modal-desc",
+			text: t(locale, "m6.list.desc", { n: this.opts.candidates.length }),
+		});
+
+		const checked = new Set<number>(
+			this.opts.candidates.map((c) => c.cp),
+		);
+		const list = contentEl.createDiv({ cls: "gm-pick-list" });
+		for (const candidate of this.opts.candidates) {
+			const row = list.createDiv({ cls: "gm-pick-item" });
+			const box = row.createEl("input", { type: "checkbox" });
+			box.checked = true;
+			box.addEventListener("change", () => {
+				if (box.checked) checked.add(candidate.cp);
+				else checked.delete(candidate.cp);
+				updateLabel();
+			});
+			row.createSpan({
+				cls: "gm-pick-char",
+				text: String.fromCodePoint(candidate.cp),
+			});
+			row.createSpan({ cls: "gm-pick-id", text: candidate.id });
+			row.createSpan({ cls: `gm-dot ${colorClassOf(candidate.category)}` });
+			row.createSpan({ text: " " + t(locale, `cat.${candidate.category}`) });
+			row.createSpan({
+				cls: "gm-pick-suggest",
+				text: t(locale, "tip.suggest") + ": " + t(locale, `act.${candidate.action.toLowerCase()}`),
+			});
+		}
+
+		const foot = contentEl.createDiv({ cls: "modal-button-container" });
+		foot
+			.createEl("button", { text: t(locale, "btn.cancel") })
+			.addEventListener("click", () => this.close());
+		const confirm = foot.createEl("button", { cls: "mod-cta" });
+		const updateLabel = (): void => {
+			confirm.textContent = t(locale, "btn.add.n", { n: checked.size });
+			confirm.disabled = checked.size === 0;
+		};
+		updateLabel();
+		confirm.addEventListener("click", () => {
+			this.close();
+			this.opts.onConfirm(
+				this.opts.candidates.filter((c) => checked.has(c.cp)),
+			);
+		});
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
+}
+
+function colorClassOf(category: Category): string {
+	if (category === "invisible") return "red";
+	if (category === "spaceLike") return "blue";
+	return "yellow";
+}
+
 function undoNotice(
 	main: string,
 	locale: Locale,
@@ -359,7 +437,14 @@ export function runPickCodepoint(host: CommandsHost, editor: Editor): void {
 	if (selection.length > 0) {
 		const found = collectPickables(host, selection);
 		if (found.length > 1) {
-			addBatchPicks(host, localeNow, found);
+			// confirm-before-add: the user checks which codepoints to take
+			new PickListModal(host.app, {
+				locale: localeNow,
+				candidates: found,
+				onConfirm: (picked) => {
+					if (picked.length > 0) addBatchPicks(host, localeNow, picked);
+				},
+			}).open();
 			return;
 		}
 		if (found.length === 1 && found[0]) {

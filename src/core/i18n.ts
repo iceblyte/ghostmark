@@ -44,6 +44,8 @@ const ZH: Record<string, string> = {
 	"m5.desc": "光标所在块（{block}，{lines} 行）。默认免确认，直接执行：",
 	"m6.title": "拾取码点",
 	"m6.desc": "该字符不在默认策略表中，已按类别给出建议动作，可修改后加入：",
+	"m6.list.desc": "选区内发现 {n} 个未收录码点，勾选要加入的项：",
+	"btn.add.n": "加入 {n}",
 
 	"r.red": "无语义不可见字符",
 	"r.blue": "空格类字符",
@@ -207,6 +209,8 @@ const EN: Record<string, string> = {
 	"m5.desc": "Block at cursor ({block}, {lines} lines). No confirm by default:",
 	"m6.title": "Pick codepoint",
 	"m6.desc": "This character is not in the default policy table. A category-based action is suggested — adjust and add:",
+	"m6.list.desc": "Found {n} uncovered codepoints in the selection — check the ones to add:",
+	"btn.add.n": "Add {n}",
 
 	"r.red": "Invisible characters (no semantics)",
 	"r.blue": "Space-like characters",
