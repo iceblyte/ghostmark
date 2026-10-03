@@ -9,3 +9,6 @@ Thumbs.db
 
 # 本地工具配置
 .zcodeignore
+
+# 视频制作产物（大文件，不入库；管线在 tools/video/）
+video/
