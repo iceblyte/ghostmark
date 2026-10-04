@@ -7,6 +7,10 @@ on:
 
 permissions:
   contents: write
+  # Required by actions/attest-build-provenance to publish build
+  # provenance for the release assets.
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -21,17 +25,27 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - name: Generate artifact attestations
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            main.js
+            styles.css
+            manifest.json
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Only files Obsidian downloads belong in the release; versions.json
+          # ships in the repository, not as a release asset.
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "Release $GITHUB_REF_NAME already exists — uploading assets"
+            gh release delete-asset "$GITHUB_REF_NAME" versions.json --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
             gh release upload "$GITHUB_REF_NAME" \
-              main.js manifest.json versions.json --clobber
+              main.js manifest.json styles.css --clobber
           else
             gh release create "$GITHUB_REF_NAME" \
               --title "$GITHUB_REF_NAME" \
               --generate-notes \
-              main.js manifest.json versions.json
+              main.js manifest.json styles.css
           fi
