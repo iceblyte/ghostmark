@@ -214,40 +214,7 @@ body.theme-light {
 	display: none;
 }
 
-/* ---------- 设置面板（原型 P8） ---------- */
-.gm-sub-head {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 13px;
-	color: var(--text-muted);
-	margin: 16px 0 2px;
-}
-
-/* ---------- 策略表分组导航 / 子页面（点击进入修改） ---------- */
-.setting-item.gm-group-nav {
-	cursor: pointer;
-}
-
-.setting-item.gm-group-nav:hover {
-	background: var(--background-modifier-hover);
-}
-
-.setting-item.gm-subpage-head {
-	border-bottom: 1px solid var(--background-modifier-border);
-	margin-bottom: 4px;
-}
-
-.setting-item.gm-group-nav .setting-item-name,
-.setting-item.gm-subpage-head .setting-item-name {
-	font-weight: 600;
-}
-
-.gm-group-nav .setting-item-name .gm-setting-name,
-.gm-subpage-head .setting-item-name .gm-setting-name {
-	gap: 8px;
-}
-
+/* ---------- 设置面板（原型 P8，声明式设置 API） ---------- */
 .gm-setting-name {
 	display: flex;
 	align-items: center;

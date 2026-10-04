@@ -4,7 +4,7 @@
   [![Release](https://img.shields.io/github/v/release/iceblyte/ghostmark)](https://github.com/iceblyte/ghostmark/releases)
   [![CI](https://img.shields.io/github/actions/workflow/status/iceblyte/ghostmark/ci.yml?branch=main&label=CI)](https://github.com/iceblyte/ghostmark/actions/workflows/ci.yml)
   [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-  ![min app version](https://img.shields.io/badge/min%20app%20version-1.0.0-blue)
+  ![min app version](https://img.shields.io/badge/min%20app%20version-1.13.0-blue)
 
   *[English](README.md) · 简体中文*
 </div>

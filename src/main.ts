@@ -95,7 +95,7 @@ export default class GhostmarkPlugin extends Plugin {
 		});
 		// picks and policy changes show up in an open settings tab at once
 		if (this.settingsTab?.containerEl.isShown()) {
-			this.settingsTab.display();
+			this.settingsTab.update();
 		}
 	}
 

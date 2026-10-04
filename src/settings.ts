@@ -1,18 +1,25 @@
 /**
  * Settings tab (FR-11, prototype P8): the character policy table shows
- * three group entries that open a dedicated sub-page per category (FR-12
- * feedback: editing happens on its own page), plus the picked-additions
- * section with a manual add row, context rules, interface and language.
- * Changes apply instantly and persist (saveSettings also re-pushes the
- * InspectConfig to every editor).
+ * three navigable category pages (FR-12 feedback: editing happens on its
+ * own page), plus the picked-additions section with a manual add row,
+ * context rules, interface and language. Rendered through the declarative
+ * settings API (getSettingDefinitions, Obsidian 1.13+) so every entry
+ * shows up in Obsidian's settings search; rows with rich labels are
+ * rendered imperatively via `render` callbacks. Changes apply instantly
+ * and persist (saveSettings also re-pushes the InspectConfig to every
+ * editor).
  */
 
 import {
+	getLanguage,
 	Notice,
 	PluginSettingTab,
-	Setting,
 	type App,
 	type Plugin,
+	type SettingDefinition,
+	type SettingDefinitionGroup,
+	type SettingDefinitionItem,
+	type SettingDefinitionPage,
 } from "obsidian";
 import {
 	classifyUnknownCodepoint,
@@ -20,6 +27,7 @@ import {
 	DEFAULT_POLICY_ENTRIES,
 	type Action,
 	type Category,
+	type CharPolicy,
 	type PolicyEntry,
 } from "./core/categories";
 import {
@@ -61,13 +69,11 @@ export interface GhostmarkTabDeps {
 }
 
 /**
- * Obsidian's UI locale. Read from localStorage("language") — the official
- * getLanguage() would force minAppVersion 1.8.7, which the design doc
- * keeps at 1.0.0. zh / zh-TW … map to "zh", everything else to "en".
+ * Obsidian's UI locale via the official getLanguage() (since 1.8.7, below
+ * our minAppVersion). zh / zh-TW … map to "zh", everything else to "en".
  */
 export function obsidianLocale(): Locale {
-	const lang = window.localStorage.getItem("language") ?? "en";
-	return lang.toLowerCase().startsWith("zh") ? "zh" : "en";
+	return getLanguage().toLowerCase().startsWith("zh") ? "zh" : "en";
 }
 
 export function buildInspectConfig(
@@ -97,8 +103,6 @@ function tagFor(category: Category): { cls: string; text: string } {
 }
 
 export class GhostmarkSettingTab extends PluginSettingTab {
-	private subPage: Category | null = null;
-
 	constructor(
 		app: App,
 		plugin: Plugin,
@@ -115,189 +119,122 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		return this.deps.getLocale();
 	}
 
-	display(restoreScroll = true): void {
-		const { containerEl } = this;
-		// re-renders of the same page keep the scroll position; page
-		// switches start at the top
-		const scrollTop = restoreScroll ? containerEl.scrollTop : 0;
-		containerEl.empty();
-		const L = this.L;
+	override getSettingDefinitions(): SettingDefinitionItem[] {
+		return [
+			this.policyTableGroup(),
+			this.customPoliciesGroup(),
+			this.contextRulesGroup(),
+			this.interfaceGroup(),
+			this.languageGroup(),
+		];
+	}
 
-		if (this.subPage) {
-			this.displayCategorySubPage(this.subPage);
-		} else {
-			this.displayMainPage();
+	/** Wire declarative controls to the injected settings store. */
+	override getControlValue(key: string): unknown {
+		return this.settings[key as keyof GhostmarkSettings];
+	}
+
+	override async setControlValue(key: string, value: unknown): Promise<void> {
+		// Control keys are GhostmarkSettings field names by construction.
+		const store = this.settings as unknown as Record<string, unknown>;
+		store[key] = value;
+		if (key === "statusBar" && typeof value === "boolean") {
+			this.deps.setStatusBarVisible(value);
 		}
-		containerEl.scrollTop = scrollTop;
+		await this.deps.saveSettings();
+		// Re-derive the definitions: the language switch relocalizes every
+		// label, and the ZWNJ rule is mirrored by the locked policy row.
+		if (key === "language" || key === "zwnjAction") this.update();
 	}
 
-	private heading(text: string): void {
-		new Setting(this.containerEl).setName(text).setHeading();
-	}
-
-	private note(text: string, container: HTMLElement = this.containerEl): void {
-		container.createDiv({
-			cls: "setting-item-description",
-			text,
-		});
-	}
-
-	private subHead(cls: string | null, text: string): void {
-		const head = createDiv({ cls: "gm-sub-head" });
-		if (cls) head.createSpan({ cls: `gm-dot ${cls}` });
-		head.createSpan({ text });
-		this.containerEl.appendChild(head);
-	}
-
-	private displayMainPage(): void {
+	/** Character policy table: description plus one page per category. */
+	private policyTableGroup(): SettingDefinitionGroup {
 		const L = this.L;
-
-		this.displayPolicyTable();
-		this.displayContextRules();
-		this.displayInterface();
-		new Setting(this.containerEl)
-			.setName(t(L, "s.lang"))
-			.setDesc(t(L, "s.lang.d"))
-			.addDropdown((dd) =>
-				dd
-					.addOptions({
-						auto: t(L, "opt.auto"),
-						en: "English",
-						zh: "简体中文",
-					})
-					.setValue(this.settings.language)
-					.onChange(async (value) => {
-						this.settings.language = value as GhostmarkSettings["language"];
-						await this.deps.saveSettings();
-						this.display();
-					}),
-			);
+		return {
+			type: "group",
+			heading: t(L, "s.g1"),
+			items: [
+				this.noteDef(t(L, "s.d1")),
+				this.categoryPage("invisible"),
+				this.categoryPage("spaceLike"),
+				this.categoryPage("semantic"),
+			],
+		};
 	}
 
-	private displayPolicyTable(): void {
-		const L = this.L;
-
-		this.heading(t(L, "s.g1"));
-		this.note(t(L, "s.d1"));
-
-		for (const category of ["invisible", "spaceLike", "semantic"] as const) {
-			this.displayGroupNav(category);
-		}
-
-		this.displayCustomPolicies();
-	}
-
-	/** Group entry on the main page; clicking opens the category page. */
-	private displayGroupNav(category: Category): void {
+	/** Navigable sub-page listing every codepoint of one category. */
+	private categoryPage(category: Category): SettingDefinitionPage {
 		const L = this.L;
 		const labels = {
 			invisible: "s.red",
 			spaceLike: "s.blue",
 			semantic: "s.yellow",
 		} as const;
-		const count = DEFAULT_POLICY_ENTRIES.filter(
+		const entries = DEFAULT_POLICY_ENTRIES.filter(
 			(entry) => entry.category === category,
-		).length;
-
-		const setting = new Setting(this.containerEl).setClass("gm-group-nav");
-		setting.setName(
-			createFragment((frag) => {
-				const wrap = createSpan({ cls: "gm-setting-name" });
-				wrap.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
-				wrap.createSpan({ text: t(L, labels[category]) });
-				frag.appendChild(wrap);
-			}),
 		);
-		setting.setDesc(t(L, "s.codepoints", { n: count }));
-		setting.addExtraButton((btn) => {
-			btn.setIcon("chevron-right");
-			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.g1"));
-			btn.onClick(() => {
-				this.subPage = category;
-				this.display(false);
-			});
-		});
-		setting.settingEl.addEventListener("click", () => {
-			this.subPage = category;
-			this.display(false);
-		});
-	}
-
-	/** Dedicated page for one category: back entry plus its policy rows. */
-	private displayCategorySubPage(category: Category): void {
-		const L = this.L;
-		const labels = {
-			invisible: "s.red",
-			spaceLike: "s.blue",
-			semantic: "s.yellow",
-		} as const;
-
-		const head = new Setting(this.containerEl).setClass("gm-subpage-head");
-		head.setName(
-			createFragment((frag) => {
-				const wrap = createSpan({ cls: "gm-setting-name" });
-				wrap.createSpan({ cls: `gm-dot ${tagFor(category).cls}` });
-				wrap.createSpan({ text: t(L, labels[category]) });
-				frag.appendChild(wrap);
-			}),
-		);
-		head.addExtraButton((btn) => {
-			btn.setIcon("arrow-left");
-			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.back"));
-			btn.onClick(() => {
-				this.subPage = null;
-				this.display(false);
-			});
-		});
-
-		for (const entry of DEFAULT_POLICY_ENTRIES) {
-			if (entry.category !== category) continue;
-			this.displayPolicyRow(entry, this.containerEl);
+		const items: SettingDefinition[] = [];
+		for (const entry of entries) {
+			items.push(this.policyRow(entry));
 			if (entry.id === "U+FEFF") {
-				this.note(t(L, "s.feff"));
+				items.push(this.noteDef(t(L, "s.feff")));
 			}
 		}
+		return {
+			type: "page",
+			name: t(L, labels[category]),
+			desc: t(L, "s.codepoints", { n: entries.length }),
+			items,
+		};
 	}
 
-	private displayPolicyRow(entry: PolicyEntry, container: HTMLElement): void {
+	/** One policy row: rich codepoint label plus its action dropdown. */
+	private policyRow(entry: PolicyEntry): SettingDefinition {
 		const L = this.L;
 		const locked = entry.options.length <= 1;
-		const setting = new Setting(container);
-		setting.setName(
-			createFragment((frag) => {
-				const wrap = createSpan({ cls: "gm-setting-name" });
-				wrap.createSpan({ cls: "gm-cp", text: entry.id });
-				wrap.createSpan({
-					cls: "gm-entry-name",
-					text: entryLabel(entry, L),
-				});
-				const tag = tagFor(entry.category);
-				wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
-				if (locked) {
-					wrap.createSpan({ cls: "gm-tag lock", text: t(L, "s.lock") });
-				}
-				frag.appendChild(wrap);
-			}),
-		);
+		return {
+			name: entryLabel(entry, L),
+			aliases: [entry.id],
+			render: (setting) => {
+				setting.setName(
+					createFragment((frag) => {
+						const wrap = createSpan({ cls: "gm-setting-name" });
+						wrap.createSpan({ cls: "gm-cp", text: entry.id });
+						wrap.createSpan({
+							cls: "gm-entry-name",
+							text: entryLabel(entry, L),
+						});
+						const tag = tagFor(entry.category);
+						wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
+						if (locked) {
+							wrap.createSpan({ cls: "gm-tag lock", text: t(L, "s.lock") });
+						}
+						frag.appendChild(wrap);
+					}),
+				);
 
-		setting.addDropdown((dd) => {
-			const options: Record<string, string> = {};
-			for (const action of entry.options) {
-				options[action] = actionLabel(L, "opt", action);
-			}
-			dd.addOptions(options);
-			if (locked) dd.selectEl.disabled = true;
-			const current =
-				entry.id === "U+200C"
-					? this.settings.zwnjAction
-					: (this.settings.policyOverrides[entry.id] ?? entry.action);
-			dd.setValue(current);
-			dd.onChange(async (value) => {
-				this.applyRowAction(entry, value as GhostmarkSettings["zwnjAction"]);
-				await this.deps.saveSettings();
-				this.display();
-			});
-		});
+				setting.addDropdown((dd) => {
+					const options: Record<string, string> = {};
+					for (const action of entry.options) {
+						options[action] = actionLabel(L, "opt", action);
+					}
+					dd.addOptions(options);
+					if (locked) dd.selectEl.disabled = true;
+					const current =
+						entry.id === "U+200C"
+							? this.settings.zwnjAction
+							: (this.settings.policyOverrides[entry.id] ?? entry.action);
+					dd.setValue(current);
+					dd.onChange(async (value) => {
+						this.applyRowAction(
+							entry,
+							value as GhostmarkSettings["zwnjAction"],
+						);
+						await this.deps.saveSettings();
+					});
+				});
+			},
+		};
 	}
 
 	private applyRowAction(
@@ -315,69 +252,77 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		}
 	}
 
-	private displayCustomPolicies(): void {
+	/** Picked additions: manual add row, one row per entry, reset. */
+	private customPoliciesGroup(): SettingDefinitionGroup {
 		const L = this.L;
-
-		this.subHead(null, t(L, "s.custom"));
-		this.displayCustomAddRow();
-
+		const items: SettingDefinition[] = [this.customAddRow()];
 		const entries = Object.entries(this.settings.customPolicies);
 		if (entries.length === 0) {
-			this.note(t(L, "s.custom.empty"));
+			items.push(this.noteDef(t(L, "s.custom.empty")));
 		}
 		for (const [key, custom] of entries) {
-			const setting = new Setting(this.containerEl).setClass("gm-picked-row");
-			setting.setName(
-				createFragment((frag) => {
-					const wrap = createSpan({ cls: "gm-setting-name" });
-					wrap.createSpan({ cls: "gm-cp", text: charOf(key) });
-					wrap.createSpan({ cls: "gm-cp", text: key });
-					wrap.createSpan({
-						cls: "gm-entry-name",
-						text: custom.name || t(L, "pick.name.unknown"),
-					});
-					const tag = tagFor(custom.category);
-					wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
-					wrap.createSpan({
-						cls: "gm-tag picked",
-						text: t(L, "s.picked"),
-					});
-					frag.appendChild(wrap);
-				}),
-			);
-			setting.addDropdown((dd) =>
-				dd
-					.addOptions({
-						remove: actionLabel(L, "opt", "remove"),
-						toSpace: actionLabel(L, "opt", "toSpace"),
-						keep: actionLabel(L, "opt", "keep"),
-					})
-					.setValue(custom.action)
-					.onChange(async (value) => {
-						custom.action = value as GhostmarkSettings["zwnjAction"];
-						await this.deps.saveSettings();
-					}),
-			);
-			setting.addExtraButton((btn) => {
-				btn.setIcon("trash");
-				// setTooltip needs Obsidian 1.1.0; aria-label shows the
-				// native tooltip on every supported version.
-				btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.delete"));
-				btn.onClick(async () => {
-					delete this.settings.customPolicies[key];
-					await this.deps.saveSettings();
-					this.display();
-				});
-			});
+			items.push(this.customRow(key, custom));
 		}
+		items.push(this.resetRow());
+		return {
+			type: "group",
+			heading: t(L, "s.custom"),
+			items,
+		};
+	}
 
-		new Setting(this.containerEl).addButton((btn) =>
-			btn.setButtonText(t(L, "s.reset")).onClick(async () => {
-				this.deps.setSettings(resetPolicies(this.settings));
-				await this.deps.saveSettings();
-				this.display();
-			}),
-		);
+	/** One picked codepoint: rich label, action dropdown, delete button. */
+	private customRow(key: string, custom: CharPolicy): SettingDefinition {
+		const L = this.L;
+		return {
+			name: `${key} ${custom.name || t(L, "pick.name.unknown")}`,
+			aliases: [charOf(key)],
+			render: (setting) => {
+				setting.setClass("gm-picked-row");
+				setting.setName(
+					createFragment((frag) => {
+						const wrap = createSpan({ cls: "gm-setting-name" });
+						wrap.createSpan({ cls: "gm-cp", text: charOf(key) });
+						wrap.createSpan({ cls: "gm-cp", text: key });
+						wrap.createSpan({
+							cls: "gm-entry-name",
+							text: custom.name || t(L, "pick.name.unknown"),
+						});
+						const tag = tagFor(custom.category);
+						wrap.createSpan({ cls: `gm-tag ${tag.cls}`, text: tag.text });
+						wrap.createSpan({
+							cls: "gm-tag picked",
+							text: t(L, "s.picked"),
+						});
+						frag.appendChild(wrap);
+					}),
+				);
+				setting.addDropdown((dd) =>
+					dd
+						.addOptions({
+							remove: actionLabel(L, "opt", "remove"),
+							toSpace: actionLabel(L, "opt", "toSpace"),
+							keep: actionLabel(L, "opt", "keep"),
+						})
+						.setValue(custom.action)
+						.onChange(async (value) => {
+							custom.action = value as GhostmarkSettings["zwnjAction"];
+							await this.deps.saveSettings();
+						}),
+				);
+				setting.addExtraButton((btn) => {
+					btn.setIcon("trash");
+					// setTooltip needs Obsidian 1.1.0; aria-label shows the
+					// native tooltip on every supported version.
+					btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.delete"));
+					btn.onClick(async () => {
+						delete this.settings.customPolicies[key];
+						await this.deps.saveSettings();
+						this.update();
+					});
+				});
+			},
+		};
 	}
 
 	/**
@@ -385,7 +330,7 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 	 * ("U+2065", "2065") or a pasted character; "auto" resolves the
 	 * category-based suggested action at add time.
 	 */
-	private displayCustomAddRow(): void {
+	private customAddRow(): SettingDefinition {
 		const L = this.L;
 		let input = "";
 		let choice: Action | "auto" = "auto";
@@ -427,41 +372,172 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 					});
 				}),
 			);
-			this.display();
+			this.update();
 		};
 
-		const setting = new Setting(this.containerEl).setClass("gm-add-row");
-		setting.addText((text) => {
-			text
-				.setPlaceholder(t(L, "s.add.placeholder"))
-				.onChange((value) => {
-					input = value;
+		return {
+			name: t(L, "s.add"),
+			render: (setting) => {
+				setting.setClass("gm-add-row");
+				setting.addText((text) => {
+					text
+						.setPlaceholder(t(L, "s.add.placeholder"))
+						.onChange((value) => {
+							input = value;
+						});
+					text.inputEl.setAttribute("aria-label", t(L, "s.add"));
+					text.inputEl.addEventListener("keydown", (event) => {
+						if (event.key === "Enter") void submit();
+					});
 				});
-			text.inputEl.setAttribute("aria-label", t(L, "s.add"));
-			text.inputEl.addEventListener("keydown", (event) => {
-				if (event.key === "Enter") void submit();
-			});
-		});
-		setting.addDropdown((dd) =>
-			dd
-				.addOptions({
-					auto: t(L, "opt.auto"),
-					remove: actionLabel(L, "opt", "remove"),
-					toSpace: actionLabel(L, "opt", "toSpace"),
-					keep: actionLabel(L, "opt", "keep"),
-				})
-				.setValue("auto")
-				.onChange((value) => {
-					choice = value as Action | "auto";
-				}),
-		);
-		setting.addExtraButton((btn) => {
-			btn.setIcon("plus");
-			// setTooltip needs Obsidian 1.1.0; aria-label shows the
-			// native tooltip on every supported version.
-			btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.add"));
-			btn.onClick(() => void submit());
-		});
+				setting.addDropdown((dd) =>
+					dd
+						.addOptions({
+							auto: t(L, "opt.auto"),
+							remove: actionLabel(L, "opt", "remove"),
+							toSpace: actionLabel(L, "opt", "toSpace"),
+							keep: actionLabel(L, "opt", "keep"),
+						})
+						.setValue("auto")
+						.onChange((value) => {
+							choice = value as Action | "auto";
+						}),
+				);
+				setting.addExtraButton((btn) => {
+					btn.setIcon("plus");
+					// setTooltip needs Obsidian 1.1.0; aria-label shows the
+					// native tooltip on every supported version.
+					btn.extraSettingsEl.setAttribute("aria-label", t(L, "s.add"));
+					btn.onClick(() => void submit());
+				});
+			},
+		};
+	}
+
+	/** Reset button row: clear table edits and picked codepoints. */
+	private resetRow(): SettingDefinition {
+		const L = this.L;
+		return {
+			name: t(L, "s.reset"),
+			render: (setting) => {
+				setting.addButton((btn) =>
+					btn.setButtonText(t(L, "s.reset")).onClick(async () => {
+						this.deps.setSettings(resetPolicies(this.settings));
+						await this.deps.saveSettings();
+						this.update();
+					}),
+				);
+			},
+		};
+	}
+
+	/** Explanatory text row: no control, excluded from settings search. */
+	private noteDef(text: string): SettingDefinition {
+		return { name: "", desc: text, searchable: false };
+	}
+
+	private contextRulesGroup(): SettingDefinitionGroup {
+		const L = this.L;
+		return {
+			type: "group",
+			heading: t(L, "s.g2"),
+			items: [
+				{
+					name: t(L, "s.math"),
+					desc: t(L, "s.math.d"),
+					control: {
+						type: "dropdown",
+						key: "mathMode",
+						options: {
+							markOnly: t(L, "opt.markonly"),
+							clean: t(L, "opt.clean"),
+						},
+					},
+				},
+				{
+					name: t(L, "s.zwnj"),
+					desc: t(L, "s.zwnj.d"),
+					control: {
+						type: "dropdown",
+						key: "zwnjAction",
+						options: {
+							keep: t(L, "opt.keep"),
+							remove: t(L, "opt.remove"),
+						},
+					},
+				},
+				{
+					name: t(L, "s.codespace"),
+					desc: t(L, "s.codespace.d"),
+					control: { type: "toggle", key: "codeToSpace" },
+				},
+			],
+		};
+	}
+
+	private interfaceGroup(): SettingDefinitionGroup {
+		const L = this.L;
+		return {
+			type: "group",
+			heading: t(L, "s.g3"),
+			items: [
+				{
+					name: t(L, "s.remember"),
+					desc: t(L, "s.remember.d"),
+					control: { type: "toggle", key: "inspectRemember" },
+				},
+				{
+					name: t(L, "s.density"),
+					desc: t(L, "s.density.d"),
+					control: {
+						type: "dropdown",
+						key: "density",
+						options: {
+							compact: t(L, "opt.compact"),
+							detailed: t(L, "opt.detailed"),
+						},
+					},
+				},
+				{
+					name: t(L, "s.confirmall"),
+					desc: t(L, "s.confirmall.d"),
+					control: { type: "toggle", key: "confirmBeforeAll" },
+				},
+				{
+					name: t(L, "s.confirmblk"),
+					desc: t(L, "s.confirmblk.d"),
+					control: { type: "toggle", key: "confirmBeforeBlock" },
+				},
+				{
+					name: t(L, "s.statusbar"),
+					desc: t(L, "s.statusbar.d"),
+					control: { type: "toggle", key: "statusBar" },
+				},
+			],
+		};
+	}
+
+	private languageGroup(): SettingDefinitionGroup {
+		const L = this.L;
+		return {
+			type: "group",
+			heading: t(L, "s.g4"),
+			items: [
+				{
+					name: t(L, "s.lang"),
+					desc: t(L, "s.lang.d"),
+					control: {
+						type: "dropdown",
+						key: "language",
+						options: {
+							auto: t(L, "opt.auto"),
+							en: "English",
+							zh: "简体中文",
+						},
+					},
+				},
+			],
+		};
 	}
 
 	/** "U+2065" / "u+2065" / "2065" / a pasted character → codepoint. */
@@ -470,123 +546,5 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 		if (hex?.[1]) return Number.parseInt(hex[1], 16);
 		const cp = input.codePointAt(0);
 		return cp === undefined ? null : cp;
-	}
-
-	private displayContextRules(): void {
-		const L = this.L;
-
-		this.heading(t(L, "s.g2"));
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.math"))
-			.setDesc(t(L, "s.math.d"))
-			.addDropdown((dd) =>
-				dd
-					.addOptions({
-						markOnly: t(L, "opt.markonly"),
-						clean: t(L, "opt.clean"),
-					})
-					.setValue(this.settings.mathMode)
-					.onChange(async (value) => {
-						this.settings.mathMode = value as GhostmarkSettings["mathMode"];
-						await this.deps.saveSettings();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.zwnj"))
-			.setDesc(t(L, "s.zwnj.d"))
-			.addDropdown((dd) =>
-				dd
-					.addOptions({
-						keep: t(L, "opt.keep"),
-						remove: t(L, "opt.remove"),
-					})
-					.setValue(this.settings.zwnjAction)
-					.onChange(async (value) => {
-						this.settings.zwnjAction = value as GhostmarkSettings["zwnjAction"];
-						await this.deps.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.codespace"))
-			.setDesc(t(L, "s.codespace.d"))
-			.addToggle((toggle) =>
-				toggle.setValue(this.settings.codeToSpace).onChange(async (value) => {
-					this.settings.codeToSpace = value;
-					await this.deps.saveSettings();
-				}),
-			);
-	}
-
-	private displayInterface(): void {
-		const L = this.L;
-
-		this.heading(t(L, "s.g3"));
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.remember"))
-			.setDesc(t(L, "s.remember.d"))
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.settings.inspectRemember)
-					.onChange(async (value) => {
-						this.settings.inspectRemember = value;
-						await this.deps.saveSettings();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.density"))
-			.setDesc(t(L, "s.density.d"))
-			.addDropdown((dd) =>
-				dd
-					.addOptions({
-						compact: t(L, "opt.compact"),
-						detailed: t(L, "opt.detailed"),
-					})
-					.setValue(this.settings.density)
-					.onChange(async (value) => {
-						this.settings.density = value as GhostmarkSettings["density"];
-						await this.deps.saveSettings();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.confirmall"))
-			.setDesc(t(L, "s.confirmall.d"))
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.settings.confirmBeforeAll)
-					.onChange(async (value) => {
-						this.settings.confirmBeforeAll = value;
-						await this.deps.saveSettings();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.confirmblk"))
-			.setDesc(t(L, "s.confirmblk.d"))
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.settings.confirmBeforeBlock)
-					.onChange(async (value) => {
-						this.settings.confirmBeforeBlock = value;
-						await this.deps.saveSettings();
-					}),
-			);
-
-		new Setting(this.containerEl)
-			.setName(t(L, "s.statusbar"))
-			.setDesc(t(L, "s.statusbar.d"))
-			.addToggle((toggle) =>
-				toggle.setValue(this.settings.statusBar).onChange(async (value) => {
-					this.settings.statusBar = value;
-					this.deps.setStatusBarVisible(value);
-					await this.deps.saveSettings();
-				}),
-			);
 	}
 }
