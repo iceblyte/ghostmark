@@ -26,7 +26,7 @@ confirmable, undoable actions.
 
 ## Inspect mode
 
-One toggle (command, `Ctrl/Cmd + Alt + I`, or a status-bar click) renders every
+One toggle (command, status-bar click, or a hotkey you assign) renders every
 hit as an inline glyph — in Source mode and Live Preview, across all notes.
 
 <img src="docs/images/editor-inspect.png" alt="Inspect mode: three-color glyphs, gutter badges, hover details and the status bar" width="100%">
@@ -76,7 +76,7 @@ check-list; you can also add codepoints by hand in settings.
 
 <img src="docs/images/command-palette.png" alt="Command palette with the five Ghostmark commands" width="80%">
 
-| Command | Suggested hotkey |
+| Command | Suggested hotkey (not set by default — bind it in Settings → Hotkeys) |
 | --- | --- |
 | Ghostmark: Toggle inspect mode | `Ctrl/Cmd + Alt + I` |
 | Ghostmark: Clear all marks | `Ctrl/Cmd + Alt + K` |

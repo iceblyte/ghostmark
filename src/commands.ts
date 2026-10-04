@@ -674,17 +674,18 @@ export function clearCurrentBlock(
 }
 
 export function registerCommands(host: CommandsHost): void {
+	// No default hotkeys: they can conflict with the user's own bindings
+	// (official review guideline). Suggested bindings are documented in the
+	// README and can be set in Settings → Hotkeys.
 	host.addCommand({
 		id: "toggle-inspect",
 		name: t(host.config.locale, "cmd.toggle"),
-		hotkeys: [{ modifiers: ["Mod", "Alt"], key: "i" }],
 		callback: () => host.setInspectEnabled(!host.inspectEnabled),
 	});
 
 	host.addCommand({
 		id: "clear-all",
 		name: t(host.config.locale, "cmd.clearall"),
-		hotkeys: [{ modifiers: ["Mod", "Alt"], key: "k" }],
 		editorCallback: (editor) => {
 			const localeNow = host.config.locale;
 			const text = editor.getValue();

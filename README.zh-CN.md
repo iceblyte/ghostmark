@@ -22,7 +22,7 @@ Ghostmark 把它们**全部显形**，并以"上下文感知、执行前确认�
 
 ## 检查模式
 
-一个开关（命令 / `Ctrl/Cmd + Alt + I` / 状态栏点击）让所有命中以行内字形呈现——Source 与 Live Preview 双模式可用，全仓库生效。
+一个开关（命令 / 状态栏点击 / 自行绑定的快捷键）让所有命中以行内字形呈现——Source 与 Live Preview 双模式可用，全仓库生效。
 
 <img src="docs/images/editor-inspect.png" alt="检查模式：三色字形、行号槽徽标、悬停详情与状态栏" width="100%">
 
@@ -59,7 +59,7 @@ Ghostmark 把它们**全部显形**，并以"上下文感知、执行前确认�
 
 <img src="docs/images/command-palette.png" alt="命令面板中的五个 Ghostmark 命令" width="80%">
 
-| 命令 | 建议快捷键 |
+| 命令 | 建议快捷键（默认不占用，可在 设置 → 快捷键 中绑定） |
 | --- | --- |
 | Ghostmark: 切换检查模式 | `Ctrl/Cmd + Alt + I` |
 | Ghostmark: 清除全部标记 | `Ctrl/Cmd + Alt + K` |
