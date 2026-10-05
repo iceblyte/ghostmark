@@ -79,7 +79,24 @@ Ghostmark 把它们**全部显形**，并以"上下文感知、执行前确认�
 
 ## 安装
 
-暂未上架社区插件市场，手动安装：
+**Ghostmark 已上架 Obsidian 官方社区插件市场**——最简单的安装方式，更新也由 Obsidian 自动接管：
+
+1. 打开 *设置 → 第三方插件*；
+2. 搜索 **Ghostmark**，点击**安装**，再**启用**。
+
+也可以直接打开[插件页面](https://obsidian.md/plugins?id=ghostmark)。
+
+### 通过 BRAT 安装
+
+BRAT 同样可用（本仓库的 Release 结构符合其要求），但插件已上架市场，BRAT 更适合在正式版发布前抢先测试修复：
+
+1. 安装并启用 [BRAT](https://github.com/TfTHacker/obsidian42-brat)；
+2. 在命令面板执行 **BRAT: Add a beta plugin for testing**；
+3. 输入 `iceblyte/ghostmark` 并确认，随后启用 **Ghostmark**。
+
+BRAT 跟踪本仓库的 Release；市场安装则继续通过市场自动更新。
+
+### 手动安装
 
 1. 从[最新 Release](https://github.com/iceblyte/ghostmark/releases/latest) 下载 `main.js`、`manifest.json`（与 `styles.css`）；
 2. 放入 `<vault>/.obsidian/plugins/ghostmark/`；

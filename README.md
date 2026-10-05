@@ -101,7 +101,28 @@ desktop-specific — the command palette is the mobile entry.
 
 ## Install
 
-Not yet in the community plugin store. Manual install:
+**Ghostmark is available in the official community plugin store** — the
+easiest way to install it, with updates handled by Obsidian itself:
+
+1. Open *Settings → Community plugins*;
+2. Search **Ghostmark**, press **Install**, then **Enable**.
+
+Or jump straight to the [plugin page](https://obsidian.md/plugins?id=ghostmark).
+
+### Via BRAT
+
+BRAT works against this repository (its releases ship the files BRAT
+expects), but with the plugin already in the store it only makes sense
+for testing fixes ahead of a store release:
+
+1. Install and enable [BRAT](https://github.com/TfTHacker/obsidian42-brat);
+2. Run **BRAT: Add a beta plugin for testing** from the command palette;
+3. Enter `iceblyte/ghostmark` and confirm, then enable **Ghostmark**.
+
+BRAT follows this repository's releases; store installs keep updating
+through the store.
+
+### Manual
 
 1. Download `main.js`, `manifest.json` (and `styles.css`) from the
    [latest release](https://github.com/iceblyte/ghostmark/releases/latest);
