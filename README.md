@@ -50,6 +50,12 @@ count — and clicking one clears the enclosing block. Hovering any glyph shows
 the character's name, codepoint, category and suggested action. The status bar
 keeps a live `Ghost: N` count for the active note.
 
+Live Preview's properties panel hides the frontmatter — so when the frontmatter
+carries marks, a **`frontmatter contains N marks` summary badge** appears right
+below the panel (segmented per category, like the gutter badges). Clicking it
+clears the frontmatter; in Source mode the raw marks are visible and the badge
+steps aside.
+
 ## Clear with confidence
 
 Clearing always shows a confirm modal with the category breakdown, applies as

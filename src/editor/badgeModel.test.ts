@@ -4,6 +4,7 @@ import {
 	badgeSegments,
 	badgeVariant,
 	badgeWidthPx,
+	frontmatterBadge,
 	MIN_BADGE_GUTTER,
 } from "./badgeModel";
 
@@ -123,5 +124,44 @@ describe("badgeVariant", () => {
 		expect(info.variant).toBe("passive");
 		expect(info.actionedCount).toBe(0);
 		expect(info.totalCount).toBe(5);
+	});
+});
+
+describe("frontmatterBadge", () => {
+	function fhit(
+		block: Hit["block"],
+		count: number,
+		category: Hit["category"] = "invisible",
+	): Hit {
+		return { ...hit(category, count), block };
+	}
+
+	it("aggregates only frontmatter hits into segments and character count", () => {
+		const badge = frontmatterBadge([
+			fhit("frontmatter", 3),
+			fhit("frontmatter", 44, "base64"),
+			fhit("prose", 10),
+			fhit("fencedCode", 2),
+		]);
+		expect(badge.count).toBe(47);
+		expect(badge.segments).toEqual([
+			{ color: "red", count: 3 },
+			{ color: "purple", count: 44 },
+		]);
+	});
+
+	it("keeps protected hits visible in the badge (mark-only semantic)", () => {
+		const badge = frontmatterBadge([
+			fhit("frontmatter", 2, "semantic"),
+		]);
+		expect(badge.count).toBe(2);
+		expect(badge.segments).toEqual([{ color: "yellow", count: 2 }]);
+	});
+
+	it("reports zero for a clean frontmatter", () => {
+		expect(frontmatterBadge([fhit("prose", 5)])).toEqual({
+			segments: [],
+			count: 0,
+		});
 	});
 });

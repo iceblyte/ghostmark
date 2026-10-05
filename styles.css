@@ -144,6 +144,26 @@ body.theme-light {
 	opacity: 0.55;
 }
 
+/* ---------- Live Preview frontmatter 摘要徽标 ---------- */
+.gm-fm-badge {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 3px 12px 6px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 12px;
+	user-select: none;
+}
+
+.gm-fm-badge:hover {
+	color: var(--text-normal);
+}
+
+.gm-fm-badge .gm-badge {
+	flex: none;
+}
+
 /* ---------- hover 详情浮层（原型 .gm-w .tip 结构） ---------- */
 .gm-hover {
 	font-family: var(--font-ui);

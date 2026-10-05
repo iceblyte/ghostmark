@@ -57,6 +57,24 @@ export function badgeSegments(hits: Hit[]): BadgeSegment[] {
 	return segments;
 }
 
+export interface FrontmatterBadge {
+	segments: BadgeSegment[];
+	count: number;
+}
+
+/**
+ * Aggregated frontmatter marks for the Live Preview summary badge: only
+ * hits inside the frontmatter count, since the properties panel hides
+ * exactly that region. Zero count = no badge.
+ */
+export function frontmatterBadge(hits: Hit[]): FrontmatterBadge {
+	const inFrontmatter = hits.filter((hit) => hit.block === "frontmatter");
+	return {
+		segments: badgeSegments(inFrontmatter),
+		count: inFrontmatter.reduce((sum, hit) => sum + hit.count, 0),
+	};
+}
+
 export type BadgeVariant = "clear" | "space" | "passive";
 
 export interface BadgeVariantInfo {

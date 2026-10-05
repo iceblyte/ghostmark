@@ -14,6 +14,7 @@ import {
 import {
 	clearBase64Segment,
 	clearCurrentBlock,
+	frontmatterHidden,
 	registerCommands,
 	runPickCodepoint,
 } from "./commands";
@@ -21,6 +22,8 @@ import { INSPECT_EXTENSIONS } from "./editor/inspectMode";
 import {
 	clearBlockRequestFacet,
 	clearHitRequestFacet,
+	frontmatterBadgeEffect,
+	frontmatterBadgeField,
 	inspectRuntime,
 	inspectRuntimeEffect,
 	setInspectRuntime,
@@ -68,6 +71,23 @@ export default class GhostmarkPlugin extends Plugin {
 
 		registerStatusBar(this);
 		registerCommands(this);
+
+		// Live Preview flag for the frontmatter summary badge: recompute
+		// per leaf on layout changes (mode switches fire this event) and
+		// dispatch only when the value actually changes.
+		this.registerEvent(
+			this.app.workspace.on("layout-change", () => {
+				this.app.workspace.iterateAllLeaves((leaf) => {
+					if (!(leaf.view instanceof MarkdownView)) return;
+					const cmView = EditorView.findFromDOM(leaf.view.containerEl);
+					if (!cmView) return;
+					const hidden = frontmatterHidden(leaf.view);
+					if (cmView.state.field(frontmatterBadgeField, false) !== hidden) {
+						cmView.dispatch({ effects: frontmatterBadgeEffect.of(hidden) });
+					}
+				});
+			}),
+		);
 
 		// Editor context menu entry for pick-codepoint (FR-9)
 		this.registerEvent(

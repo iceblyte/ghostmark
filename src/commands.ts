@@ -56,9 +56,10 @@ function activeMarkdownView(host: CommandsHost): MarkdownView | null {
  * frontmatter with Obsidian's properties widget — marks inside it
  * render nowhere and the cursor cannot land there visibly, so
  * navigation skips them. Source mode shows the raw frontmatter and
- * keeps those marks navigable.
+ * keeps those marks navigable. The frontmatter summary badge uses the
+ * same probe to decide whether it applies.
  */
-function frontmatterHidden(view: MarkdownView): boolean {
+export function frontmatterHidden(view: MarkdownView): boolean {
 	if (view.getMode() !== "source") return false;
 	// markdown leaf state: { mode: "source", source: boolean } —
 	// source: false is Live Preview, source: true is plain Source mode

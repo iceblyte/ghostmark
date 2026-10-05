@@ -31,6 +31,7 @@ const ZH: Record<string, string> = {
 	"badge.tip": "本行 {n} 处命中 · 点击清除当前块",
 	"badge.tip.space": "本行 {n} 处空格类 · 点击转为普通空格",
 	"badge.tip.keep": "本行 {n} 处标记（保留/仅标记）· 无可清除项",
+	"fm.badge": "frontmatter 含 {n} 处标记",
 
 	"cmd.toggle": "Ghostmark: 切换检查模式",
 	"cmd.clearall": "Ghostmark: 清除全部标记",
@@ -236,6 +237,7 @@ const EN: Record<string, string> = {
 		"{n} space-like chars in this line · Click to convert to plain spaces",
 	"badge.tip.keep":
 		"{n} marks in this line (keep / mark-only) · Nothing to clear",
+	"fm.badge": "frontmatter contains {n} marks",
 
 	"cmd.toggle": "Ghostmark: Toggle inspect mode",
 	"cmd.clearall": "Ghostmark: Clear all marks",
