@@ -279,6 +279,90 @@ describe("scanner: expanded policy table", () => {
 	});
 });
 
+describe("scanner: base64 tokens", () => {
+	const T = "M2pzpiGaOITdXr3Fb0HrULkJXq6Mc/ZvF8S3p5OQqjA=";
+
+	it("uses the documented 44-character watermark shape in these tests", () => {
+		expect(T).toMatch(/^[A-Za-z0-9+/]{43}=$/);
+	});
+
+	it("produces no base64 hits when the option is off", () => {
+		expect(scan(`细节 ${T}\n`, policy)).toHaveLength(0);
+	});
+
+	it("marks a standalone token as one purple remove hit", () => {
+		const hits = scan(`细节 ${T}\n`, policy, { base64: true });
+		expect(hits).toHaveLength(1);
+		expect(hits[0]).toMatchObject({
+			index: 3,
+			length: 44,
+			count: 44,
+			codepoint: "base64",
+			category: "base64",
+			block: "prose",
+			action: "remove",
+			entryId: "base64",
+		});
+	});
+
+	it("marks only the trailing 44-char window when a word is glued in front", () => {
+		const text = `localStorage${T}`;
+		const hits = scan(text, policy, { base64: true });
+		expect(hits).toHaveLength(1);
+		expect(hits[0]).toMatchObject({ index: 12, length: 44 });
+		const { text: cleaned } = clean(text, hits);
+		expect(cleaned).toBe("localStorage");
+	});
+
+	it("marks each token of a glued chain on its own", () => {
+		const text = T + T + T + T;
+		const hits = scan(text, policy, { base64: true });
+		expect(hits).toHaveLength(4);
+		expect(hits[0]).toMatchObject({ index: 0, length: 44 });
+		expect(hits[1]).toMatchObject({ index: 44, length: 44 });
+		expect(hits[3]).toMatchObject({ index: 132, length: 44 });
+	});
+
+	it("marks a space-separated burst as independent segments", () => {
+		const hits = scan(`${T} ${T} ${T} ${T}`, policy, { base64: true });
+		expect(hits).toHaveLength(4);
+	});
+
+	it("ignores unpadded runs and runs shorter than the minimum", () => {
+		const text =
+			"backend/app/routers/health and abc123def456ghij= plus 0123456789abcdefghij";
+		expect(scan(text, policy, { base64: true })).toHaveLength(0);
+	});
+
+	it("exempts data URI payloads", () => {
+		const payload =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk=";
+		const text = `![img](data:image/png;base64,${payload})`;
+		expect(scan(text, policy, { base64: true })).toHaveLength(0);
+	});
+
+	it("marks code-context tokens only", () => {
+		const fenced = scan(`\`\`\`python\nK = "${T}"\n\`\`\``, policy, {
+			base64: true,
+		});
+		expect(fenced).toHaveLength(1);
+		expect(fenced[0]).toMatchObject({ action: "markOnly", block: "fencedCode" });
+
+		const inline = scan(`配置 \`K = "${T}"\` 已就位`, policy, { base64: true });
+		expect(inline).toHaveLength(1);
+		expect(inline[0]).toMatchObject({ action: "markOnly", block: "inlineCode" });
+	});
+
+	it("keeps hit lists ascending when base64 hits interleave with policy hits", () => {
+		const hits = scan(`a\u2062 ${T} b\u061c`, policy, { base64: true });
+		expect(hits.map((h) => h.index)).toEqual([
+			1, // U+2062
+			3, // token
+			49, // U+061C
+		]);
+	});
+});
+
 describe("scanner: fixture totals", () => {
 	it("matches the documented numbers on the fixture", () => {
 		const hits = scan(fixture, policy);

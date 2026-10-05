@@ -90,6 +90,41 @@ describe("clean", () => {
 	});
 });
 
+describe("clean: base64 tokens", () => {
+	const T = "M2pzpiGaOITdXr3Fb0HrULkJXq6Mc/ZvF8S3p5OQqjA=";
+
+	it("removes prose tokens, keeps code tokens, preserves glued words", () => {
+		const source = `段落一 ${T}\n\n\`\`\`python\nK = "${T}"\n\`\`\`\n\nlocalStorage${T} 结束\n`;
+		const hits = scan(source, policy, { base64: true });
+		const { text, report } = clean(source, hits);
+		expect(text).toBe(
+			`段落一 \n\n\`\`\`python\nK = "${T}"\n\`\`\`\n\nlocalStorage 结束\n`,
+		);
+		// 44 (prose) + 44 (glued, word preserved) — the code token stays
+		expect(report.total).toBe(88);
+		expect(report.byCategory.base64).toBe(88);
+		expect(report.byCodepoint.base64).toBe(88);
+		// no per-character codepoint noise from ASCII tokens
+		expect(Object.keys(report.byCodepoint)).toEqual(["base64"]);
+	});
+
+	it("summarizes base64 segments under one aggregate key", () => {
+		const source = `a ${T} b ${T}`;
+		const summary = summarizeHits(source, scan(source, policy, { base64: true }));
+		expect(summary.byCategory.base64).toBe(88);
+		expect(summary.byCategoryCodepoint.base64).toEqual({ base64: 88 });
+		expect(summary.actionable).toBe(88);
+		expect(summary.markOnly).toBe(0);
+	});
+
+	it("counts code-context tokens as mark-only, not actionable", () => {
+		const source = `\`K = "${T}"\``;
+		const summary = summarizeHits(source, scan(source, policy, { base64: true }));
+		expect(summary.markOnly).toBe(44);
+		expect(summary.actionable).toBe(0);
+	});
+});
+
 describe("summarizeHits", () => {
 	it("aggregates per category with the math mark-only split", () => {
 		const summary = summarizeHits(fixture, scan(fixture, policy));

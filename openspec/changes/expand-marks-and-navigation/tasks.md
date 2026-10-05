@@ -9,9 +9,9 @@
 
 ## 2. core：base64 识别与清除（base64-marking）
 
-- [ ] 2.1 `src/core/scanner.ts`：实现 base64 扫描（design D2 正则 + 44 尾窗裁剪 + `;base64,` data URI 豁免 + `ScanOptions.base64` 开关 + 代码/数学上下文 markOnly）；单测覆盖 spec 全部场景：44 独立整段、56 粘连只标尾部 44 且 `localStorage` 保留、<20 与无 `=` 不命中、四连发各自成段、data URI 载荷豁免、路径/git SHA 不误报、代码块内 markOnly、开关关闭零命中
-- [ ] 2.2 `src/core/cleaner.ts`：`clean`/`summarizeHits` 对 `category === "base64"` 特判计数（`byCodepoint["base64"] += length`）；单测断言 report.total、`byCategory.base64`、弹窗汇总数字与 `ChangeReport` 无逐字符码点噪音
-- [ ] 2.3 端到端清除断言：含正文 token + 代码块 token + 粘词 token 的文本经 `scan` + `clean` 后正文段全删、代码段保留、粘词前缀保留、零残留；`npx vitest run src/core/cleaner.test.ts src/core/scanner.test.ts` 通过
+- [x] 2.1 `src/core/scanner.ts`：实现 base64 扫描（design D2 正则 + 44 尾窗裁剪 + `;base64,` data URI 豁免 + `ScanOptions.base64` 开关 + 代码/数学上下文 markOnly）；单测覆盖 spec 全部场景：44 独立整段、56 粘连只标尾部 44 且 `localStorage` 保留、<20 与无 `=` 不命中、四连发各自成段、data URI 载荷豁免、路径/git SHA 不误报、代码块内 markOnly、开关关闭零命中
+- [x] 2.2 `src/core/cleaner.ts`：`clean`/`summarizeHits` 对 `category === "base64"` 特判计数（`byCodepoint["base64"] += length`）；单测断言 report.total、`byCategory.base64`、弹窗汇总数字与 `ChangeReport` 无逐字符码点噪音
+- [x] 2.3 端到端清除断言：含正文 token + 代码块 token + 粘词 token 的文本经 `scan` + `clean` 后正文段全删、代码段保留、粘词前缀保留、零残留；`npx vitest run src/core/cleaner.test.ts src/core/scanner.test.ts` 通过
 
 ## 3. core：设置模型与迁移
 
