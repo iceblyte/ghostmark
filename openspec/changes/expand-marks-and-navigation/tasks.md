@@ -47,5 +47,5 @@
 ## 8. Bug 修复（用户人工验收轮）
 
 - [x] 8.1 修复 Bug 1：跳转定位规则抽取为纯函数 `src/core/navigation.ts`（pickJumpTarget），prev 改为"严格位于光标之前的最后一个命中"——光标停在某标记上（两端皆是，跳转后的典型状态）时必须跳过它，不再永远重选当前标记；回归单测覆盖光标在标记末尾/开头/标记之间/链式相邻命中/循环边界；`npx vitest run src/core/navigation.test.ts` 通过
-- [ ] 8.2 修复 Bug 2：跳转后目标行瞬时高亮——`src/editor/flash.ts`（StateField + 行级 Decoration，文档变更即清除），jump 命令 dispatch 效果并经 WeakMap 定时器在 1.6s 后清除；styles.css 增加渐隐脉冲动画；`npx tsc -noEmit -skipLibCheck` 通过
-- [ ] 8.3 自主验证：全量三闸门（test / lint / build）全绿；用构建产物模拟"next → prev → next"跳转序列对比修复前后行为；既有 145 项测试与两份 fixture 断言零回归；宿主端视觉确认项（闪烁动画观感）列入验收清单第 13 节待人工复核
+- [x] 8.2 修复 Bug 2：跳转后目标行瞬时高亮——`src/editor/flash.ts`（StateField + 行级 Decoration，文档变更即清除），jump 命令 dispatch 效果并经 WeakMap 定时器在 1.6s 后清除；styles.css 增加渐隐脉冲动画；`npx tsc -noEmit -skipLibCheck` 通过
+- [x] 8.3 自主验证：全量三闸门（test / lint / build）全绿；用构建产物模拟"next → prev → next"跳转序列对比修复前后行为；既有 145 项测试与两份 fixture 断言零回归；宿主端视觉确认项（闪烁动画观感）列入验收清单第 13 节待人工复核

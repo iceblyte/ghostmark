@@ -21,6 +21,7 @@ import {
 	MIN_BADGE_GUTTER,
 } from "./badgeModel";
 import { hoverExtension } from "./hover";
+import { flashField } from "./flash";
 import {
 	clearHitRequestFacet,
 	inspectHitsField,
@@ -167,4 +168,6 @@ export const INSPECT_EXTENSIONS: Extension[] = [
 	decorationsPlugin,
 	hoverExtension,
 	gutterExtension,
+	// jump-navigation line flash; renders only when the shell dispatches it
+	flashField,
 ];

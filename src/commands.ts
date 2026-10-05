@@ -31,6 +31,7 @@ import { t, type Locale } from "./core/i18n";
 import { pickJumpTarget } from "./core/navigation";
 import { scan } from "./core/scanner";
 import type { InspectConfig } from "./editor/inspectState";
+import { flashMark } from "./editor/flash";
 
 export interface CommandsHost extends Component {
 	app: App;
@@ -44,6 +45,10 @@ export interface CommandsHost extends Component {
 
 function activeEditor(host: CommandsHost): Editor | null {
 	return host.app.workspace.getActiveViewOfType(MarkdownView)?.editor ?? null;
+}
+
+function activeMarkdownView(host: CommandsHost): MarkdownView | null {
+	return host.app.workspace.getActiveViewOfType(MarkdownView);
 }
 
 function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
@@ -685,17 +690,18 @@ export function clearCurrentBlock(
 
 /**
  * Jump to the next / previous mark relative to the cursor: select the
- * hit (clear feedback even for zero-width glyphs), scroll it into view,
- * wrap around the document ends with a notice. Includes keep and
- * mark-only hits — the user is reviewing what is there, not only what
- * would be cleaned.
+ * hit, flash its line (the selection alone is easy to lose in a dense
+ * document), scroll it into view, and wrap around the document ends
+ * with a notice. Includes keep and mark-only hits — the user is
+ * reviewing what is there, not only what would be cleaned.
  */
 function jumpToMark(
 	host: CommandsHost,
-	editor: Editor,
+	view: MarkdownView,
 	direction: "next" | "prev",
 ): void {
 	const localeNow = host.config.locale;
+	const editor = view.editor;
 	const hits = scanEditor(editor, host.config);
 	if (hits.length === 0) {
 		new Notice(t(localeNow, "n.jump.none"));
@@ -716,6 +722,7 @@ function jumpToMark(
 	const to = editor.offsetToPos(target.index + target.length);
 	editor.setSelection(from, to);
 	editor.scrollIntoView({ from, to }, true);
+	flashMark(view.containerEl, target.index);
 	if (wrapped) {
 		new Notice(
 			t(
@@ -842,11 +849,11 @@ export function registerCommands(host: CommandsHost): void {
 		// Visibility gate (design doc §6): jumping to marks the user
 		// cannot see is meaningless, so gray out while inspect is off.
 		checkCallback: (checking) => {
-			const editor = activeEditor(host);
-			if (!editor) return false;
+			const view = activeMarkdownView(host);
+			if (!view) return false;
 			if (!host.inspectEnabled) return false;
 			if (!checking) {
-				jumpToMark(host, editor, "next");
+				jumpToMark(host, view, "next");
 			}
 			return true;
 		},
@@ -856,11 +863,11 @@ export function registerCommands(host: CommandsHost): void {
 		id: "jump-previous-mark",
 		name: t(host.config.locale, "cmd.jumpprev"),
 		checkCallback: (checking) => {
-			const editor = activeEditor(host);
-			if (!editor) return false;
+			const view = activeMarkdownView(host);
+			if (!view) return false;
 			if (!host.inspectEnabled) return false;
 			if (!checking) {
-				jumpToMark(host, editor, "prev");
+				jumpToMark(host, view, "prev");
 			}
 			return true;
 		},

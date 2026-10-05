@@ -535,3 +535,17 @@ body.theme-light {
 	gap: 6px;
 	align-items: center;
 }
+
+/* ---------- 跳转定位：目标行短暂闪烁 ---------- */
+@keyframes gm-flash-fade {
+	from {
+		background-color: hsla(var(--interactive-accent-hsl), 0.42);
+	}
+	to {
+		background-color: transparent;
+	}
+}
+
+.cm-line.gm-flash-line {
+	animation: gm-flash-fade 1.6s ease-out forwards;
+}
