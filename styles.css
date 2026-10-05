@@ -536,16 +536,21 @@ body.theme-light {
 	align-items: center;
 }
 
-/* ---------- 跳转定位：目标行短暂闪烁 ---------- */
-@keyframes gm-flash-fade {
-	from {
-		background-color: hsla(var(--interactive-accent-hsl), 0.42);
+/* ---------- 跳转定位：仅标记范围脉冲（Word/飞书搜索式高亮） ----------
+   装饰层每次跳转都会以新代数重建匹配的 widget，动画因此必然重放 */
+@keyframes gm-flash-ring {
+	0% {
+		box-shadow:
+			0 0 0 1px hsla(var(--interactive-accent-hsl), 0.95),
+			0 0 0 6px hsla(var(--interactive-accent-hsl), 0.45);
 	}
-	to {
-		background-color: transparent;
+	100% {
+		box-shadow:
+			0 0 0 1px hsla(var(--interactive-accent-hsl), 0),
+			0 0 0 6px hsla(var(--interactive-accent-hsl), 0);
 	}
 }
 
-.cm-line.gm-flash-line {
-	animation: gm-flash-fade 1.6s ease-out forwards;
+.gm-w.gm-flash {
+	animation: gm-flash-ring 1.5s ease-out forwards;
 }

@@ -31,7 +31,7 @@ import { t, type Locale } from "./core/i18n";
 import { pickJumpTarget } from "./core/navigation";
 import { scan } from "./core/scanner";
 import type { InspectConfig } from "./editor/inspectState";
-import { flashMark } from "./editor/flash";
+import { applyJumpAndFlash } from "./editor/flash";
 
 export interface CommandsHost extends Component {
 	app: App;
@@ -718,11 +718,17 @@ function jumpToMark(
 				: (hits[hits.length - 1] ?? null);
 	}
 	if (!target) return;
-	const from = editor.offsetToPos(target.index);
-	const to = editor.offsetToPos(target.index + target.length);
-	editor.setSelection(from, to);
-	editor.scrollIntoView({ from, to }, true);
-	flashMark(view.containerEl, target.index);
+	// One CM transaction: select the hit, center it (native effect — the
+	// file-start wrap crosses the whole document and must never rely on
+	// the editor wrapper's scrolling) and flash the exact mark range.
+	if (
+		!applyJumpAndFlash(view.containerEl, target.index, target.index + target.length)
+	) {
+		const fromPos = editor.offsetToPos(target.index);
+		const toPos = editor.offsetToPos(target.index + target.length);
+		editor.setSelection(fromPos, toPos);
+		editor.scrollIntoView({ from: fromPos, to: toPos }, true);
+	}
 	if (wrapped) {
 		new Notice(
 			t(

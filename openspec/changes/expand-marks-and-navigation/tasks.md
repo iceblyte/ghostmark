@@ -49,3 +49,9 @@
 - [x] 8.1 修复 Bug 1：跳转定位规则抽取为纯函数 `src/core/navigation.ts`（pickJumpTarget），prev 改为"严格位于光标之前的最后一个命中"——光标停在某标记上（两端皆是，跳转后的典型状态）时必须跳过它，不再永远重选当前标记；回归单测覆盖光标在标记末尾/开头/标记之间/链式相邻命中/循环边界；`npx vitest run src/core/navigation.test.ts` 通过
 - [x] 8.2 修复 Bug 2：跳转后目标行瞬时高亮——`src/editor/flash.ts`（StateField + 行级 Decoration，文档变更即清除），jump 命令 dispatch 效果并经 WeakMap 定时器在 1.6s 后清除；styles.css 增加渐隐脉冲动画；`npx tsc -noEmit -skipLibCheck` 通过
 - [x] 8.3 自主验证：全量三闸门（test / lint / build）全绿；用构建产物模拟"next → prev → next"跳转序列对比修复前后行为；既有 145 项测试与两份 fixture 断言零回归；宿主端视觉确认项（闪烁动画观感）列入验收清单第 13 节待人工复核
+
+## 9. Bug 修复第二轮（用户人工验收轮 2）
+
+- [x] 9.1 修复 Bug 2：高亮从"整行"改为"仅标记范围"——flash 状态值带代数（gen，每次跳转递增），widget 以 eq 比较代数，匹配的 widget 重建并播放强调色脉冲动画，保证同一段落内连续跳转每次都重放；移除行级装饰与旧 CSS；`src/editor/flash.test.ts` 覆盖状态转换（设置/清除/文档变更丢弃/gen 递增）
+- [x] 9.2 修复 Bug 1：跳转应用改为单次 CM 原生事务——选区 + `EditorView.scrollIntoView(center)` + flash 效果一次 dispatch，不再依赖 Obsidian 包装器的滚动行为（文件开头跨全文档循环跳转的不可见路径）；无 CM 视图时回退包装器路径
+- [x] 9.3 验证：三闸门全绿 + 既有 154 项测试零回归 + flash 状态机单测；验收清单第 13 节更新为新行为（范围脉冲）待宿主复核

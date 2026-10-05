@@ -82,6 +82,7 @@ export function buildDecorations(view: EditorView): DecorationSet {
 	if (hits.length === 0) return Decoration.none;
 	const config = inspectRuntime.config;
 	if (!config) return Decoration.none;
+	const flash = view.state.field(flashField, false);
 
 	const ranges: Array<{ from: number; to: number; deco: Decoration }> = [];
 	for (const { from, to } of view.visibleRanges) {
@@ -96,6 +97,12 @@ export function buildDecorations(view: EditorView): DecorationSet {
 							}
 						}
 					: undefined;
+			// the flashed mark pulses: its generation rides into the widget
+			// so eq() differs and the CSS animation restarts every time
+			const flashGen =
+				flash && flash.from === hit.index && flash.to === hit.index + hit.length
+					? flash.gen
+					: 0;
 			const widget = new GhostWidget(
 				hit.category,
 				hit.codepoint,
@@ -103,6 +110,7 @@ export function buildDecorations(view: EditorView): DecorationSet {
 				hit.action === "markOnly",
 				config.density,
 				config.locale,
+				flashGen,
 				onClear,
 			);
 			ranges.push({
@@ -126,6 +134,13 @@ function runtimeChanged(update: ViewUpdate): boolean {
 	);
 }
 
+function flashChanged(update: ViewUpdate): boolean {
+	return (
+		update.state.field(flashField, false) !==
+		update.startState.field(flashField, false)
+	);
+}
+
 const decorationsPlugin = ViewPlugin.fromClass(
 	class {
 		decorations: DecorationSet;
@@ -145,7 +160,8 @@ const decorationsPlugin = ViewPlugin.fromClass(
 			if (
 				update.docChanged ||
 				update.viewportChanged ||
-				runtimeChanged(update)
+				runtimeChanged(update) ||
+				flashChanged(update)
 			) {
 				this.decorations = buildDecorations(update.view);
 			}

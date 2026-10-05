@@ -45,6 +45,7 @@ export class GhostWidget extends WidgetType {
 		readonly markOnly: boolean,
 		readonly density: Density,
 		readonly locale: Locale,
+		readonly flashGen: number = 0,
 		readonly onClear?: () => void,
 	) {
 		super();
@@ -57,13 +58,16 @@ export class GhostWidget extends WidgetType {
 			other.count === this.count &&
 			other.markOnly === this.markOnly &&
 			other.density === this.density &&
-			other.locale === this.locale
+			other.locale === this.locale &&
+			// a new generation must redraw the widget so the CSS pulse
+			// restarts even when the flash lands on the same mark again
+			other.flashGen === this.flashGen
 		);
 	}
 
 	override toDOM(): HTMLElement {
 		const el = createSpan();
-		el.className = `gm-w ${colorClass(this.category)}${this.markOnly ? " markonly" : ""}${this.onClear ? " clearable" : ""}`;
+		el.className = `gm-w ${colorClass(this.category)}${this.markOnly ? " markonly" : ""}${this.onClear ? " clearable" : ""}${this.flashGen > 0 ? " gm-flash" : ""}`;
 		el.setAttribute("data-cp", DATA_CP[this.category](this.codepoint));
 		el.setAttribute("data-nm", t(this.locale, `cp.${this.codepoint}`));
 		el.setAttribute("data-density", this.density);
