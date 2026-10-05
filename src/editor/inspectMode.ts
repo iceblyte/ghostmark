@@ -22,6 +22,7 @@ import {
 } from "./badgeModel";
 import { hoverExtension } from "./hover";
 import {
+	clearHitRequestFacet,
 	inspectHitsField,
 	inspectRuntime,
 	inspectRuntimeField,
@@ -84,6 +85,16 @@ export function buildDecorations(view: EditorView): DecorationSet {
 	const ranges: Array<{ from: number; to: number; deco: Decoration }> = [];
 	for (const { from, to } of view.visibleRanges) {
 		for (const hit of hitsInRange(hits, from, to)) {
+			// base64 glyphs clear their own segment on click; the facet is
+			// read at click time so the shell wiring stays fresh
+			const onClear =
+				hit.category === "base64"
+					? () => {
+							for (const request of view.state.facet(clearHitRequestFacet)) {
+								request(view, hit);
+							}
+						}
+					: undefined;
 			const widget = new GhostWidget(
 				hit.category,
 				hit.codepoint,
@@ -91,6 +102,7 @@ export function buildDecorations(view: EditorView): DecorationSet {
 				hit.action === "markOnly",
 				config.density,
 				config.locale,
+				onClear,
 			);
 			ranges.push({
 				from: hit.index,

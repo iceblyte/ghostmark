@@ -19,6 +19,8 @@ export interface InspectConfig {
 	locale: Locale;
 	mathMode: "markOnly" | "clean";
 	codeToSpace: boolean;
+	/** Purple-mark base64 tracking tokens (settings toggle). */
+	base64: boolean;
 	/** Display name for a policy entry id (i18n table or a picked name). */
 	nameFor: (entryId: string) => string;
 }
@@ -61,6 +63,7 @@ function scanState(state: {
 	return scan(state.doc.toString(), config.policy, {
 		mathMode: config.mathMode,
 		codeToSpace: config.codeToSpace,
+		base64: config.base64,
 	});
 }
 
@@ -86,4 +89,13 @@ export const inspectHitsField = StateField.define<Hit[]>({
  */
 export const clearBlockRequestFacet = Facet.define<
 	(view: EditorView, lineIndex: number) => void
+>();
+
+/**
+ * Provided by the shell: base64 widget clicks request a single-segment
+ * clear for that hit (explicit intent — allowed even for mark-only
+ * tokens inside code).
+ */
+export const clearHitRequestFacet = Facet.define<
+	(view: EditorView, hit: Hit) => void
 >();

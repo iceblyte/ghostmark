@@ -87,6 +87,7 @@ export function buildInspectConfig(
 		locale,
 		mathMode: settings.mathMode,
 		codeToSpace: settings.codeToSpace,
+		base64: settings.base64Marking,
 		nameFor: (entryId) => {
 			const custom = settings.customPolicies[entryId];
 			if (custom) return custom.name || entryId;

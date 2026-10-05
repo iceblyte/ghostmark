@@ -25,14 +25,16 @@ function hit(
 }
 
 describe("badgeSegments", () => {
-	it("splits three colors into ordered segments with their counts", () => {
+	it("splits four colors into ordered segments with their counts", () => {
 		const segments = badgeSegments([
 			hit("invisible", 4),
+			hit("base64", 44),
 			hit("spaceLike", 22),
 			hit("semantic", 1, "keep"),
 		]);
 		expect(segments).toEqual([
 			{ color: "red", count: 4 },
+			{ color: "purple", count: 44 },
 			{ color: "blue", count: 22 },
 			{ color: "yellow", count: 1 },
 		]);
@@ -47,6 +49,9 @@ describe("badgeSegments", () => {
 		).toEqual([
 			{ color: "red", count: 2 },
 			{ color: "yellow", count: 3 },
+		]);
+		expect(badgeSegments([hit("base64", 88)])).toEqual([
+			{ color: "purple", count: 88 },
 		]);
 	});
 

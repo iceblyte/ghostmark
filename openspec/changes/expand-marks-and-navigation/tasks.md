@@ -25,11 +25,11 @@
 
 ## 5. editor 层：紫色类别与点击清除
 
-- [ ] 5.1 `src/editor/badgeModel.ts`：`BADGE_COLORS` 增 `{color: "purple", category: "base64"}`（排在红后）、`colorClass` 增分支；`badgeModel.test.ts` 增断言：base64 命中产出紫色段且变体为 clear、计数按字符数
-- [ ] 5.2 `src/editor/inspectState.ts`：`InspectConfig` 增 `base64: boolean` 并传入 `scan()`；新增 `clearHitRequestFacet`（design D3）；`npx tsc -noEmit -skipLibCheck` 通过
-- [ ] 5.3 `src/editor/widgets.ts`：base64 紫色字形（紧凑 `⌗ ×N`、详细 `b64 ×N`）、`eq` 不含回调、`toDOM` 内经 `clearHitRequestFacet` 挂点击清除；`inspectMode.ts` 对 base64 命中传入 hit 数据；手动确认：紫字形渲染、点击仅删该段、撤销恢复
-- [ ] 5.4 `src/editor/hover.ts`：base64 段悬停显示名称/长度/类别/建议动作与点击清除提示（i18n `note.base64`、`cp.base64`）；手动确认文案随语言切换
-- [ ] 5.5 `styles.css`：`.gm-w.purple`、`.gm-badge-seg.purple`、`.gm-dot.purple` 三色体系中紫色的原型样式（对照既有三色的对比度与密度）；手动确认 Source 与 Live Preview 双模式外观一致
+- [x] 5.1 `src/editor/badgeModel.ts`：`BADGE_COLORS` 增 `{color: "purple", category: "base64"}`（排在红后）、`colorClass` 增分支；`badgeModel.test.ts` 增断言：base64 命中产出紫色段且变体为 clear、计数按字符数
+- [x] 5.2 `src/editor/inspectState.ts`：`InspectConfig` 增 `base64: boolean` 并传入 `scan()`；新增 `clearHitRequestFacet`（design D3）；`npx tsc -noEmit -skipLibCheck` 通过
+- [x] 5.3 `src/editor/widgets.ts`：base64 紫色字形（紧凑 `⌗ ×N`、详细 `b64 ×N`）、`eq` 不含回调、`toDOM` 内经 `clearHitRequestFacet` 挂点击清除；`inspectMode.ts` 对 base64 命中传入 hit 数据；手动确认：紫字形渲染、点击仅删该段、撤销恢复
+- [x] 5.4 `src/editor/hover.ts`：base64 段悬停显示名称/长度/类别/建议动作与点击清除提示（i18n `note.base64`、`cp.base64`）；手动确认文案随语言切换
+- [x] 5.5 `styles.css`：`.gm-w.purple`、`.gm-badge-seg.purple`、`.gm-dot.purple` 三色体系中紫色的原型样式（对照既有三色的对比度与密度）；手动确认 Source 与 Live Preview 双模式外观一致
 
 ## 6. 外壳层：命令、设置与装配
 

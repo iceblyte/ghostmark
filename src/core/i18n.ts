@@ -8,9 +8,10 @@ export type Locale = "en" | "zh";
 export type LanguageSetting = "auto" | Locale;
 
 const ZH: Record<string, string> = {
-	"cat.red": "无语义不可见",
-	"cat.blue": "空格类",
-	"cat.yellow": "受保护语义",
+	"cat.invisible": "无语义不可见",
+	"cat.spaceLike": "空格类",
+	"cat.semantic": "受保护语义",
+	"cat.base64": "base64 乱码",
 
 	"act.remove": "清除",
 	"act.tospace": "转普通空格",
@@ -24,6 +25,7 @@ const ZH: Record<string, string> = {
 	"note.zwj": "ZWJ 承载 emoji 组合语义，永久保护",
 	"note.skin": "肤色修饰符，永久保护",
 	"note.run": "空格成串（≥2）→ 整串删除",
+	"note.base64": "Base64 追踪串（可见垃圾）：点击字形清除该段",
 
 	"ghost.tip": "{n} 处命中 · 点击切换检查模式",
 	"badge.tip": "本行 {n} 处命中 · 点击清除当前块",
@@ -35,6 +37,8 @@ const ZH: Record<string, string> = {
 	"cmd.clearsel": "Ghostmark: 清除选区",
 	"cmd.clearblock": "Ghostmark: 清除当前块",
 	"cmd.pick": "Ghostmark: 拾取码点",
+	"cmd.jumpnext": "Ghostmark: 跳转到下一处标记",
+	"cmd.jumpprev": "Ghostmark: 跳转到上一处标记",
 
 	"m3.title": "清除全部标记",
 	"m3.desc": "将对当前笔记执行策略清理，确认后一次性替换，可单步撤销：",
@@ -50,6 +54,7 @@ const ZH: Record<string, string> = {
 	"r.red": "无语义不可见字符",
 	"r.blue": "空格类字符",
 	"r.yellow": "受保护语义字符",
+	"r.base64": "base64 乱码段",
 	"r.math": "数学块内（仅标记）",
 	"pill.remove": "清除",
 	"pill.tospace": "转空格",
@@ -69,11 +74,16 @@ const ZH: Record<string, string> = {
 	"btn.pick": "加入策略表",
 
 	"n3.ok": "已清除 {n} 处标记（红 {r} · 蓝 {b}）",
+	"n.suffix.purple": " · 紫 {p}",
 	"n3.undo": "单步撤销，原文可完整恢复",
 	"n3.keep": "数学块内 {a} 处仅标记 · 受保护 {b} 处按策略保留",
 	"n4.ok": "已清除选区 {n} 处标记（红 {r} · 蓝 {b}）",
 	"n5.ok": "已清除当前块 {n} 处（红 {r} · 蓝 {b}）· 块外零改动",
 	"n5.zero": "该块无命中（或全部为保留/仅标记），未做修改",
+	"n7.ok": "已清除该 base64 段（{n} 字符）",
+	"n.jump.none": "当前笔记没有标记",
+	"n.jump.wrap.next": "已到文末，回到开头继续",
+	"n.jump.wrap.prev": "已到文首，回到末尾继续",
 	"n6.ok": "已将 {cp}（动作：{act}）加入策略表",
 	"n6.more": "可在设置 → 字符策略表中修改动作",
 	"n.pick.known": "该字符已在策略表中",
@@ -115,6 +125,9 @@ const ZH: Record<string, string> = {
 	"s.zwnj.d": "波斯语等语言承载构词语义，误删会毁掉复合词（#625 教训）。",
 	"s.codespace": "代码块内空格类转普通空格",
 	"s.codespace.d": "直接删除会破坏 Python 缩进与语法。",
+	"s.base64": "标记 base64 乱码",
+	"s.base64.d":
+		"以紫色标记以等号结尾的 base64 追踪串（data URI 豁免、代码内仅标记）；点击字形可逐段清除，清除命令一并处理。",
 	"s.g3": "界面",
 	"s.remember": "记住检查模式状态",
 	"s.remember.d": "重启后保持上次开关（默认开启）。",
@@ -160,6 +173,7 @@ const ZH: Record<string, string> = {
 	"cp.U+200D": "零宽连接符",
 	"cp.U+200C": "零宽非连接符",
 	"cp.U+FE00-FE0F": "变体选择符",
+	"cp.base64": "Base64 追踪串",
 	"cp.U+00AD": "软连字符",
 	"cp.U+202A-202E": "双向嵌入与覆盖控制",
 	"cp.U+2066-2069": "双向隔离控制",
@@ -196,9 +210,10 @@ const ZH: Record<string, string> = {
 };
 
 const EN: Record<string, string> = {
-	"cat.red": "Invisible · no semantics",
-	"cat.blue": "Space-like",
-	"cat.yellow": "Protected · semantic",
+	"cat.invisible": "Invisible · no semantics",
+	"cat.spaceLike": "Space-like",
+	"cat.semantic": "Protected · semantic",
+	"cat.base64": "Base64 garbage",
 
 	"act.remove": "Remove",
 	"act.tospace": "Convert to space",
@@ -212,6 +227,8 @@ const EN: Record<string, string> = {
 	"note.zwj": "ZWJ carries emoji semantics — permanently protected",
 	"note.skin": "Skin-tone modifier — permanently protected",
 	"note.run": "Space run (≥2) → whole run removed",
+	"note.base64":
+		"Base64 tracking token (visible garbage): click the glyph to clear it",
 
 	"ghost.tip": "{n} hits · Click to toggle inspect mode",
 	"badge.tip": "{n} hits in this line · Click to clear current block",
@@ -225,6 +242,8 @@ const EN: Record<string, string> = {
 	"cmd.clearsel": "Ghostmark: Clear selection",
 	"cmd.clearblock": "Ghostmark: Clear current block",
 	"cmd.pick": "Ghostmark: Pick codepoint",
+	"cmd.jumpnext": "Ghostmark: Jump to next mark",
+	"cmd.jumpprev": "Ghostmark: Jump to previous mark",
 
 	"m3.title": "Clear all marks",
 	"m3.desc": "Policy-based clean of the whole note. One-shot replace after confirm, single-step undo:",
@@ -240,6 +259,7 @@ const EN: Record<string, string> = {
 	"r.red": "Invisible characters (no semantics)",
 	"r.blue": "Space-like characters",
 	"r.yellow": "Protected semantic characters",
+	"r.base64": "Base64 garbage segments",
 	"r.math": "In math block (mark-only)",
 	"pill.remove": "Remove",
 	"pill.tospace": "→ Space",
@@ -259,11 +279,16 @@ const EN: Record<string, string> = {
 	"btn.pick": "Add to policy table",
 
 	"n3.ok": "Cleared {n} marks (red {r} · blue {b})",
+	"n.suffix.purple": " · purple {p}",
 	"n3.undo": "Single-step undo — the original text is fully recoverable",
 	"n3.keep": "{a} mark-only in math · {b} protected — kept by policy",
 	"n4.ok": "Cleared {n} marks in selection (red {r} · blue {b})",
 	"n5.ok": "Cleared {n} marks in current block (red {r} · blue {b}) · zero change outside",
 	"n5.zero": "No eligible hits in this block (all keep / mark-only) — text unchanged",
+	"n7.ok": "Cleared that base64 segment ({n} characters)",
+	"n.jump.none": "No marks in this note",
+	"n.jump.wrap.next": "Reached the end — wrapped to the top",
+	"n.jump.wrap.prev": "Reached the start — wrapped to the bottom",
 	"n6.ok": "{cp} (action: {act}) added to the policy table",
 	"n6.more": "Change it anytime in Settings → Character policy table",
 	"n.pick.known": "This codepoint is already in the policy table",
@@ -305,6 +330,9 @@ const EN: Record<string, string> = {
 	"s.zwnj.d": "ZWNJ carries word-formation semantics in e.g. Persian; deleting it breaks compound words (#625).",
 	"s.codespace": "Convert space-like chars to plain spaces in code blocks",
 	"s.codespace.d": "Deleting them outright would break Python indentation and syntax.",
+	"s.base64": "Mark base64 garbage",
+	"s.base64.d":
+		"Purple-mark base64 tracking tokens ending in = (data URIs exempt, mark-only in code); click a glyph to clear that segment, clear commands include them.",
 	"s.g3": "Interface",
 	"s.remember": "Remember inspect mode state",
 	"s.remember.d": "Keep the last on/off state across restarts (on by default).",
@@ -350,6 +378,7 @@ const EN: Record<string, string> = {
 	"cp.U+200D": "ZERO WIDTH JOINER",
 	"cp.U+200C": "ZERO WIDTH NON-JOINER",
 	"cp.U+FE00-FE0F": "VARIATION SELECTORS",
+	"cp.base64": "Base64 tracking token",
 	"cp.U+00AD": "SOFT HYPHEN",
 	"cp.U+202A-202E": "BIDI EMBEDDING AND OVERRIDE CONTROLS",
 	"cp.U+2066-2069": "BIDI ISOLATE CONTROLS",

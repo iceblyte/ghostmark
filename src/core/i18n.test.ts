@@ -18,12 +18,12 @@ describe("i18n key parity", () => {
 });
 
 describe("t()", () => {
-	it("returns the zh and en strings from the prototype", () => {
-		expect(t("zh", "cmd.clearall")).toBe("Ghostmark: 清除全部标记");
-		expect(t("en", "cmd.clearall")).toBe("Ghostmark: Clear all marks");
-		expect(t("zh", "cat.red")).toBe("无语义不可见");
-		expect(t("en", "cat.red")).toBe("Invisible · no semantics");
-	});
+		it("returns the zh and en strings from the prototype", () => {
+			expect(t("zh", "cmd.clearall")).toBe("Ghostmark: 清除全部标记");
+			expect(t("en", "cmd.clearall")).toBe("Ghostmark: Clear all marks");
+			expect(t("zh", "cat.invisible")).toBe("无语义不可见");
+			expect(t("en", "cat.base64")).toBe("Base64 garbage");
+		});
 
 	it("interpolates variables", () => {
 		expect(t("zh", "btn.clear", { n: 798 })).toBe("清除 798");

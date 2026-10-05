@@ -1,8 +1,11 @@
 /**
  * Inline glyph widgets for hits, styled after UI prototype P0–P2:
- * one compact glyph per category (red ⌷ / blue ␣ / yellow ⌦) or the
- * codepoint abbreviation in detailed density, with the prototype's
- * exact three-color palette (see styles.css).
+ * one compact glyph per category (red ⌷ / purple ⌗ / blue ␣ / yellow ⌦)
+ * or the codepoint abbreviation in detailed density, with the prototype's
+ * exact color palette (see styles.css). Base64 glyphs take an onClear
+ * callback — clicking the glyph clears that one segment; the callback is
+ * deliberately excluded from eq() so decoration rebuilds never force
+ * widget redraws.
  */
 
 import { WidgetType } from "@codemirror/view";
@@ -20,6 +23,20 @@ const COMPACT_GLYPH: Record<Category, string> = {
 	base64: "⌗",
 };
 
+const DETAILED_LABEL: Record<Category, (codepoint: string) => string> = {
+	invisible: (cp) => cp.slice(2),
+	spaceLike: (cp) => cp.slice(2),
+	semantic: (cp) => cp.slice(2),
+	base64: () => "b64",
+};
+
+const DATA_CP: Record<Category, (codepoint: string) => string> = {
+	invisible: (cp) => cp.slice(2),
+	spaceLike: (cp) => cp.slice(2),
+	semantic: (cp) => cp.slice(2),
+	base64: () => "base64",
+};
+
 export class GhostWidget extends WidgetType {
 	constructor(
 		readonly category: Category,
@@ -28,6 +45,7 @@ export class GhostWidget extends WidgetType {
 		readonly markOnly: boolean,
 		readonly density: Density,
 		readonly locale: Locale,
+		readonly onClear?: () => void,
 	) {
 		super();
 	}
@@ -45,17 +63,24 @@ export class GhostWidget extends WidgetType {
 
 	override toDOM(): HTMLElement {
 		const el = createSpan();
-		el.className = `gm-w ${colorClass(this.category)}${this.markOnly ? " markonly" : ""}`;
-		el.setAttribute("data-cp", this.codepoint.slice(2));
+		el.className = `gm-w ${colorClass(this.category)}${this.markOnly ? " markonly" : ""}${this.onClear ? " clearable" : ""}`;
+		el.setAttribute("data-cp", DATA_CP[this.category](this.codepoint));
 		el.setAttribute("data-nm", t(this.locale, `cp.${this.codepoint}`));
 		el.setAttribute("data-density", this.density);
 		const gt = createSpan({ cls: "gt" });
 		const label =
 			this.density === "compact"
 				? COMPACT_GLYPH[this.category]
-				: this.codepoint.slice(2);
+				: DETAILED_LABEL[this.category](this.codepoint);
 		gt.textContent = this.count > 1 ? `${label} ×${this.count}` : label;
 		el.appendChild(gt);
+		if (this.onClear) {
+			el.addEventListener("mousedown", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				this.onClear?.();
+			});
+		}
 		return el;
 	}
 

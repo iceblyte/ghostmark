@@ -13,19 +13,21 @@
 
 import type { Category, Hit } from "../core/categories";
 
-/** Ordered color registry (severity order: red, blue, yellow, …). */
+/** Ordered color registry (severity order: red, purple, blue, yellow). */
 export const BADGE_COLORS: ReadonlyArray<{
 	color: string;
 	category: Category;
 }> = [
 	{ color: "red", category: "invisible" },
+	{ color: "purple", category: "base64" },
 	{ color: "blue", category: "spaceLike" },
 	{ color: "yellow", category: "semantic" },
 ];
 
-/** UI color for a category (prototype three-color system). */
+/** UI color for a category (prototype three-color system + purple). */
 export function colorClass(category: Category): string {
 	if (category === "invisible") return "red";
+	if (category === "base64") return "purple";
 	if (category === "spaceLike") return "blue";
 	return "yellow";
 }

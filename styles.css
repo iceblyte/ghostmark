@@ -1,5 +1,5 @@
 /* ============================================================
-   Ghostmark — three-color widget palette from UI prototype P0
+   Ghostmark — color widget palette from UI prototype P0
    (dark values on body.theme-dark, light overrides on theme-light)
    ============================================================ */
 
@@ -7,6 +7,9 @@ body.theme-dark {
 	--gm-red-fg: #ff8a93;
 	--gm-red-bg: rgba(255, 94, 109, 0.15);
 	--gm-red-bd: rgba(255, 94, 109, 0.38);
+	--gm-purple-fg: #c98fff;
+	--gm-purple-bg: rgba(178, 102, 255, 0.16);
+	--gm-purple-bd: rgba(178, 102, 255, 0.42);
 	--gm-blue-fg: #7cb8ff;
 	--gm-blue-bg: rgba(76, 146, 236, 0.16);
 	--gm-blue-bd: rgba(76, 146, 236, 0.4);
@@ -19,6 +22,9 @@ body.theme-light {
 	--gm-red-fg: #b3261e;
 	--gm-red-bg: #fcebed;
 	--gm-red-bd: #f2b8bd;
+	--gm-purple-fg: #6d28ad;
+	--gm-purple-bg: #f3ecfd;
+	--gm-purple-bd: #ddc9f6;
 	--gm-blue-fg: #1f6fd6;
 	--gm-blue-bg: #e9f2fc;
 	--gm-blue-bd: #b9d7f5;
@@ -53,6 +59,12 @@ body.theme-light {
 	border-color: var(--gm-red-bd);
 }
 
+.gm-w.purple {
+	background: var(--gm-purple-bg);
+	color: var(--gm-purple-fg);
+	border-color: var(--gm-purple-bd);
+}
+
 .gm-w.blue {
 	background: var(--gm-blue-bg);
 	color: var(--gm-blue-fg);
@@ -71,6 +83,11 @@ body.theme-light {
 
 .gm-w .gt {
 	white-space: nowrap;
+}
+
+/* base64 段可点击清除 */
+.gm-w.clearable {
+	cursor: pointer;
 }
 
 /* ---------- 行号槽徽标（分段式：每个类别一段，各带数量） ---------- */
@@ -106,6 +123,11 @@ body.theme-light {
 .gm-badge-seg.red {
 	background: var(--gm-red-bg);
 	color: var(--gm-red-fg);
+}
+
+.gm-badge-seg.purple {
+	background: var(--gm-purple-bg);
+	color: var(--gm-purple-fg);
 }
 
 .gm-badge-seg.blue {
@@ -170,6 +192,10 @@ body.theme-light {
 
 .gm-dot.red {
 	background: var(--gm-red-fg);
+}
+
+.gm-dot.purple {
+	background: var(--gm-purple-fg);
 }
 
 .gm-dot.blue {
@@ -254,6 +280,12 @@ body.theme-light {
 	color: var(--gm-red-fg);
 	border-color: var(--gm-red-bd);
 	background: var(--gm-red-bg);
+}
+
+.gm-tag.purple {
+	color: var(--gm-purple-fg);
+	border-color: var(--gm-purple-bd);
+	background: var(--gm-purple-bg);
 }
 
 .gm-tag.blue {
@@ -357,6 +389,12 @@ body.theme-light {
 	color: var(--gm-red-fg);
 	border-color: var(--gm-red-bd);
 	background: var(--gm-red-bg);
+}
+
+.gm-cnt-pill.purple {
+	color: var(--gm-purple-fg);
+	border-color: var(--gm-purple-bd);
+	background: var(--gm-purple-bg);
 }
 
 .gm-cnt-pill.blue {

@@ -38,6 +38,7 @@ function hitAt(hits: Hit[], pos: number): Hit | null {
 }
 
 function noteFor(hit: Hit): string | null {
+	if (hit.category === "base64") return "note.base64";
 	const cp = parseCodepointId(hit.entryId);
 	if (cp !== null && isSkinModifier(cp)) return "note.skin";
 	if (hit.entryId === "U+200D") return "note.zwj";
