@@ -28,3 +28,7 @@
 - [x] 5.1 根因：块级 widget 随插件装饰集进入本插件 `atomicRanges` 供给，在 frontmatter 边界形成原子墙 → 鼠标选区被强制移出（跳段、选区不一致）；挂载点落在 Obsidian 属性面板替换范围内（Live Preview 被吞）；外来块级 DOM 干扰 Source 模式 frontmatter 行结构
 - [x] 5.2 重做：移除块级 widget（fmBadge.ts）、frontmatterBadgeField/Effect 及其状态机测试；新增 `src/frontmatterBadge.ts` 控制器——编辑器文档流外的固定摘要条（每叶子一个，锚定 `.cm-editor` 之前，WeakMap 跟踪），点击直接调 `clearCurrentBlock(editor, 0)`；接线 layout-change / active-leaf-change / editor-change / 检查模式开关 / 设置变更
 - [x] 5.3 验证：三闸门全绿 + 165 项测试零回归（badgeModel 聚合测试保留）；spec/design/proposal 措辞同步为固定摘要条方案；验收清单第 14 节更新待宿主复核
+
+## 6. 样式重塑（用户验收轮：方案 A）
+
+- [x] 6.1 纯 CSS：`.gm-fm-badge` 由整条横幅改为右对齐（`width: fit-content` + `margin-left: auto`）、圆角胶囊（`border-radius: 999px` + 描边 + 次级底色），文本不换行；锚点与逻辑零改动；`npm run build` 通过
