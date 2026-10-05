@@ -9,24 +9,35 @@ import {
 } from "./categories";
 
 describe("default policy table", () => {
-	it("has 21 rows: 13 red, 5 blue, 3 yellow", () => {
-		expect(DEFAULT_POLICY_ENTRIES).toHaveLength(21);
+	it("has 46 rows: 28 red, 15 blue, 3 yellow", () => {
+		expect(DEFAULT_POLICY_ENTRIES).toHaveLength(46);
 		const byCategory = {
 			invisible: 0,
 			spaceLike: 0,
 			semantic: 0,
+			base64: 0,
 		};
 		for (const entry of DEFAULT_POLICY_ENTRIES) {
 			byCategory[entry.category]++;
 		}
-		expect(byCategory).toEqual({ invisible: 13, spaceLike: 5, semantic: 3 });
+		expect(byCategory).toEqual({
+			invisible: 28,
+			spaceLike: 15,
+			semantic: 3,
+			base64: 0,
+		});
 	});
 
-	it("gives every red codepoint the remove action", () => {
+	it("gives every red codepoint the remove action except the line/paragraph separators", () => {
 		for (const entry of DEFAULT_POLICY_ENTRIES) {
 			if (entry.category !== "invisible") continue;
-			expect(entry.action).toBe("remove");
 			expect(entry.options).toContain("remove");
+			if (entry.id === "U+2028" || entry.id === "U+2029") {
+				// removing would glue the neighboring words together
+				expect(entry.action).toBe("toSpace");
+			} else {
+				expect(entry.action).toBe("remove");
+			}
 		}
 	});
 
@@ -52,10 +63,11 @@ describe("default policy table", () => {
 });
 
 describe("buildScanPolicy", () => {
-	it("expands all 36 covered codepoints including the variation selector range", () => {
+	it("expands all 258 covered codepoints including the range rows", () => {
 		const policy = buildScanPolicy();
-		// 20 single codepoints + 16 range codepoints
-		expect(policy.size).toBe(36);
+		// 35 single codepoints + 223 range codepoints (variation selectors,
+		// bidi groups, tag characters, C0/C1 controls, noncharacters, …)
+		expect(policy.size).toBe(258);
 		expect(policy.get(0x2062)).toEqual({
 			category: "invisible",
 			action: "remove",
@@ -67,6 +79,25 @@ describe("buildScanPolicy", () => {
 			entryId: "U+FE00-FE0F",
 		});
 		expect(policy.get(0xfe00)?.entryId).toBe("U+FE00-FE0F");
+		expect(policy.get(0x202e)).toEqual({
+			category: "invisible",
+			action: "remove",
+			entryId: "U+202A-202E",
+		});
+		expect(policy.get(0x2028)?.action).toBe("toSpace");
+		expect(policy.get(0x85)).toEqual({
+			category: "invisible",
+			action: "remove",
+			entryId: "U+0080-009F",
+		});
+	});
+
+	it("leaves the ideographic space and structural whitespace out of the table", () => {
+		const policy = buildScanPolicy();
+		expect(policy.has(0x3000)).toBe(false);
+		expect(policy.has(0x09)).toBe(false);
+		expect(policy.has(0x0a)).toBe(false);
+		expect(policy.has(0x0d)).toBe(false);
 	});
 
 	it("applies per-row overrides", () => {
@@ -144,6 +175,21 @@ describe("classifyUnknownCodepoint", () => {
 			category: "semantic",
 			action: "keep",
 		});
+	});
+
+	it("suggests remove for control characters outside the table", () => {
+		expect(classifyUnknownCodepoint(0x009c)).toEqual({
+			category: "invisible",
+			action: "remove",
+		});
+	});
+
+	it("suggests toSpace for the ideographic space without tabling it", () => {
+		expect(classifyUnknownCodepoint(0x3000)).toEqual({
+			category: "spaceLike",
+			action: "toSpace",
+		});
+		expect(buildScanPolicy().has(0x3000)).toBe(false);
 	});
 });
 

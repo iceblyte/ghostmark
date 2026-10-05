@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { buildScanPolicy } from "./categories";
+import { clean } from "./cleaner";
 import { scan } from "./scanner";
 
 const policy = buildScanPolicy();
@@ -208,12 +209,82 @@ describe("scanner: custom policies", () => {
 	});
 });
 
+describe("scanner: expanded policy table", () => {
+	it("marks bidi overrides and the soft hyphen as removable red hits", () => {
+		const hits = scan("a\u202eb\u00adc", policy);
+		expect(hits).toHaveLength(2);
+		expect(hits[0]).toMatchObject({
+			codepoint: "U+202E",
+			category: "invisible",
+			action: "remove",
+			entryId: "U+202A-202E",
+		});
+		expect(hits[1]).toMatchObject({ codepoint: "U+00AD", action: "remove" });
+	});
+
+	it("converts a line separator to a space so words stay apart", () => {
+		const text = "hello\u2028world";
+		const hits = scan(text, policy);
+		expect(hits).toHaveLength(1);
+		expect(hits[0]).toMatchObject({
+			codepoint: "U+2028",
+			category: "invisible",
+			action: "toSpace",
+		});
+		expect(clean(text, hits).text).toBe("hello world");
+	});
+
+	it("follows the run rule for the newly covered spaces", () => {
+		expect(scan("a\u2005b", policy)[0]).toMatchObject({
+			codepoint: "U+2005",
+			action: "toSpace",
+		});
+		expect(scan("a\u2005\u2005b", policy)[0]).toMatchObject({
+			codepoint: "U+2005",
+			action: "remove",
+			count: 2,
+		});
+		expect(scan("a\u200ab\u205fb", policy)).toHaveLength(2);
+	});
+
+	it("converts an em space to a plain space inside fenced code", () => {
+		const hits = scan("```python\n\t\u2003x = 1\n```", policy);
+		expect(hits).toHaveLength(1);
+		expect(hits[0]).toMatchObject({
+			codepoint: "U+2003",
+			action: "toSpace",
+			block: "fencedCode",
+		});
+	});
+
+	it("marks control characters as red hits", () => {
+		const hits = scan("a\u000bb\u0085c", policy);
+		expect(hits).toHaveLength(2);
+		expect(hits[0]).toMatchObject({
+			codepoint: "U+000B",
+			action: "remove",
+			entryId: "U+000B-000C",
+		});
+		expect(hits[1]).toMatchObject({
+			codepoint: "U+0085",
+			action: "remove",
+			entryId: "U+0080-009F",
+		});
+	});
+
+	it("never touches the ideographic space or structural whitespace", () => {
+		expect(scan("中文\u3000缩进", policy)).toHaveLength(0);
+		expect(scan("```\n\tindented\n```", policy)).toHaveLength(0);
+		expect(scan("a\r\nb", policy)).toHaveLength(0);
+	});
+});
+
 describe("scanner: fixture totals", () => {
 	it("matches the documented numbers on the fixture", () => {
 		const hits = scan(fixture, policy);
 
 		const byAction = { remove: 0, toSpace: 0, keep: 0, markOnly: 0 };
-		const byCategory = { invisible: 0, spaceLike: 0, semantic: 0 };
+		const byCategory = { invisible: 0, spaceLike: 0, semantic: 0, base64: 0 };
 		let actionedCps = 0;
 		for (const h of hits) {
 			byAction[h.action] += h.count;
@@ -225,7 +296,12 @@ describe("scanner: fixture totals", () => {
 		// red 324 (321 cleared + 3 math mark-only), blue 477, yellow 5.
 		// Prose blue runs (≥2) are removed whole, so almost all blue lands
 		// under "remove"; only the single code-block en space converts.
-		expect(byCategory).toEqual({ invisible: 324, spaceLike: 477, semantic: 5 });
+		expect(byCategory).toEqual({
+			invisible: 324,
+			spaceLike: 477,
+			semantic: 5,
+			base64: 0,
+		});
 		expect(byAction).toEqual({
 			remove: 797,
 			toSpace: 1,

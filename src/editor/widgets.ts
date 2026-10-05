@@ -17,6 +17,7 @@ const COMPACT_GLYPH: Record<Category, string> = {
 	invisible: "⌷",
 	spaceLike: "␣",
 	semantic: "⌦",
+	base64: "⌗",
 };
 
 export class GhostWidget extends WidgetType {

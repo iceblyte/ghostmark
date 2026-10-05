@@ -2,10 +2,10 @@
 
 ## 1. core：策略表扩展（character-policy）
 
-- [ ] 1.1 `src/core/categories.ts`：按 design D5 新增 25 行策略行（13 红 + U+2028/2029 红默认 toSpace + 10 蓝），`Category` 联合类型增 `"base64"` 并修正所有 `Record<Category, …>` 初始化；运行 `npx vitest run src/core/categories.test.ts` 确认既有断言不回归
-- [ ] 1.2 `src/core/categories.ts`：`classifyUnknownCodepoint` 增补 `\p{Cc}` → invisible/remove 建议；单测覆盖 U+009C 建议"清除"、U+3000 建议不受影响（不进表）
-- [ ] 1.3 `src/core/i18n.ts`：为全部新增行补 `cp.*` 键（en 官方名 + zh 译名）；`npm test` 中 i18n 键集合一致性断言通过
-- [ ] 1.4 `src/core/scanner.test.ts`：新增策略行行为断言——U+202E 正文命中 remove、U+2028 转 `hello world`、U+2005 成串删/孤立转空格、U+2003 代码内转空格、U+000B/U+0085 红色命中、U+3000 与 \t/\n/\r 永不命中；`npx vitest run src/core/scanner.test.ts` 通过
+- [x] 1.1 `src/core/categories.ts`：按 design D5 新增 25 行策略行（13 红 + U+2028/2029 红默认 toSpace + 10 蓝），`Category` 联合类型增 `"base64"` 并修正所有 `Record<Category, …>` 初始化；运行 `npx vitest run src/core/categories.test.ts` 确认既有断言不回归
+- [x] 1.2 `src/core/categories.ts`：`classifyUnknownCodepoint` 增补 `\p{Cc}` → invisible/remove 建议；单测覆盖 U+009C 建议"清除"、U+3000 建议不受影响（不进表）
+- [x] 1.3 `src/core/i18n.ts`：为全部新增行补 `cp.*` 键（en 官方名 + zh 译名）；`npm test` 中 i18n 键集合一致性断言通过
+- [x] 1.4 `src/core/scanner.test.ts`：新增策略行行为断言——U+202E 正文命中 remove、U+2028 转 `hello world`、U+2005 成串删/孤立转空格、U+2003 代码内转空格、U+000B/U+0085 红色命中、U+3000 与 \t/\n/\r 永不命中；`npx vitest run src/core/scanner.test.ts` 通过
 
 ## 2. core：base64 识别与清除（base64-marking）
 

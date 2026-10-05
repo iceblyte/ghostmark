@@ -163,7 +163,9 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 	}
 
 	/** Navigable sub-page listing every codepoint of one category. */
-	private categoryPage(category: Category): SettingDefinitionPage {
+	private categoryPage(
+		category: "invisible" | "spaceLike" | "semantic",
+	): SettingDefinitionPage {
 		const L = this.L;
 		const labels = {
 			invisible: "s.red",

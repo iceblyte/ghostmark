@@ -9,8 +9,8 @@ export type Action = "remove" | "toSpace" | "keep";
 /** Final action after context rules may downgrade a hit to mark-only. */
 export type HitAction = Action | "markOnly";
 
-/** Red / blue / yellow in the UI color system. */
-export type Category = "invisible" | "spaceLike" | "semantic";
+/** Red / blue / yellow / purple in the UI color system. */
+export type Category = "invisible" | "spaceLike" | "semantic" | "base64";
 
 /** Context a hit occurs in, produced by blocks.ts. */
 export type BlockType =
@@ -101,8 +101,8 @@ function single(
 }
 
 /**
- * The default policy table (design doc §4.2), ordered as in the settings
- * prototype P8: 13 red, 5 blue, 3 yellow rows = 21 default rows.
+ * The default policy table (design doc §4.2 + the 2026-10 expansion):
+ * 28 red, 15 blue, 3 yellow rows = 46 default rows.
  */
 export const DEFAULT_POLICY_ENTRIES: PolicyEntry[] = [
 	single(0x200b, "invisible", "remove", "ZERO WIDTH SPACE", RED_OPTIONS),
@@ -130,6 +130,105 @@ export const DEFAULT_POLICY_ENTRIES: PolicyEntry[] = [
 		"ZERO WIDTH NO-BREAK SPACE",
 		RED_OPTIONS,
 	),
+	// Expanded coverage (2026-10 reference-corpus iteration): bidi controls,
+	// soft hyphen, interlinear anchors, tag characters, C0/C1 controls,
+	// noncharacters. U+2028/2029 default toSpace — removing them would glue
+	// the words on both sides together.
+	single(0x00ad, "invisible", "remove", "SOFT HYPHEN", RED_OPTIONS),
+	{
+		id: "U+202A-202E",
+		lo: 0x202a,
+		hi: 0x202e,
+		category: "invisible",
+		action: "remove",
+		name: "BIDI EMBEDDING AND OVERRIDE CONTROLS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+2066-2069",
+		lo: 0x2066,
+		hi: 0x2069,
+		category: "invisible",
+		action: "remove",
+		name: "BIDI ISOLATE CONTROLS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+206A-206F",
+		lo: 0x206a,
+		hi: 0x206f,
+		category: "invisible",
+		action: "remove",
+		name: "DEPRECATED FORMAT CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	single(0x2028, "invisible", "toSpace", "LINE SEPARATOR", RED_OPTIONS),
+	single(0x2029, "invisible", "toSpace", "PARAGRAPH SEPARATOR", RED_OPTIONS),
+	{
+		id: "U+FFF9-FFFB",
+		lo: 0xfff9,
+		hi: 0xfffb,
+		category: "invisible",
+		action: "remove",
+		name: "INTERLINEAR ANNOTATION ANCHORS",
+		options: RED_OPTIONS,
+	},
+	single(0xe0001, "invisible", "remove", "LANGUAGE TAG", RED_OPTIONS),
+	{
+		id: "U+E0020-E007F",
+		lo: 0xe0020,
+		hi: 0xe007f,
+		category: "invisible",
+		action: "remove",
+		name: "TAG CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+0000-0008",
+		lo: 0x0000,
+		hi: 0x0008,
+		category: "invisible",
+		action: "remove",
+		name: "C0 CONTROL CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+000B-000C",
+		lo: 0x000b,
+		hi: 0x000c,
+		category: "invisible",
+		action: "remove",
+		name: "C0 CONTROL CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+000E-001F",
+		lo: 0x000e,
+		hi: 0x001f,
+		category: "invisible",
+		action: "remove",
+		name: "C0 CONTROL CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	single(0x007f, "invisible", "remove", "DELETE", RED_OPTIONS),
+	{
+		id: "U+0080-009F",
+		lo: 0x0080,
+		hi: 0x009f,
+		category: "invisible",
+		action: "remove",
+		name: "C1 CONTROL CHARACTERS",
+		options: RED_OPTIONS,
+	},
+	{
+		id: "U+FDD0-FDEF",
+		lo: 0xfdd0,
+		hi: 0xfdef,
+		category: "invisible",
+		action: "remove",
+		name: "NONCHARACTERS",
+		options: RED_OPTIONS,
+	},
 	single(0x2002, "spaceLike", "toSpace", "EN SPACE", BLUE_OPTIONS),
 	single(0x2009, "spaceLike", "toSpace", "THIN SPACE", BLUE_OPTIONS),
 	single(0x2007, "spaceLike", "toSpace", "FIGURE SPACE", BLUE_OPTIONS),
@@ -141,6 +240,24 @@ export const DEFAULT_POLICY_ENTRIES: PolicyEntry[] = [
 		BLUE_OPTIONS,
 	),
 	single(0x00a0, "spaceLike", "toSpace", "NO-BREAK SPACE", BLUE_OPTIONS),
+	// Remaining width-varying spaces complete the Zs sweep (U+3000 stays out:
+	// a legitimate full-width space in Chinese typography).
+	single(0x2000, "spaceLike", "toSpace", "EN QUAD", BLUE_OPTIONS),
+	single(0x2001, "spaceLike", "toSpace", "EM QUAD", BLUE_OPTIONS),
+	single(0x2003, "spaceLike", "toSpace", "EM SPACE", BLUE_OPTIONS),
+	single(0x2004, "spaceLike", "toSpace", "THREE-PER-EM SPACE", BLUE_OPTIONS),
+	single(0x2005, "spaceLike", "toSpace", "FOUR-PER-EM SPACE", BLUE_OPTIONS),
+	single(0x2006, "spaceLike", "toSpace", "SIX-PER-EM SPACE", BLUE_OPTIONS),
+	single(0x2008, "spaceLike", "toSpace", "PUNCTUATION SPACE", BLUE_OPTIONS),
+	single(0x200a, "spaceLike", "toSpace", "HAIR SPACE", BLUE_OPTIONS),
+	single(
+		0x205f,
+		"spaceLike",
+		"toSpace",
+		"MEDIUM MATHEMATICAL SPACE",
+		BLUE_OPTIONS,
+	),
+	single(0x1680, "spaceLike", "toSpace", "OGHAM SPACE MARK", BLUE_OPTIONS),
 	// ZWJ is hard-locked to keep: emoji semantics must never be cleaned.
 	single(0x200d, "semantic", "keep", "ZERO WIDTH JOINER", ["keep"]),
 	single(0x200c, "semantic", "keep", "ZERO WIDTH NON-JOINER", KEEP_REMOVE_OPTIONS),
@@ -218,6 +335,8 @@ export function classifyUnknownCodepoint(cp: number): {
 	const ch = String.fromCodePoint(cp);
 	if (/\p{Zs}/u.test(ch)) return { category: "spaceLike", action: "toSpace" };
 	if (/\p{Cf}/u.test(ch)) return { category: "invisible", action: "remove" };
+	// Control characters match the expanded table's stance: garbage.
+	if (/\p{Cc}/u.test(ch)) return { category: "invisible", action: "remove" };
 	return { category: "semantic", action: "keep" };
 }
 

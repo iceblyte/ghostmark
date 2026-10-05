@@ -21,7 +21,7 @@ export function clean(text: string, hits: Hit[]): CleanResult {
 	const report: ChangeReport = {
 		total: 0,
 		byCodepoint: {},
-		byCategory: { invisible: 0, spaceLike: 0, semantic: 0 },
+		byCategory: { invisible: 0, spaceLike: 0, semantic: 0, base64: 0 },
 	};
 	let out = text;
 	// hits arrive ascending; going backwards keeps offsets valid
@@ -40,6 +40,13 @@ export function clean(text: string, hits: Hit[]): CleanResult {
 }
 
 function countSpan(text: string, hit: Hit, report: ChangeReport): void {
+	if (hit.category === "base64") {
+		// one aggregate key instead of one entry per ASCII character
+		report.byCodepoint.base64 = (report.byCodepoint.base64 ?? 0) + hit.length;
+		report.byCategory.base64 += hit.length;
+		report.total += hit.length;
+		return;
+	}
 	const end = hit.index + hit.length;
 	let i = hit.index;
 	while (i < end) {
@@ -66,16 +73,27 @@ export interface HitSummary {
 /** Aggregate hits into the numbers shown by the confirm modals. */
 export function summarizeHits(text: string, hits: Hit[]): HitSummary {
 	const summary: HitSummary = {
-		byCategory: { invisible: 0, spaceLike: 0, semantic: 0 },
+		byCategory: { invisible: 0, spaceLike: 0, semantic: 0, base64: 0 },
 		byCategoryCodepoint: {
 			invisible: {},
 			spaceLike: {},
 			semantic: {},
+			base64: {},
 		},
 		markOnly: 0,
 		actionable: 0,
 	};
 	for (const hit of hits) {
+		if (hit.category === "base64") {
+			summary.byCategory.base64 += hit.length;
+			summary.byCategoryCodepoint.base64.base64 =
+				(summary.byCategoryCodepoint.base64.base64 ?? 0) + hit.length;
+			if (hit.action === "markOnly") summary.markOnly += hit.length;
+			if (hit.action === "remove" || hit.action === "toSpace") {
+				summary.actionable += hit.length;
+			}
+			continue;
+		}
 		const end = hit.index + hit.length;
 		let i = hit.index;
 		while (i < end) {

@@ -22,6 +22,7 @@ describe("clean", () => {
 			invisible: 1,
 			spaceLike: 0,
 			semantic: 0,
+			base64: 0,
 		});
 	});
 
@@ -96,6 +97,7 @@ describe("summarizeHits", () => {
 			invisible: 324,
 			spaceLike: 477,
 			semantic: 5,
+			base64: 0,
 		});
 		expect(summary.byCategoryCodepoint.invisible).toEqual({
 			"U+2062": 108,
