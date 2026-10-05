@@ -80,6 +80,8 @@ const ZH: Record<string, string> = {
 	"n5.zero": "该块无命中（或全部为保留/仅标记），未做修改",
 	"n7.ok": "已清除该 base64 段（{n} 字符）",
 	"n.jump.none": "当前笔记没有标记",
+	"n.jump.hidden":
+		"标记都在 Live Preview 隐藏的 frontmatter 中——请切换到 Source 模式查看，或使用清除命令处理",
 	"n.jump.wrap.next": "已到文末，回到开头继续",
 	"n.jump.wrap.prev": "已到文首，回到末尾继续",
 	"n6.ok": "已将 {cp}（动作：{act}）加入策略表",
@@ -283,6 +285,8 @@ const EN: Record<string, string> = {
 	"n5.zero": "No eligible hits in this block (all keep / mark-only) — text unchanged",
 	"n7.ok": "Cleared that base64 segment ({n} characters)",
 	"n.jump.none": "No marks in this note",
+	"n.jump.hidden":
+		"All marks sit inside the frontmatter, which Live Preview hides — switch to Source mode, or use the clear commands",
 	"n.jump.wrap.next": "Reached the end — wrapped to the top",
 	"n.jump.wrap.prev": "Reached the start — wrapped to the bottom",
 	"n6.ok": "{cp} (action: {act}) added to the policy table",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Hit } from "./categories";
-import { pickJumpTarget } from "./navigation";
+import { filterNavigable, pickJumpTarget } from "./navigation";
 
 /**
  * Regression tests for the user-acceptance round: "jump to previous
@@ -69,5 +69,31 @@ describe("pickJumpTarget: prev (the reported bug)", () => {
 		expect(pickJumpTarget(chain, 88, "prev")?.index).toBe(0);
 		// cursor at the end of the last token → middle token
 		expect(pickJumpTarget(chain, 132, "prev")?.index).toBe(44);
+	});
+});
+
+describe("filterNavigable (Live Preview frontmatter)", () => {
+	function hitIn(block: Hit["block"], index: number): Hit {
+		return { ...hitAt(index), block };
+	}
+	const hits = [
+		hitIn("frontmatter", 0),
+		hitIn("frontmatter", 10),
+		hitIn("prose", 40),
+	];
+
+	it("keeps frontmatter hits where they render (Source mode)", () => {
+		expect(filterNavigable(hits, false)).toEqual(hits);
+	});
+
+	it("skips frontmatter hits where Live Preview hides them", () => {
+		const navigable = filterNavigable(hits, true);
+		expect(navigable).toHaveLength(1);
+		expect(navigable[0]).toMatchObject({ block: "prose", index: 40 });
+	});
+
+	it("lets the caller detect the all-hidden case", () => {
+		const frontmatterOnly = [hitIn("frontmatter", 0)];
+		expect(filterNavigable(frontmatterOnly, true)).toHaveLength(0);
 	});
 });

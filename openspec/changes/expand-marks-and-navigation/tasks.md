@@ -55,3 +55,9 @@
 - [x] 9.1 修复 Bug 2：高亮从"整行"改为"仅标记范围"——flash 状态值带代数（gen，每次跳转递增），widget 以 eq 比较代数，匹配的 widget 重建并播放强调色脉冲动画，保证同一段落内连续跳转每次都重放；移除行级装饰与旧 CSS；`src/editor/flash.test.ts` 覆盖状态转换（设置/清除/文档变更丢弃/gen 递增）
 - [x] 9.2 修复 Bug 1：跳转应用改为单次 CM 原生事务——选区 + `EditorView.scrollIntoView(center)` + flash 效果一次 dispatch，不再依赖 Obsidian 包装器的滚动行为（文件开头跨全文档循环跳转的不可见路径）；无 CM 视图时回退包装器路径
 - [x] 9.3 验证：三闸门全绿 + 既有 154 项测试零回归 + flash 状态机单测；验收清单第 13 节更新为新行为（范围脉冲）待宿主复核
+
+## 10. Bug 修复第三轮（Live Preview frontmatter 导航）
+
+- [x] 10.1 导航目标过滤：`core/navigation.ts` 增 `filterNavigable`（hideFrontmatter 时剔除 `block === "frontmatter"` 的命中）；命令层经 `view.getState().state.source === false`（Live Preview）触发；Source 模式行为不变；单测覆盖过滤与透传
+- [x] 10.2 全部命中都在 frontmatter 且不可见时给出专项提示（新 i18n 键 `n.jump.hidden`，en/zh 键集合一致）；清除命令与状态栏计数不受影响（frontmatter 仍参与扫描与清理）
+- [x] 10.3 验证：三闸门全绿 + 全量测试零回归；验收清单第 13 节追加 Live Preview 场景待验项

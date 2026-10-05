@@ -28,7 +28,7 @@ import { blockRangeAt, blockRangeToTextRange } from "./core/blocks";
 import { clean, summarizeHits, type HitSummary } from "./core/cleaner";
 import type { GhostmarkSettings } from "./core/policy";
 import { t, type Locale } from "./core/i18n";
-import { pickJumpTarget } from "./core/navigation";
+import { filterNavigable, pickJumpTarget } from "./core/navigation";
 import { scan } from "./core/scanner";
 import type { InspectConfig } from "./editor/inspectState";
 import { applyJumpAndFlash } from "./editor/flash";
@@ -49,6 +49,20 @@ function activeEditor(host: CommandsHost): Editor | null {
 
 function activeMarkdownView(host: CommandsHost): MarkdownView | null {
 	return host.app.workspace.getActiveViewOfType(MarkdownView);
+}
+
+/**
+ * Live Preview ("source" mode with source: false) covers the
+ * frontmatter with Obsidian's properties widget — marks inside it
+ * render nowhere and the cursor cannot land there visibly, so
+ * navigation skips them. Source mode shows the raw frontmatter and
+ * keeps those marks navigable.
+ */
+function frontmatterHidden(view: MarkdownView): boolean {
+	if (view.getMode() !== "source") return false;
+	// markdown leaf state: { mode: "source", source: boolean } —
+	// source: false is Live Preview, source: true is plain Source mode
+	return view.getState()["source"] === false;
 }
 
 function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
@@ -702,9 +716,18 @@ function jumpToMark(
 ): void {
 	const localeNow = host.config.locale;
 	const editor = view.editor;
-	const hits = scanEditor(editor, host.config);
+	const allHits = scanEditor(editor, host.config);
+	// Live Preview hides the frontmatter behind the properties widget:
+	// hits inside it can never be seen or selected, so they are not
+	// navigable there (Source mode keeps them).
+	const hits = filterNavigable(allHits, frontmatterHidden(view));
 	if (hits.length === 0) {
-		new Notice(t(localeNow, "n.jump.none"));
+		new Notice(
+			t(
+				localeNow,
+				allHits.length > 0 ? "n.jump.hidden" : "n.jump.none",
+			),
+		);
 		return;
 	}
 	const cursor = editor.posToOffset(editor.getCursor("head"));

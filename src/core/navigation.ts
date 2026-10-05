@@ -39,3 +39,18 @@ export function pickJumpTarget(
 	}
 	return target;
 }
+
+/**
+ * Live Preview replaces the frontmatter with Obsidian's properties
+ * widget — decorations, selections and scroll targets inside it are
+ * invisible, so navigation must skip frontmatter hits there or the
+ * jump appears dead. Source mode renders them normally and keeps them
+ * navigable. Clearing is unaffected either way (the scan stays whole).
+ */
+export function filterNavigable(
+	hits: Hit[],
+	hideFrontmatter: boolean,
+): Hit[] {
+	if (!hideFrontmatter) return hits;
+	return hits.filter((hit) => hit.block !== "frontmatter");
+}
