@@ -28,6 +28,7 @@ import { blockRangeAt, blockRangeToTextRange } from "./core/blocks";
 import { clean, summarizeHits, type HitSummary } from "./core/cleaner";
 import type { GhostmarkSettings } from "./core/policy";
 import { t, type Locale } from "./core/i18n";
+import { pickJumpTarget } from "./core/navigation";
 import { scan } from "./core/scanner";
 import type { InspectConfig } from "./editor/inspectState";
 
@@ -701,19 +702,14 @@ function jumpToMark(
 		return;
 	}
 	const cursor = editor.posToOffset(editor.getCursor("head"));
-	let target: Hit | undefined;
-	if (direction === "next") {
-		target = hits.find((hit) => hit.index > cursor);
-	} else {
-		for (const hit of hits) {
-			if (hit.index < cursor) target = hit;
-			else break;
-		}
-	}
+	let target = pickJumpTarget(hits, cursor, direction);
 	let wrapped = false;
 	if (!target) {
 		wrapped = true;
-		target = direction === "next" ? hits[0] : hits[hits.length - 1];
+		target =
+			direction === "next"
+				? (hits[0] ?? null)
+				: (hits[hits.length - 1] ?? null);
 	}
 	if (!target) return;
 	const from = editor.offsetToPos(target.index);
