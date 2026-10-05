@@ -33,9 +33,17 @@ hit as an inline glyph — in Source mode and Live Preview, across all notes.
 
 | Color | Meaning | Default action |
 | --- | --- | --- |
-| 🔴 red `⌷` | invisible, no semantics (U+200B, U+2060–2064, U+061C, U+180E, U+200E/F, U+FFFE/F, U+FEFF) | removed — including inside code |
-| 🔵 blue `␣` | space-like (U+2002, U+2009, U+2007, U+202F, U+00A0) | runs of ≥2 removed whole, isolated → plain space; one-to-one in code |
+| 🔴 red `⌷` | invisible, no semantics — zero-width and format characters (U+200B, U+2060–2064, U+061C, U+180E, U+200E/F, U+FFFE/F, U+FEFF, U+00AD, bidi controls U+202A–202E & U+2066–2069, tag characters, C0/C1 controls, noncharacters, …) | removed — including inside code |
+| 🟣 purple `⌗` | base64 tracking tokens (≥20 token chars ending in `=`) | visible garbage — click a glyph to clear that segment; included by the clear commands |
+| 🔵 blue `␣` | space-like (U+2002, U+2009, U+2007, U+202F, U+00A0, and the remaining width-varying spaces) | runs of ≥2 removed whole, isolated → plain space; one-to-one in code |
 | 🟡 yellow `⌦` | protected semantics (ZWJ is hard-locked, ZWNJ, variation selectors) | marked only, never touched |
+
+The red group also covers U+2028/2029 line and paragraph separators, which
+default to *convert to space* so the words beside them never glue together.
+The ideographic space (U+3000) is legitimate Chinese typography and is never
+touched. Base64 tokens glued in front of words mark only the trailing
+44-character window, data URI payloads are exempt, and tokens inside code are
+marked but never swept (a setting toggle turns base64 marking off entirely).
 
 Gutter badges are **segmented** — one colored segment per category with its own
 count — and clicking one clears the enclosing block. Hovering any glyph shows
@@ -56,12 +64,15 @@ and reports what it did — including what it deliberately left behind.
 </div>
 
 - **Clear all** — the whole note, gated by the modal above.
-- **Clear selection** — grayed out until you select something; reminds you that
-  base64 tracking tokens are *visible* garbage to delete by hand.
+- **Clear selection** — grayed out until you select something.
 - **Clear current block** — paragraph / list item / quote run / table row /
   whole code or math block / frontmatter. Confirm-free by default, therefore
   only available while inspect mode is on (visibility is the gate); the gutter
   badge is a second entry point.
+
+Prefer to review every mark yourself? Use **Jump to next / previous mark** to
+hop between marks — they select the hit, scroll it into view and wrap around
+the document ends.
 
 ## Pick unknown watermarks
 
@@ -82,19 +93,21 @@ check-list; you can also add codepoints by hand in settings.
 | Ghostmark: Clear all marks | `Ctrl/Cmd + Alt + K` |
 | Ghostmark: Clear selection | — (needs a selection) |
 | Ghostmark: Clear current block | — (needs inspect mode) |
+| Ghostmark: Jump to next mark | `Ctrl/Cmd + Alt + .` |
+| Ghostmark: Jump to previous mark | `Ctrl/Cmd + Alt + ,` |
 | Ghostmark: Pick codepoint | — |
 
-Settings group the 21 default policy rows (editable per codepoint, with the
-picked additions section), context rules (math blocks are **mark-only** by
-default — MathML transcoding can put a meaningful U+2062 in a formula),
-interface options and a bilingual UI (English / 简体中文, following Obsidian's
-language by default).
+Settings group the 46 default policy rows (editable per codepoint group, with
+the picked additions section), context rules (math blocks are **mark-only** by
+default — MathML transcoding can put a meaningful U+2062 in a formula; base64
+marking is on by default), interface options and a bilingual UI
+(English / 简体中文, following Obsidian's language by default).
 
 <img src="docs/images/settings.png" alt="Ghostmark settings" width="80%">
 
 ## On mobile
 
-Decorations and all five commands work on mobile; only the status bar is
+Decorations and all seven commands work on mobile; only the status bar is
 desktop-specific — the command palette is the mobile entry.
 
 <img src="docs/images/mobile.png" alt="Mobile: inspect mode without a status bar, palette as the entry" width="70%">
@@ -140,10 +153,15 @@ npm test        # vitest (core engine + fixture acceptance)
 ```
 
 The core engine (`src/core/`) is pure TypeScript with no Obsidian or CodeMirror
-imports, fully unit-tested against the committed synthetic sample
-`src/core/fixtures/watermark-fixture.md` — 801 invisible characters (U+2062
-×108, U+061C ×216, U+2002 ×300, U+2009 ×177) plus 4 ZWJ and 1 skin modifier:
-806 hits, 798 clearable, zero residue after clear-all.
+imports, fully unit-tested against two committed synthetic samples:
+
+- `src/core/fixtures/watermark-fixture.md` — 801 invisible characters
+  (U+2062 ×108, U+061C ×216, U+2002 ×300, U+2009 ×177) plus 4 ZWJ and 1 skin
+  modifier: 806 hits, 798 clearable, zero residue after clear-all;
+- `src/core/fixtures/clipped-fixture.md` — the 2026-10 expansion fixture:
+  every expanded policy group, base64 tokens in all observed shapes
+  (standalone, glued four-burst chains, word-glued, inside code) and
+  anti-false-positive negatives (paths, URLs, git SHAs, data URIs).
 
 **Dev vault tip:** copy `main.js`, `manifest.json` and `styles.css` into your
 test vault's `.obsidian/plugins/ghostmark/` after every build, or use
