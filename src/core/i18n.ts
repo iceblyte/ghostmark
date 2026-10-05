@@ -61,8 +61,6 @@ const ZH: Record<string, string> = {
 	"pill.keep": "保留",
 	"pill.markonly": "仅标记",
 	"m3.math": "数学块内 {n} 处仅标记（默认不动），已从清除计数中扣除。",
-	"m4.warn":
-		"选区内的 base64 追踪 token 是可见垃圾，不属于策略表字符——请手动选中后删除（FR-8 设计意图）。",
 
 	"m6.ctx": "光标处字符",
 	"m6.cp": "码点",
@@ -266,8 +264,6 @@ const EN: Record<string, string> = {
 	"pill.keep": "Keep",
 	"pill.markonly": "Mark only",
 	"m3.math": "{n} mark-only hits inside the math block (untouched by default) are excluded from the count.",
-	"m4.warn":
-		"The base64 tracking token inside the selection is visible garbage, not a policy character — select and delete it manually.",
 
 	"m6.ctx": "Character at cursor",
 	"m6.cp": "Codepoint",

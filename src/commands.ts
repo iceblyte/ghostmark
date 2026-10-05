@@ -49,6 +49,7 @@ function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
 	return scan(editor.getValue(), config.policy, {
 		mathMode: config.mathMode,
 		codeToSpace: config.codeToSpace,
+		base64: config.base64,
 	});
 }
 
@@ -101,7 +102,7 @@ function replaceWholeDocument(editor: Editor, text: string): void {
 	]);
 }
 
-/** Prototype P3/P4 confirm modal: category counts, math split, warning. */
+/** Prototype P3/P4 confirm modal: category counts, math split. */
 export class ConfirmClearModal extends Modal {
 	constructor(
 		app: App,
@@ -110,7 +111,6 @@ export class ConfirmClearModal extends Modal {
 			title: string;
 			desc: string;
 			summary: HitSummary;
-			warn?: string;
 			confirmLabel: string;
 			onConfirm: () => void;
 		},
@@ -161,6 +161,15 @@ export class ConfirmClearModal extends Modal {
 				pill: t(locale, "pill.remove"),
 			});
 		}
+		if (summary.byCategory.base64 > 0) {
+			rows.push({
+				color: "purple",
+				label: t(locale, "r.base64"),
+				sub: sub("base64"),
+				num: summary.byCategory.base64,
+				pill: t(locale, "pill.remove"),
+			});
+		}
 		if (summary.byCategory.spaceLike > 0) {
 			rows.push({
 				color: "blue",
@@ -204,18 +213,12 @@ export class ConfirmClearModal extends Modal {
 			});
 		}
 
-		if (this.opts.warn) {
-			contentEl.createDiv({
-				cls: "gm-modal-note warn",
-				text: this.opts.warn,
-			});
-		} else if (summary.markOnly > 0) {
+		if (summary.markOnly > 0) {
 			contentEl.createDiv({
 				cls: "gm-modal-note",
 				text: t(locale, "m3.math", { n: summary.markOnly }),
 			});
 		}
-
 		const foot = contentEl.createDiv({ cls: "modal-button-container" });
 		foot
 			.createEl("button", { text: t(locale, "btn.cancel") })
@@ -347,6 +350,11 @@ function undoNotice(
 			row.createSpan({ text: " " + t(locale, "n3.undo") });
 		}),
 	);
+}
+
+/** " · 紫 N" suffix appended to clear notices when base64 segments went. */
+function purpleSuffix(locale: Locale, count: number): string {
+	return count > 0 ? t(locale, "n.suffix.purple", { p: count }) : "";
 }
 
 /** Prototype P6 pick modal: char preview, codepoint facts, action select. */
@@ -630,6 +638,7 @@ export function clearCurrentBlock(
 	const hits = scan(slice, host.config.policy, {
 		mathMode: host.config.mathMode,
 		codeToSpace: host.config.codeToSpace,
+		base64: host.config.base64,
 	});
 	const summary = summarizeHits(slice, hits);
 	if (summary.actionable === 0) {
@@ -651,7 +660,7 @@ export function clearCurrentBlock(
 				n: report.total,
 				r: report.byCategory.invisible,
 				b: report.byCategory.spaceLike,
-			}),
+			}) + purpleSuffix(localeNow, report.byCategory.base64),
 			localeNow,
 		);
 	};
@@ -671,6 +680,75 @@ export function clearCurrentBlock(
 		confirmLabel: t(localeNow, "btn.clear", { n: summary.actionable }),
 		onConfirm: run,
 	}).open();
+}
+
+/**
+ * Jump to the next / previous mark relative to the cursor: select the
+ * hit (clear feedback even for zero-width glyphs), scroll it into view,
+ * wrap around the document ends with a notice. Includes keep and
+ * mark-only hits — the user is reviewing what is there, not only what
+ * would be cleaned.
+ */
+function jumpToMark(
+	host: CommandsHost,
+	editor: Editor,
+	direction: "next" | "prev",
+): void {
+	const localeNow = host.config.locale;
+	const hits = scanEditor(editor, host.config);
+	if (hits.length === 0) {
+		new Notice(t(localeNow, "n.jump.none"));
+		return;
+	}
+	const cursor = editor.posToOffset(editor.getCursor("head"));
+	let target: Hit | undefined;
+	if (direction === "next") {
+		target = hits.find((hit) => hit.index > cursor);
+	} else {
+		for (const hit of hits) {
+			if (hit.index < cursor) target = hit;
+			else break;
+		}
+	}
+	let wrapped = false;
+	if (!target) {
+		wrapped = true;
+		target = direction === "next" ? hits[0] : hits[hits.length - 1];
+	}
+	if (!target) return;
+	const from = editor.offsetToPos(target.index);
+	const to = editor.offsetToPos(target.index + target.length);
+	editor.setSelection(from, to);
+	editor.scrollIntoView({ from, to }, true);
+	if (wrapped) {
+		new Notice(
+			t(
+				localeNow,
+				direction === "next" ? "n.jump.wrap.next" : "n.jump.wrap.prev",
+			),
+		);
+	}
+}
+
+/**
+ * Clear one base64 segment (widget click): an explicit single-segment
+ * action, so it is allowed even for mark-only tokens inside code and
+ * never gated by the confirm settings. One transaction → single-step
+ * undo; scroll and cursor stay put.
+ */
+export function clearBase64Segment(
+	host: CommandsHost,
+	editor: Editor,
+	hit: Hit,
+): void {
+	applyCleanedChanges(editor, [
+		{
+			from: editorOffset(editor, hit.index),
+			to: editorOffset(editor, hit.index + hit.length),
+			text: "",
+		},
+	]);
+	undoNotice(t(host.config.locale, "n7.ok", { n: hit.length }), host.config.locale);
 }
 
 export function registerCommands(host: CommandsHost): void {
@@ -703,7 +781,7 @@ export function registerCommands(host: CommandsHost): void {
 						n: report.total,
 						r: report.byCategory.invisible,
 						b: report.byCategory.spaceLike,
-					}),
+					}) + purpleSuffix(localeNow, report.byCategory.base64),
 					localeNow,
 					{
 						markOnly: summary.markOnly,
@@ -761,6 +839,36 @@ export function registerCommands(host: CommandsHost): void {
 		name: t(host.config.locale, "cmd.pick"),
 		editorCallback: (editor) => runPickCodepoint(host, editor),
 	});
+
+	host.addCommand({
+		id: "jump-next-mark",
+		name: t(host.config.locale, "cmd.jumpnext"),
+		// Visibility gate (design doc §6): jumping to marks the user
+		// cannot see is meaningless, so gray out while inspect is off.
+		checkCallback: (checking) => {
+			const editor = activeEditor(host);
+			if (!editor) return false;
+			if (!host.inspectEnabled) return false;
+			if (!checking) {
+				jumpToMark(host, editor, "next");
+			}
+			return true;
+		},
+	});
+
+	host.addCommand({
+		id: "jump-previous-mark",
+		name: t(host.config.locale, "cmd.jumpprev"),
+		checkCallback: (checking) => {
+			const editor = activeEditor(host);
+			if (!editor) return false;
+			if (!host.inspectEnabled) return false;
+			if (!checking) {
+				jumpToMark(host, editor, "prev");
+			}
+			return true;
+		},
+	});
 }
 
 function runClearSelection(host: CommandsHost, editor: Editor): void {
@@ -790,6 +898,7 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 		let total = 0;
 		let red = 0;
 		let blue = 0;
+		let purple = 0;
 		const changes = ranges.map((range) => {
 			const slice = text.slice(range.from, range.to);
 			const sliceHits = hits.filter(
@@ -799,6 +908,7 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 			total += report.total;
 			red += report.byCategory.invisible;
 			blue += report.byCategory.spaceLike;
+			purple += report.byCategory.base64;
 			return {
 				from: editor.offsetToPos(range.from),
 				to: editor.offsetToPos(range.to),
@@ -807,7 +917,8 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 		});
 		applyCleanedChanges(editor, changes);
 		undoNotice(
-			t(localeNow, "n4.ok", { n: total, r: red, b: blue }),
+			t(localeNow, "n4.ok", { n: total, r: red, b: blue }) +
+				purpleSuffix(localeNow, purple),
 			localeNow,
 			{
 				markOnly: summary.markOnly,
@@ -825,7 +936,6 @@ function runClearSelection(host: CommandsHost, editor: Editor): void {
 		title: t(localeNow, "m4.title"),
 		desc: t(localeNow, "m4.desc"),
 		summary,
-		warn: t(localeNow, "m4.warn"),
 		confirmLabel: t(localeNow, "btn.clear", { n: summary.actionable }),
 		onConfirm: run,
 	}).open();

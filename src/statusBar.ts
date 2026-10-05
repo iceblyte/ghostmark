@@ -61,6 +61,7 @@ export class GhostmarkStatusBar {
 			? scan(view.editor.getValue(), this.plugin.config.policy, {
 					mathMode: this.plugin.config.mathMode,
 					codeToSpace: this.plugin.config.codeToSpace,
+					base64: this.plugin.config.base64,
 				}).reduce((sum, h) => sum + h.count, 0)
 			: 0;
 		this.countEl.setText(String(count));

@@ -33,10 +33,10 @@
 
 ## 6. 外壳层：命令、设置与装配
 
-- [ ] 6.1 `src/commands.ts`：新增 `jump-next`/`jump-prev` 命令（design D4：checkCallback 闸门、循环 + 循环 Notice、无标记 Notice、`setSelection` + `scrollIntoView(range, true)`）；单测覆盖光标在标记内取下一个、文末循环、无命中提示；手动确认跳转选中并滚动居中
-- [ ] 6.2 `src/commands.ts`：清除全部/选区/当前块包含 base64 段（config 传入 `base64` 选项）、确认弹窗增紫色行（`r.base64`）、Notice 文案增 `{p}`、移除 `m4.warn` "base64 需手动删除" 警告及其 i18n 键；单测：含 token 笔记的清除全部产生紫色计数且代码块内保留
-- [ ] 6.3 `src/settings.ts`：上下文规则组增"标记 base64 乱码"开关行（`base64Marking`）；`buildInspectConfig` 映射该字段；手动确认：切换后所有打开笔记立即生效且重启保留
-- [ ] 6.4 `src/main.ts`：注册 `clearHitRequestFacet` 实现（走 `applyCleanedChanges`，光标/滚动保持）；`src/statusBar.ts` 确认计数自动包含 base64（如需改动则修改并验证）；手动确认点击字形清除后无滚动跳变、`Ctrl/Cmd+Z` 一步恢复
+- [x] 6.1 `src/commands.ts`：新增 `jump-next`/`jump-prev` 命令（design D4：checkCallback 闸门、循环 + 循环 Notice、无标记 Notice、`setSelection` + `scrollIntoView(range, true)`）；单测覆盖光标在标记内取下一个、文末循环、无命中提示；手动确认跳转选中并滚动居中
+- [x] 6.2 `src/commands.ts`：清除全部/选区/当前块包含 base64 段（config 传入 `base64` 选项）、确认弹窗增紫色行（`r.base64`）、Notice 文案增 `{p}`、移除 `m4.warn` "base64 需手动删除" 警告及其 i18n 键；单测：含 token 笔记的清除全部产生紫色计数且代码块内保留
+- [x] 6.3 `src/settings.ts`：上下文规则组增"标记 base64 乱码"开关行（`base64Marking`）；`buildInspectConfig` 映射该字段；手动确认：切换后所有打开笔记立即生效且重启保留
+- [x] 6.4 `src/main.ts`：注册 `clearHitRequestFacet` 实现（走 `applyCleanedChanges`，光标/滚动保持）；`src/statusBar.ts` 确认计数自动包含 base64（如需改动则修改并验证）；手动确认点击字形清除后无滚动跳变、`Ctrl/Cmd+Z` 一步恢复
 
 ## 7. 文档与验收
 

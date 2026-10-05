@@ -474,6 +474,11 @@ export class GhostmarkSettingTab extends PluginSettingTab {
 					desc: t(L, "s.codespace.d"),
 					control: { type: "toggle", key: "codeToSpace" },
 				},
+				{
+					name: t(L, "s.base64"),
+					desc: t(L, "s.base64.d"),
+					control: { type: "toggle", key: "base64Marking" },
+				},
 			],
 		};
 	}

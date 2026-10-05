@@ -12,6 +12,7 @@ import {
 	type GhostmarkSettings,
 } from "./core/policy";
 import {
+	clearBase64Segment,
 	clearCurrentBlock,
 	registerCommands,
 	runPickCodepoint,
@@ -19,6 +20,7 @@ import {
 import { INSPECT_EXTENSIONS } from "./editor/inspectMode";
 import {
 	clearBlockRequestFacet,
+	clearHitRequestFacet,
 	inspectRuntime,
 	inspectRuntimeEffect,
 	setInspectRuntime,
@@ -56,6 +58,11 @@ export default class GhostmarkPlugin extends Plugin {
 			clearBlockRequestFacet.of((view, lineIndex) => {
 				const editor = view.state.field(editorInfoField).editor;
 				if (editor) clearCurrentBlock(this, editor, lineIndex);
+			}),
+			// Base64 widget click → clear that one segment (explicit intent)
+			clearHitRequestFacet.of((view, hit) => {
+				const editor = view.state.field(editorInfoField).editor;
+				if (editor) clearBase64Segment(this, editor, hit);
 			}),
 		]);
 
