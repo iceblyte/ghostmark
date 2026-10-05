@@ -15,7 +15,7 @@
 
 ## 3. core：设置模型与迁移
 
-- [ ] 3.1 `src/core/policy.ts`：`GhostmarkSettings` 增 `base64Marking: boolean`（默认 true）、`SCHEMA_VERSION` 3；`migrateSettings` 处理缺失字段；单测覆盖 schemaVersion 2 旧数据迁移（默认补齐、其余字段不动）与非法值回退
+- [x] 3.1 `src/core/policy.ts`：`GhostmarkSettings` 增 `base64Marking: boolean`（默认 true）、`SCHEMA_VERSION` 3；`migrateSettings` 处理缺失字段；单测覆盖 schemaVersion 2 旧数据迁移（默认补齐、其余字段不动）与非法值回退
 
 ## 4. core：第二个 fixture（脱敏样本）
 

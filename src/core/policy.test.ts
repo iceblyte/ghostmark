@@ -11,6 +11,7 @@ describe("DEFAULT_SETTINGS", () => {
 			mathMode: "markOnly",
 			zwnjAction: "keep",
 			codeToSpace: true,
+			base64Marking: true,
 			inspectRemember: true,
 			inspectEnabled: false,
 			density: "compact",
@@ -49,6 +50,30 @@ describe("migrateSettings", () => {
 			inspectRemember: false,
 		});
 		expect(migrated.inspectRemember).toBe(false);
+	});
+
+	it("fills base64Marking with the default when migrating older data", () => {
+		const migrated = migrateSettings({
+			schemaVersion: 2,
+			inspectRemember: false,
+		});
+		expect(migrated.base64Marking).toBe(true);
+		expect(migrated.inspectRemember).toBe(false);
+	});
+
+	it("keeps an explicit base64Marking=false across schema versions", () => {
+		expect(
+			migrateSettings({ schemaVersion: 2, base64Marking: false })
+				.base64Marking,
+		).toBe(false);
+		expect(
+			migrateSettings({ schemaVersion: 3, base64Marking: false })
+				.base64Marking,
+		).toBe(false);
+	});
+
+	it("falls back to the default on a non-boolean base64Marking", () => {
+		expect(migrateSettings({ base64Marking: "yes" }).base64Marking).toBe(true);
 	});
 
 	it("keeps valid overrides and customs, drops invalid ones", () => {

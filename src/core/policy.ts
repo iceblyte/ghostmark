@@ -33,6 +33,8 @@ export interface GhostmarkSettings {
 	/** Convenience control for the U+200C row (context rules group). */
 	zwnjAction: "keep" | "remove";
 	codeToSpace: boolean;
+	/** Purple-mark base64 tracking tokens and clear them with the commands. */
+	base64Marking: boolean;
 	/** Interface. */
 	inspectRemember: boolean;
 	/** Last inspect-mode state, honored when inspectRemember is on. */
@@ -44,7 +46,7 @@ export interface GhostmarkSettings {
 	language: LanguageSetting;
 }
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const DEFAULT_SETTINGS: GhostmarkSettings = {
 	schemaVersion: SCHEMA_VERSION,
@@ -54,6 +56,7 @@ export const DEFAULT_SETTINGS: GhostmarkSettings = {
 	mathMode: "markOnly",
 	zwnjAction: "keep",
 	codeToSpace: true,
+	base64Marking: true,
 	inspectRemember: true,
 	inspectEnabled: false,
 	density: "compact",
@@ -164,6 +167,12 @@ export function migrateSettings(raw: unknown): GhostmarkSettings {
 			typeof data.codeToSpace === "boolean"
 				? data.codeToSpace
 				: settings.codeToSpace;
+	}
+	if (data.base64Marking !== undefined) {
+		settings.base64Marking =
+			typeof data.base64Marking === "boolean"
+				? data.base64Marking
+				: settings.base64Marking;
 	}
 	if (data.inspectRemember !== undefined) {
 		settings.inspectRemember =
