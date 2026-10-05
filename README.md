@@ -51,9 +51,10 @@ the character's name, codepoint, category and suggested action. The status bar
 keeps a live `Ghost: N` count for the active note.
 
 Live Preview's properties panel hides the frontmatter — so when the frontmatter
-carries marks, a **`frontmatter contains N marks` summary badge** appears right
-below the panel (segmented per category, like the gutter badges). Clicking it
-clears the frontmatter; in Source mode the raw marks are visible and the badge
+carries marks, a **`frontmatter contains N marks` summary bar** appears above the editor
+content (segmented per category, like the gutter badges — rendered outside the
+document so it can never interfere with selection or cursors). Clicking it
+clears the frontmatter; in Source mode the raw marks are visible and the bar
 steps aside.
 
 ## Clear with confidence

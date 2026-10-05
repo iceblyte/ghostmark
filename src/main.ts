@@ -14,7 +14,6 @@ import {
 import {
 	clearBase64Segment,
 	clearCurrentBlock,
-	frontmatterHidden,
 	registerCommands,
 	runPickCodepoint,
 } from "./commands";
@@ -22,12 +21,11 @@ import { INSPECT_EXTENSIONS } from "./editor/inspectMode";
 import {
 	clearBlockRequestFacet,
 	clearHitRequestFacet,
-	frontmatterBadgeEffect,
-	frontmatterBadgeField,
 	inspectRuntime,
 	inspectRuntimeEffect,
 	setInspectRuntime,
 } from "./editor/inspectState";
+import { FrontmatterBadgeController } from "./frontmatterBadge";
 import { buildInspectConfig, obsidianLocale } from "./settings";
 import { GhostmarkSettingTab } from "./settings";
 import { GhostmarkStatusBar, registerStatusBar } from "./statusBar";
@@ -41,6 +39,8 @@ export default class GhostmarkPlugin extends Plugin {
 	private statusBar: GhostmarkStatusBar | null = null;
 
 	private settingsTab: GhostmarkSettingTab | null = null;
+
+	private frontmatterBadge: FrontmatterBadgeController | null = null;
 
 	config = buildInspectConfig(DEFAULT_SETTINGS, "en");
 
@@ -72,22 +72,27 @@ export default class GhostmarkPlugin extends Plugin {
 		registerStatusBar(this);
 		registerCommands(this);
 
-		// Live Preview flag for the frontmatter summary badge: recompute
-		// per leaf on layout changes (mode switches fire this event) and
-		// dispatch only when the value actually changes.
+		// Live Preview frontmatter summary badge: one DOM bar per leaf,
+		// refreshed on layout/leaf changes, per-keystroke for the edited
+		// leaf and whenever inspect mode or settings change.
+		const frontmatterBadge = new FrontmatterBadgeController(this);
+		this.frontmatterBadge = frontmatterBadge;
 		this.registerEvent(
-			this.app.workspace.on("layout-change", () => {
-				this.app.workspace.iterateAllLeaves((leaf) => {
-					if (!(leaf.view instanceof MarkdownView)) return;
-					const cmView = EditorView.findFromDOM(leaf.view.containerEl);
-					if (!cmView) return;
-					const hidden = frontmatterHidden(leaf.view);
-					if (cmView.state.field(frontmatterBadgeField, false) !== hidden) {
-						cmView.dispatch({ effects: frontmatterBadgeEffect.of(hidden) });
-					}
-				});
+			this.app.workspace.on("layout-change", () =>
+				frontmatterBadge.update(),
+			),
+		);
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () =>
+				frontmatterBadge.update(),
+			),
+		);
+		this.registerEvent(
+			this.app.workspace.on("editor-change", (_editor, view) => {
+				if (view instanceof MarkdownView) frontmatterBadge.updateLeaf(view);
 			}),
 		);
+		frontmatterBadge.update();
 
 		// Editor context menu entry for pick-codepoint (FR-9)
 		this.registerEvent(
@@ -124,6 +129,7 @@ export default class GhostmarkPlugin extends Plugin {
 		if (this.settingsTab?.containerEl.isShown()) {
 			this.settingsTab.update();
 		}
+		this.frontmatterBadge?.update();
 	}
 
 	setInspectEnabled(on: boolean): void {
@@ -139,6 +145,7 @@ export default class GhostmarkPlugin extends Plugin {
 			}
 		}
 		this.statusBar?.update();
+		this.frontmatterBadge?.update();
 	}
 
 	setStatusBarVisible(on: boolean): void {

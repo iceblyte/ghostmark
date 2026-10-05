@@ -6,7 +6,7 @@ Live Preview 会用 Obsidian 的属性面板覆盖 frontmatter 区域：frontmat
 
 ## What Changes
 
-- **新增 frontmatter 摘要徽标**：仅在 Live Preview 且检查模式开启、frontmatter 实际存在命中（N ≥ 1，含红/紫/蓝各类）时渲染，位置紧随属性面板之后、正文首行之前；徽标按类别分段显示计数（复用行号槽徽标的分段色彩体系）。
+- **新增 frontmatter 摘要徽标**：仅在 Live Preview 且检查模式开启、frontmatter 实际存在命中（N ≥ 1，含红/紫/蓝各类）时渲染，以固定摘要条形式渲染于编辑器内容区上方（Live Preview 专属；不进入文档流，避免与选区/装饰系统交互——首版编辑器内块级 widget 方案在验收中引发选区错乱，已返工，见 design D1）；徽标按类别分段显示计数（复用行号槽徽标的分段色彩体系）。
 - **点击清除**：点击徽标对 frontmatter 块执行策略清理——复用既有"清除当前块"管线与"块清除前确认"开关；清理后随命中数归零自动消失；单步撤销成立。
 - **模式感知**：纯 Source 模式下 frontmatter 以原文渲染、标记本就可见，徽标不渲染；两种模式切换时徽标即时出现/消失。
 - **范围限定**：不改变导航的 frontmatter 绕行规则（`mark-navigation` 主规格）；不影响扫描、清除命令与状态栏计数；无新增设置项。

@@ -14,20 +14,16 @@ import {
 	ViewPlugin,
 	type ViewUpdate,
 } from "@codemirror/view";
-import { parseBlocks } from "../core/blocks";
 import type { Hit } from "../core/categories";
 import {
 	badgeSegments,
 	badgeWidthPx,
-	frontmatterBadge,
 	MIN_BADGE_GUTTER,
 } from "./badgeModel";
 import { hoverExtension } from "./hover";
 import { flashField } from "./flash";
-import { FrontmatterBadgeWidget } from "./fmBadge";
 import {
 	clearHitRequestFacet,
-	frontmatterBadgeField,
 	inspectHitsField,
 	inspectRuntime,
 	inspectRuntimeField,
@@ -124,32 +120,6 @@ export function buildDecorations(view: EditorView): DecorationSet {
 			});
 		}
 	}
-
-	// Live Preview frontmatter summary badge: a block widget after the
-	// properties panel summarizing the marks it hides (spec R1/R2)
-	if (view.state.field(frontmatterBadgeField, false)) {
-		const fmBadge = frontmatterBadge(hits);
-		if (fmBadge.count > 0) {
-			const map = parseBlocks(view.state.doc.toString());
-			const region = map.regions.find((r) => r.type === "frontmatter");
-			if (region) {
-				const pos = map.lineEnds[region.endLine] ?? 0;
-				ranges.push({
-					from: pos,
-					to: pos,
-					deco: Decoration.widget({
-						widget: new FrontmatterBadgeWidget(
-							fmBadge.segments,
-							fmBadge.count,
-							config.locale,
-						),
-						block: true,
-						side: 1,
-					}),
-				});
-			}
-		}
-	}
 	if (ranges.length === 0) return Decoration.none;
 	return Decoration.set(
 		ranges.map((r) => r.deco.range(r.from, r.to)),
@@ -168,13 +138,6 @@ function flashChanged(update: ViewUpdate): boolean {
 	return (
 		update.state.field(flashField, false) !==
 		update.startState.field(flashField, false)
-	);
-}
-
-function badgeModeChanged(update: ViewUpdate): boolean {
-	return (
-		update.state.field(frontmatterBadgeField, false) !==
-		update.startState.field(frontmatterBadgeField, false)
 	);
 }
 
@@ -198,8 +161,7 @@ const decorationsPlugin = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				runtimeChanged(update) ||
-				flashChanged(update) ||
-				badgeModeChanged(update)
+				flashChanged(update)
 			) {
 				this.decorations = buildDecorations(update.view);
 			}
@@ -224,6 +186,4 @@ export const INSPECT_EXTENSIONS: Extension[] = [
 	gutterExtension,
 	// jump-navigation line flash; renders only when the shell dispatches it
 	flashField,
-	// Live Preview flag for the frontmatter summary badge (shell-pushed)
-	frontmatterBadgeField,
 ];

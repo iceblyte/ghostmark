@@ -99,21 +99,3 @@ export const clearBlockRequestFacet = Facet.define<
 export const clearHitRequestFacet = Facet.define<
 	(view: EditorView, hit: Hit) => void
 >();
-
-/**
- * Pushed by the shell on layout changes: whether this leaf is in Live
- * Preview (the properties widget covers the frontmatter, so marks
- * inside it are invisible and the summary badge applies). Read by the
- * decoration layer; the shell owns the detection.
- */
-export const frontmatterBadgeEffect = StateEffect.define<boolean>();
-
-export const frontmatterBadgeField = StateField.define<boolean>({
-	create: () => false,
-	update(value, tr) {
-		for (const effect of tr.effects) {
-			if (effect.is(frontmatterBadgeEffect)) return effect.value;
-		}
-		return value;
-	},
-});

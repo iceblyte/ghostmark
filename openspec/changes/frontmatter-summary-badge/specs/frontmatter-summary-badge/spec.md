@@ -8,17 +8,17 @@
 
 ### Requirement: 徽标的存在条件与位置
 
-检查模式开启且当前叶子处于 Live Preview（属性面板覆盖 frontmatter）时，若 frontmatter 中存在至少一处标记（任何类别：红/紫/蓝/黄），SHALL 在属性面板之后、正文首行之前渲染"frontmatter 含 N 处标记"摘要徽标（N 为 frontmatter 内标记字符总数）。以下情形 SHALL NOT 渲染徽标：纯 Source 模式（frontmatter 以原文渲染，标记本就可见）；检查模式关闭；frontmatter 无任何命中（含"标记 base64 乱码"关闭时 base64 段不计入）。
+检查模式开启且当前叶子处于 Live Preview（属性面板覆盖 frontmatter）时，若 frontmatter 中存在至少一处标记（任何类别：红/紫/蓝/黄），SHALL 在该笔记编辑器视图内渲染"frontmatter 含 N 处标记"摘要徽标（N 为 frontmatter 内标记字符总数）：徽标为编辑器内容区上方的固定摘要条，不进入文档流（不与选区、光标或装饰系统交互）。以下情形 SHALL NOT 渲染徽标：纯 Source 模式（frontmatter 以原文渲染，标记本就可见）；检查模式关闭；frontmatter 无任何命中（含"标记 base64 乱码"关闭时 base64 段不计入）。
 
 #### Scenario: frontmatter 含标记时显示徽标
 
 - **WHEN** Live Preview 下笔记的 frontmatter 含 3 处红色标记与 1 段 base64（44 字符），检查模式开启
-- **THEN** 属性面板之后显示摘要徽标，N = 47
+- **THEN** 编辑器内容区上方显示摘要徽标，N = 47
 
 #### Scenario: frontmatter 干净时不显示
 
 - **WHEN** Live Preview 下笔记 frontmatter 无任何命中
-- **THEN** 不渲染徽标，正文区域无额外元素
+- **THEN** 不渲染徽标，编辑器内无额外元素
 
 #### Scenario: Source 模式不显示
 
