@@ -19,9 +19,9 @@
 
 ## 4. core：第二个 fixture（脱敏样本）
 
-- [ ] 4.1 用一次性脚本确定性生成 `src/core/fixtures/clipped-fixture.md`（design D8 十形态 base64 + 负例 + 新策略行全景 + 词内簇/指纹串 + ZWJ/数学块保护，正文全占位文字、token 为合成值），脚本用后即弃、成品入库
-- [ ] 4.2 `src/core/clipped-fixture.test.ts`：硬编码断言——每个新策略组至少 1 处命中、各 base64 形态命中数、负例（路径/URL/SHA/data URI/短串）零命中、清除后零残留（保护对象除外）、粘词前缀逐字节保留；`npx vitest run src/core/clipped-fixture.test.ts` 通过
-- [ ] 4.3 既有 `fixture.test.ts` 断言全绿（回归锚不动）：`npm test` 全量通过
+- [x] 4.1 用一次性脚本确定性生成 `src/core/fixtures/clipped-fixture.md`（design D8 十形态 base64 + 负例 + 新策略行全景 + 词内簇/指纹串 + ZWJ/数学块保护，正文全占位文字、token 为合成值），脚本用后即弃、成品入库
+- [x] 4.2 `src/core/clipped-fixture.test.ts`：硬编码断言——每个新策略组至少 1 处命中、各 base64 形态命中数、负例（路径/URL/SHA/data URI/短串）零命中、清除后零残留（保护对象除外）、粘词前缀逐字节保留；`npx vitest run src/core/clipped-fixture.test.ts` 通过
+- [x] 4.3 既有 `fixture.test.ts` 断言全绿（回归锚不动）：`npm test` 全量通过
 
 ## 5. editor 层：紫色类别与点击清除
 
