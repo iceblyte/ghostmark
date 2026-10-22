@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { blockRangeAt, blockTypeAt, parseBlocks } from "./blocks";
+import {
+	badgeBlockRange,
+	blockRangeAt,
+	blockTypeAt,
+	parseBlocks,
+} from "./blocks";
 
 const fixturePath = fileURLToPath(
 	new URL("./fixtures/watermark-fixture.md", import.meta.url),
@@ -210,5 +215,77 @@ describe("blockRangeAt six shapes", () => {
 
 	it("returns null for an empty text", () => {
 		expect(blockRangeAt("", 0)).toBeNull();
+	});
+});
+
+describe("badgeBlockRange", () => {
+	const text = [
+		"# 标题", // 0
+		"", // 1
+		"| 表头 | 列 |", // 2
+		"| --- | --- |", // 3
+		"| pyt\u2062hon | a |", // 4
+		"| Hel\u2062lo | b |", // 5
+		"", // 6
+		"正文一行", // 7
+		"",
+	].join("\n");
+
+	it("stretches a table row over the whole collapsed block", () => {
+		// a Live Preview rendered table collapses its source lines into
+		// one block; the badge click passes the block's whole span
+		const from = text.indexOf("| 表头");
+		const to = text.indexOf("| Hel") + "| Hel\u2062lo | b |".length;
+		const badge = badgeBlockRange(text, from, to);
+		expect(badge).not.toBeNull();
+		expect(badge?.range).toEqual({
+			startLine: 2,
+			endLine: 5,
+			shape: "table",
+		});
+		expect(badge?.start).toBe(from);
+		expect(text.slice(badge!.start, badge!.end)).toContain("pyt\u2062hon");
+	});
+
+	it("keeps the single-line range for a single-line block", () => {
+		const from = text.indexOf("正文一行");
+		const to = from + "正文一行".length;
+		const badge = badgeBlockRange(text, from, to);
+		expect(badge?.range).toEqual({
+			startLine: 7,
+			endLine: 7,
+			shape: "paragraph",
+		});
+		expect(badge?.start).toBe(from);
+		expect(badge?.end).toBe(to);
+	});
+
+	it("keeps a whole-region shape when the block spans the collapsed range", () => {
+		const fenced = "```python\nx\u2062\ny\n```\nafter\n";
+		const from = 0;
+		const to = fenced.indexOf("```", 1) + 3;
+		const badge = badgeBlockRange(fenced, from, to);
+		expect(badge?.range).toEqual({
+			startLine: 0,
+			endLine: 3,
+			shape: "fencedCode",
+		});
+	});
+
+	it("resolves a frontmatter span by its offsets", () => {
+		const fm = '---\ntitle: "T"\n---\n\nbody\n';
+		const badge = badgeBlockRange(fm, 0, fm.indexOf("---", 1) + 3);
+		expect(badge?.range).toEqual({
+			startLine: 0,
+			endLine: 2,
+			shape: "frontmatter",
+		});
+	});
+
+	it("returns null for empty or out-of-document offsets", () => {
+		expect(badgeBlockRange(text, 5, 5)).toBeNull();
+		expect(badgeBlockRange(text, -1, 5)).toBeNull();
+		expect(badgeBlockRange(text, 0, text.length + 1)).toBeNull();
+		expect(badgeBlockRange("", 0, 1)).toBeNull();
 	});
 });

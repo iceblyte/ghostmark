@@ -13,12 +13,14 @@
  *
  * Shown only when the leaf is in Live Preview, inspect mode is on and
  * the frontmatter holds marks. Clicking clears the frontmatter through
- * the existing block-clear pipeline (lineIndex 0) — the same confirm
- * gate, notice and single-step undo semantics as the gutter badges.
+ * the existing block-clear pipeline (the frontmatter's offset range) —
+ * the same confirm gate, notice and single-step undo semantics as the
+ * gutter badges.
  */
 
 import { MarkdownView } from "obsidian";
 import { frontmatterBadge, type FrontmatterBadge } from "./editor/badgeModel";
+import { parseBlocks } from "./core/blocks";
 import { scan } from "./core/scanner";
 import { t } from "./core/i18n";
 import {
@@ -69,7 +71,16 @@ export class FrontmatterBadgeController {
 		el.addEventListener("mousedown", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			clearCurrentBlock(this.host, view.editor, 0);
+			// the badge only shows when the frontmatter holds marks, so
+			// the frontmatter region always exists at click time
+			const text = view.editor.getValue();
+			const map = parseBlocks(text);
+			const fm = map.regions.find((r) => r.type === "frontmatter");
+			if (!fm) return;
+			clearCurrentBlock(this.host, view.editor, {
+				from: 0,
+				to: map.lineEnds[fm.endLine] ?? 0,
+			});
 		});
 		const editor = parent.querySelector<HTMLElement>(":scope > .cm-editor");
 		if (editor) parent.insertBefore(el, editor);

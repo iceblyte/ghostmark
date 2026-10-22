@@ -85,10 +85,12 @@ export const inspectHitsField = StateField.define<Hit[]>({
 
 /**
  * Provided by the shell (FR-13): gutter badge clicks request a block
- * clear for a 0-based line.
+ * clear for the badge's whole line block — the same [from, to) offsets
+ * the badge counted hits over (a Live Preview rendered table collapses
+ * its source lines into one block spanning the whole table).
  */
 export const clearBlockRequestFacet = Facet.define<
-	(view: EditorView, lineIndex: number) => void
+	(view: EditorView, target: { from: number; to: number }) => void
 >();
 
 /**

@@ -31,12 +31,13 @@ export interface BlockMap {
 	lineCount: number;
 }
 
-/** The six FR-13 block shapes. */
+/** The six FR-13 block shapes ("table" = a whole collapsed table). */
 export type BlockShape =
 	| "paragraph"
 	| "listItem"
 	| "quoteRun"
 	| "tableRow"
+	| "table"
 	| "fencedCode"
 	| "mathBlock"
 	| "frontmatter";
@@ -351,4 +352,61 @@ export function blockRangeAt(
 	while (start > 0 && isPlainProse(start - 1)) start--;
 	while (end + 1 < map.lineCount && isPlainProse(end + 1)) end++;
 	return { startLine: start, endLine: end, shape: "paragraph" };
+}
+
+/** Line index covering the offset (the trailing "\n" belongs to its line). */
+function lineIndexAt(map: BlockMap, offset: number): number | null {
+	let lo = 0;
+	let hi = map.lineCount - 1;
+	while (lo <= hi) {
+		const mid = (lo + hi) >> 1;
+		const start = map.lineStarts[mid] ?? Number.MAX_SAFE_INTEGER;
+		if (offset < start) {
+			hi = mid - 1;
+			continue;
+		}
+		const end = map.lineEnds[mid] ?? Number.MAX_SAFE_INTEGER;
+		if (offset > end) {
+			lo = mid + 1;
+			continue;
+		}
+		return mid;
+	}
+	return null;
+}
+
+/**
+ * Block range for a gutter badge click: the badge counts hits across a
+ * whole collapsed line block (e.g. a Live Preview rendered table), so
+ * the clear range must be the same [from, to) offsets — never just the
+ * first line the collapsed block starts on. The shape comes from the
+ * block at the first offset's line; a table row stretched over the
+ * collapsed range becomes the whole table. Returns null when the
+ * offsets are outside the document.
+ */
+export function badgeBlockRange(
+	text: string,
+	from: number,
+	to: number,
+): { range: BlockLineRange; start: number; end: number } | null {
+	if (from < 0 || to <= from || to > text.length) return null;
+	const map = parseBlocks(text);
+	const startLine = lineIndexAt(map, from);
+	const endLine = lineIndexAt(map, to - 1);
+	if (startLine === null || endLine === null) return null;
+	const base = blockRangeAt(text, startLine);
+	if (!base) return null;
+	const range: BlockLineRange =
+		endLine > base.endLine
+			? {
+					startLine: base.startLine,
+					endLine,
+					shape: base.shape === "tableRow" ? "table" : base.shape,
+				}
+			: base;
+	return {
+		range,
+		start: map.lineStarts[range.startLine] ?? from,
+		end: to,
+	};
 }

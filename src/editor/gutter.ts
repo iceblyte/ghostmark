@@ -128,9 +128,11 @@ export const gutterExtension = gutter({
 			const target = event.target;
 			if (!(target instanceof HTMLElement)) return false;
 			if (!target.closest(".gm-badge")) return false;
-			const lineIndex = view.state.doc.lineAt(line.from).number - 1;
+			// clear exactly the range the badge counted: a collapsed line
+			// block (Live Preview rendered table) spans all of its source
+			// lines, not just the first one
 			for (const request of view.state.facet(clearBlockRequestFacet)) {
-				request(view, lineIndex);
+				request(view, { from: line.from, to: line.to });
 			}
 			return true;
 		},

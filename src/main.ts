@@ -57,10 +57,12 @@ export default class GhostmarkPlugin extends Plugin {
 
 		this.registerEditorExtension([
 			...INSPECT_EXTENSIONS,
-			// Gutter badge → clear the block containing that line (FR-13)
-			clearBlockRequestFacet.of((view, lineIndex) => {
+			// Gutter badge → clear the block containing that line (FR-13);
+			// the target spans the badge's whole line block (a Live Preview
+			// rendered table collapses to one block over all its rows)
+			clearBlockRequestFacet.of((view, target) => {
 				const editor = view.state.field(editorInfoField).editor;
-				if (editor) clearCurrentBlock(this, editor, lineIndex);
+				if (editor) clearCurrentBlock(this, editor, target);
 			}),
 			// Base64 widget click → clear that one segment (explicit intent)
 			clearHitRequestFacet.of((view, hit) => {

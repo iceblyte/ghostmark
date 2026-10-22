@@ -24,7 +24,12 @@ import {
 	type Category,
 	type Hit,
 } from "./core/categories";
-import { blockRangeAt, blockRangeToTextRange } from "./core/blocks";
+import {
+	badgeBlockRange,
+	blockRangeAt,
+	blockRangeToTextRange,
+	type BlockLineRange,
+} from "./core/blocks";
 import { clean, summarizeHits, type HitSummary } from "./core/cleaner";
 import type { GhostmarkSettings } from "./core/policy";
 import { t, type Locale } from "./core/i18n";
@@ -76,40 +81,28 @@ function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
 
 /**
  * Apply changes as one transaction while keeping the viewport where it
- * was: the cursor is mapped through the changes explicitly (changes are
- * given in original-document coordinates, sorted, non-overlapping) and
- * the scroll position is restored if the editor moved it (Fix for the
- * jump-to-top after gutter-badge clears).
+ * was. The transaction carries changes only: CodeMirror maps the
+ * selection through them (same result as the explicit mapping it
+ * replaces), while passing a selection would make Obsidian scroll the
+ * caret into view after the update — the jump back to the cursor after
+ * gutter-badge clears. The scroll guard re-asserts the pre-transaction
+ * viewport synchronously and again on the next frame, after any
+ * host-side scroll adjustment has landed.
  */
 function applyCleanedChanges(editor: Editor, changes: EditorChange[]): void {
 	const scroll = editor.getScrollInfo();
-	const cursor = editor.posToOffset(editor.getCursor("from"));
-	let newCursor = cursor;
-	for (const change of changes) {
-		const fromPos = change.from ?? { line: 0, ch: 0 };
-		const from = editor.posToOffset(fromPos);
-		const toPos = change.to ?? editor.offsetToPos(editor.getValue().length);
-		const to = editor.posToOffset(toPos);
-		if (cursor < from) break;
-		if (cursor >= to) {
-			newCursor += change.text.length - (to - from);
-		} else {
-			newCursor = from + Math.min(cursor - from, change.text.length);
-			break;
+	editor.transaction({ changes });
+	const restore = (): void => {
+		const after = editor.getScrollInfo();
+		if (
+			Math.abs(after.top - scroll.top) > 1 ||
+			Math.abs(after.left - scroll.left) > 1
+		) {
+			editor.scrollTo(scroll.left, scroll.top);
 		}
-	}
-	const cursorPos = editor.offsetToPos(newCursor);
-	editor.transaction({
-		changes,
-		selection: { from: cursorPos },
-	});
-	const after = editor.getScrollInfo();
-	if (
-		Math.abs(after.top - scroll.top) > 1 ||
-		Math.abs(after.left - scroll.left) > 1
-	) {
-		editor.scrollTo(scroll.left, scroll.top);
-	}
+	};
+	restore();
+	window.requestAnimationFrame(restore);
 }
 
 function replaceWholeDocument(editor: Editor, text: string): void {
@@ -632,28 +625,46 @@ function editorOffset(editor: Editor, offset: number): EditorPosition {
 }
 
 /**
- * Clear the block containing the cursor (or an explicit line, for the
- * gutter badge entry). Default confirm-free — gated by inspect-mode
- * visibility per the design doc §6 complementary rule.
+ * Clear the block containing the cursor, or — for the gutter badge
+ * entry — the badge's whole line block. A collapsed line block (a Live
+ * Preview rendered table) spans all of its source lines, so the badge
+ * target is an offset range and the clear covers exactly what the
+ * badge counted; the cursor path keeps the FR-13 per-shape semantics.
+ * Default confirm-free — gated by inspect-mode visibility per the
+ * design doc §6 complementary rule.
  */
 export function clearCurrentBlock(
 	host: CommandsHost,
 	editor: Editor,
-	lineIndex?: number,
+	badgeTarget?: { from: number; to: number },
 ): void {
 	const localeNow = host.config.locale;
 	const text = editor.getValue();
-	const cursorLine = lineIndex ?? editor.getCursor("from").line;
-	const range = blockRangeAt(text, cursorLine);
-	if (!range) {
-		new Notice(t(localeNow, "n5.zero"));
-		return;
-	}
 
-	const { start: startOffset, end: endOffset } = blockRangeToTextRange(
-		text,
-		range,
-	);
+	let range: BlockLineRange;
+	let startOffset: number;
+	let endOffset: number;
+	if (badgeTarget) {
+		const badge = badgeBlockRange(text, badgeTarget.from, badgeTarget.to);
+		if (!badge) {
+			new Notice(t(localeNow, "n5.zero"));
+			return;
+		}
+		range = badge.range;
+		startOffset = badge.start;
+		endOffset = badge.end;
+	} else {
+		const cursorLine = editor.getCursor("from").line;
+		const cursorRange = blockRangeAt(text, cursorLine);
+		if (!cursorRange) {
+			new Notice(t(localeNow, "n5.zero"));
+			return;
+		}
+		range = cursorRange;
+		const offsets = blockRangeToTextRange(text, range);
+		startOffset = offsets.start;
+		endOffset = offsets.end;
+	}
 
 	const slice = text.slice(startOffset, endOffset);
 	const hits = scan(slice, host.config.policy, {
