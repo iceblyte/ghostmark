@@ -21,3 +21,9 @@
 
 - [x] 4.1 三闸门全绿：`npm test` / `npm run lint` / `npm run build`
 - [x] 4.2 手动验收（Live Preview 表格徽标清整表且计数一致、光标在视口外时视口不跳、源码模式回归、光标命令表格行粒度、单步撤销）
+
+## 5. 撤销的视口稳定（用户验收轮追加）
+
+- [x] 5.1 `src/editor/undoViewport.ts`：常驻 ViewPlugin 扩展——撤销/重做事务（`userEvent: undo|redo|select.undo|select.redo`）时记录更新前滚动位置，rAF 下一帧再断言；`isUndoLikeTransaction` 纯函数 + 单测（历史事件匹配 / 编辑与选区事件不匹配 / 无标注不匹配）
+- [x] 5.2 `src/main.ts`：`registerEditorExtension` 注册 `undoViewportExtension`（检查模式关闭时同样生效）
+- [x] 5.3 spec delta 增"撤销的视口稳定性" Requirement；三闸门复验 + 手动验收（视口外撤销不跳、视口内撤销零滚动变化、重做同规则）

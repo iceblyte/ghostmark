@@ -11,6 +11,7 @@
 
 - **徽标点击清除语义**：行号槽徽标点击改为传递所在行块（BlockInfo）的完整偏移区间 `{from, to}`——与徽标计数完全同一区间；`clearCurrentBlock` 接受该区间并对其直接扫描清理。Live Preview 折叠表格上点击徽标即清除整张表格（用户已确认）；单行行块的徽标行为不变。**光标路径的 FR-13 语义不变**（命令仍是"表格行"粒度）。
 - **清除事务的视口稳定**：`applyCleanedChanges` 移除显式 `selection` 与手动光标映射（CM 自动把选区映射过 changes，单步撤销不受影响），保留滚动守卫并增加 `requestAnimationFrame` 异步再断言一次恢复，兜住宿主在事务后补做的滚动。
+- **撤销的视口稳定（用户验收轮追加）**：CM6 历史命令源码（`@codemirror/commands` history.ts `pop()`）确认撤销事务携带 `scrollIntoView: true` 与 `userEvent: "undo"`——清除后光标在视口外时，Ctrl+Z 会把恢复出来的选区（光标原位置）强制滚入视区。新增常驻扩展 `undoViewport`：撤销/重做事务发生时在 update 监听器中读取更新前滚动位置（先于 measure 阶段的滚动落地），下一帧再断言恢复；恢复的选区本就可见时为无操作。
 - **i18n**：新增 `block.table`（en/zh），整表清除时确认弹窗按"表格"而非"表格行"描述块形态。
 - **范围限定**：不改 scanner / cleaner / policy；不改跳转命令；不新增设置项。
 
