@@ -16,3 +16,5 @@ Thumbs.db
 /tools/video/
 .playwright-mcp/
 reference/
+# 本地 AI 工作区数据（记忆/日志，与插件本体无关）
+.workbuddy-ai/
