@@ -37,6 +37,7 @@ import { filterNavigable, pickJumpTarget } from "./core/navigation";
 import { scan } from "./core/scanner";
 import type { InspectConfig } from "./editor/inspectState";
 import { applyJumpAndFlash } from "./editor/flash";
+import { pinViewportAcrossNextTransaction } from "./editor/viewportAnchor";
 
 export interface CommandsHost extends Component {
 	app: App;
@@ -85,24 +86,17 @@ function scanEditor(editor: Editor, config: InspectConfig): Hit[] {
  * selection through them (same result as the explicit mapping it
  * replaces), while passing a selection would make Obsidian scroll the
  * caret into view after the update — the jump back to the cursor after
- * gutter-badge clears. The scroll guard re-asserts the pre-transaction
- * viewport synchronously and again on the next frame, after any
- * host-side scroll adjustment has landed.
+ * gutter-badge clears. The viewport guard lives at the CM layer
+ * (editor/viewportAnchor.ts): it captures the scroll in the update
+ * listener — before the host's caret reveal lands — and re-asserts it
+ * frame by frame with direct scrollDOM writes. Restoring via
+ * editor.scrollTo instead landed on the host's schedule, a paint after
+ * the caret reveal it was meant to cancel: one visible flash whenever
+ * the cursor sat outside the viewport.
  */
 function applyCleanedChanges(editor: Editor, changes: EditorChange[]): void {
-	const scroll = editor.getScrollInfo();
+	pinViewportAcrossNextTransaction();
 	editor.transaction({ changes });
-	const restore = (): void => {
-		const after = editor.getScrollInfo();
-		if (
-			Math.abs(after.top - scroll.top) > 1 ||
-			Math.abs(after.left - scroll.left) > 1
-		) {
-			editor.scrollTo(scroll.left, scroll.top);
-		}
-	};
-	restore();
-	window.requestAnimationFrame(restore);
 }
 
 function replaceWholeDocument(editor: Editor, text: string): void {

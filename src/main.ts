@@ -25,7 +25,7 @@ import {
 	inspectRuntimeEffect,
 	setInspectRuntime,
 } from "./editor/inspectState";
-import { undoViewportExtension } from "./editor/undoViewport";
+import { viewportAnchorExtension } from "./editor/viewportAnchor";
 import { FrontmatterBadgeController } from "./frontmatterBadge";
 import { buildInspectConfig, obsidianLocale } from "./settings";
 import { GhostmarkSettingTab } from "./settings";
@@ -58,11 +58,12 @@ export default class GhostmarkPlugin extends Plugin {
 
 		this.registerEditorExtension([
 			...INSPECT_EXTENSIONS,
-			// Keep the viewport anchored across undo/redo: CM6's history
-			// commands dispatch with scrollIntoView, which yanks the
-			// restored selection back into view after a far-from-cursor
-			// clear (see editor/undoViewport.ts)
-			undoViewportExtension,
+			// Keep the viewport anchored across undo/redo and the
+			// plugin's clear transactions: CM6 history dispatches with
+			// scrollIntoView and the host reveals the caret after a
+			// clear, both of which yank the viewport back to the
+			// cursor (see editor/viewportAnchor.ts)
+			viewportAnchorExtension,
 			// Gutter badge → clear the block containing that line (FR-13);
 			// the target spans the badge's whole line block (a Live Preview
 			// rendered table collapses to one block over all its rows)

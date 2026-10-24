@@ -1,6 +1,9 @@
 import { EditorState, Transaction } from "@codemirror/state";
 import { describe, expect, it } from "vitest";
-import { isUndoLikeTransaction } from "./undoViewport";
+import {
+	isUndoLikeTransaction,
+	pinViewportAcrossNextTransaction,
+} from "./viewportAnchor";
 
 function transaction(userEvent?: string): Transaction {
 	const state = EditorState.create();
@@ -27,5 +30,11 @@ describe("isUndoLikeTransaction", () => {
 
 	it("does not match transactions without a userEvent", () => {
 		expect(isUndoLikeTransaction(transaction())).toBe(false);
+	});
+});
+
+describe("pinViewportAcrossNextTransaction", () => {
+	it("is callable and does not throw", () => {
+		expect(() => pinViewportAcrossNextTransaction()).not.toThrow();
 	});
 });
